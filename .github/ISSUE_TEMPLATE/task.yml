@@ -1,0 +1,37 @@
+name: Task
+description: Specific, decomposable, and estimable development tasks.
+type: "Task"
+body:
+  - type: markdown
+    id: title
+    attributes:
+      value: "Suggested Format: [Module] Verb + Core Objective"
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Objective
+      description: Briefly describe what this issue will achieve once completed.
+      placeholder: |
+        Implement basic account system: registration, login, and fetching current user info.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: A checklist to verify the task is complete.
+      value: |
+        - [ ] Successfully register a new user (DB record created, password hashed)
+        - [ ] Login with correct credentials returns a valid token
+        - [ ] Login with incorrect credentials returns 401 Unauthorized
+        - [ ] Registration returns 409 Conflict if the username already exists
+        - [ ] Basic input validation is implemented (username length, email format)
+      placeholder: Use - [ ] to list verifiable points.
+
+  - type: input
+    id: branch
+    attributes:
+      label: Suggested Branch Name (Optional)
+      placeholder: feat/auth-basic
