@@ -29,7 +29,7 @@ export function logStartup(hostname: string, port: number) {
 }
 
 export function getBindingInfo(): [string, number] {
-	const DEFAULT_PORT = 15412;
+	const DEFAULT_PORT = 16412;
 	const NODE_ENV = process.env.NODE_ENV || "production";
 	const HOST = process.env.HOST ?? (NODE_ENV === "development" ? "0.0.0.0" : "127.0.0.1");
 	const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : DEFAULT_PORT;

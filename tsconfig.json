@@ -1,5 +1,11 @@
 {
   "compilerOptions": {
+    "paths": {
+      "@prisma/*": ["./prisma/*"],
+      "@routes/*": ["./src/routes/*"],
+      "@lib/*": ["./src/lib/*"]
+    },
+
     // Environment setup & latest features
     "lib": ["ESNext"],
     "target": "ESNext",

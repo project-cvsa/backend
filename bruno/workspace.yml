@@ -1,0 +1,12 @@
+opencollection: 1.0.0
+info:
+  name: "CVSA"
+  type: workspace
+
+collections:
+  - name: "Backend-V2"
+    path: "collections/Backend-V2"
+
+specs:
+
+docs: ''

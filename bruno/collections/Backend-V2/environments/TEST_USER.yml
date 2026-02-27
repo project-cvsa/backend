@@ -1,0 +1,4 @@
+name: TEST_USER
+variables:
+  - secret: true
+    name: TOKEN

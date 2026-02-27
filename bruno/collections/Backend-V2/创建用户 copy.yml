@@ -1,0 +1,22 @@
+info:
+  name: 创建用户 copy
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: http://localhost:16412/v2/user
+  body:
+    type: json
+    data: |-
+      {
+        "username": "{{$randomUserName}}",
+        "password": "{{$randomPassword}}"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

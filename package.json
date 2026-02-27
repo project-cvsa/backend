@@ -7,7 +7,10 @@
     "scripts": {
         "format": "bunx --bun biome format --write",
         "lint": "bunx --bun biome lint",
-        "dev": "bun --watch src/index.ts"
+        "dev": "bun --hot src/index.ts",
+        "db-gen": "bunx --bun prisma generate",
+        "migrate": "bunx --bun prisma migrate dev --create-only",
+        "migrate:dev": "bunx --bun prisma migrate dev"
     },
     "devDependencies": {
         "@biomejs/biome": "^2.4.4",
@@ -21,8 +24,14 @@
     "dependencies": {
         "@prisma/adapter-pg": "^7.4.1",
         "@prisma/client": "^7.4.1",
+        "@t3-oss/env-core": "^0.13.10",
         "@types/pg": "^8.16.0",
+        "argon2": "^0.44.0",
         "chalk": "^5.6.2",
-        "elysia": "^1.4.26"
+        "elysia": "^1.4.26",
+        "elysia-ip": "^1.0.10",
+        "elysia-rate-limit": "^4.5.0",
+        "nanoid": "^5.1.6",
+        "zod": "^4.3.6"
     }
 }
