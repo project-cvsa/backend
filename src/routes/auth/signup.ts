@@ -1,10 +1,9 @@
-import { createUser } from "@lib/auth/createUser";
+import { userRepository, sessionRepository } from "@repositories/index";
 import { AppError } from "@lib/error";
 import { Elysia } from "elysia";
 import z from "zod";
 import { ErrorResponseSchema } from "@lib/schema";
 import { ConflictError } from "@lib/error/conflict";
-import { createSession } from "@lib/auth/createSession";
 import { ip } from "elysia-ip";
 import { rateLimit } from "elysia-rate-limit";
 import { RateLimitError } from "@lib/error/rateLimit";
@@ -46,8 +45,13 @@ export const signupHandler = new Elysia()
             try {
                 const userAgent = headers["user-agent"];
                 const requestBody = SignupRequestSchema.parse(body);
-                const user = await createUser(requestBody);
-                const token = await createSession(user.id, ip, userAgent);
+                const user = await userRepository.create(requestBody);
+                const session = await sessionRepository.create({
+                    userId: user.id,
+                    ipAddress: ip,
+                    userAgent,
+                });
+                const token = `${session.id}.${session.secret}`;
                 return status(200, {
                     message: "注册成功",
                     data: {

@@ -2,7 +2,7 @@ import { AppError } from "@lib/error";
 import { Elysia } from "elysia";
 import z from "zod";
 import { ErrorResponseSchema } from "@lib/schema";
-import { prisma } from "@lib/prisma";
+import { userRepository, sessionRepository } from "@repositories/index";
 
 const authSchema = z
     .string()
@@ -46,20 +46,11 @@ export const getCurrentUserHandler = new Elysia().get(
             }
             sha256Hasher.update(secret);
             const secretHash = sha256Hasher.digest("hex");
-            const session = await prisma.session.findUnique({
-                where: {
-                    id,
-                    secretHash,
-                },
-            });
+            const session = await sessionRepository.findByIdAndSecretHash(id, secretHash);
             if (!session) {
                 return status(401, { code: "UNAUTHORIZED", message: "未登录" });
             }
-            const user = await prisma.user.findUnique({
-                where: {
-                    id: session.userId,
-                },
-            });
+            const user = await userRepository.findById(session.userId);
             if (!user) {
                 return status(401, { code: "UNAUTHORIZED", message: "未登录" });
             }

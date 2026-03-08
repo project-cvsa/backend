@@ -3,7 +3,8 @@
     "paths": {
       "@prisma/*": ["./prisma/*"],
       "@routes/*": ["./src/routes/*"],
-      "@lib/*": ["./src/lib/*"]
+      "@lib/*": ["./src/lib/*"],
+      "@repositories/*": ["./src/repositories/*"]
     },
 
     // Environment setup & latest features
