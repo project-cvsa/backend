@@ -4,7 +4,11 @@ import os from "node:os";
 function getLocalIpAddress(): string {
 	const interfaces = os.networkInterfaces();
 	for (const name of Object.keys(interfaces)) {
-		for (const iface of interfaces[name]!) {
+		const networkInterfaces = interfaces[name];
+		if (!networkInterfaces) {
+			continue;
+		}
+		for (const iface of networkInterfaces) {
 			if (iface.family === "IPv4" && !iface.internal) {
 				return iface.address;
 			}
