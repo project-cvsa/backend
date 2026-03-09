@@ -23,9 +23,3 @@ body:
       label: Acceptance Criteria
       description: A checklist to verify the task is complete.
       placeholder: Use - [ ] to list verifiable points.
-
-  - type: input
-    id: branch
-    attributes:
-      label: Suggested Branch Name (Optional)
-      placeholder: feat/auth-basic
