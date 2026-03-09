@@ -1,7 +1,7 @@
 import { prisma } from "@lib/prisma";
 import type { IUserRepository, CreateUserData } from "./interfaces";
 import type { User } from "@prisma/generated/client";
-import { Prisma } from "@prisma/generated/client";
+import { Prisma, type PrismaClient } from "@prisma/generated/client";
 import { ConflictError } from "@lib/error/conflict";
 import { AppError } from "@lib/error";
 import { customAlphabet } from "nanoid";
@@ -10,6 +10,12 @@ const alphabet = "123456789ACDEFGHJKLMNPQRSTUVWXYZ";
 const nanoid = customAlphabet(alphabet, 7);
 
 export class UserRepository implements IUserRepository {
+    private prisma: PrismaClient;
+
+    constructor(prismaClient: PrismaClient = prisma) {
+        this.prisma = prismaClient;
+    }
+
     async create(data: CreateUserData): Promise<User> {
         const MAX_RETRIES = 5;
         let attempts = 0;
@@ -17,7 +23,7 @@ export class UserRepository implements IUserRepository {
         while (attempts < MAX_RETRIES) {
             try {
                 const hashedPassword = await Bun.password.hash(data.password);
-                return await prisma.user.create({
+                return await this.prisma.user.create({
                     data: {
                         id: nanoid(),
                         username: data.username,
@@ -54,23 +60,28 @@ export class UserRepository implements IUserRepository {
     }
 
     async findById(id: string): Promise<User | null> {
-        return await prisma.user.findUnique({
+        return await this.prisma.user.findUnique({
             where: { id },
         });
     }
 
     async findByUsername(username: string): Promise<User | null> {
-        return await prisma.user.findUnique({
+        return await this.prisma.user.findUnique({
             where: { username },
         });
     }
 
     async findByEmail(email: string): Promise<User | null> {
-        return await prisma.user.findUnique({
+        return await this.prisma.user.findUnique({
             where: { email },
         });
     }
 }
 
-// Singleton instance
-export const userRepository = new UserRepository();
+// Factory function to create UserRepository with optional PrismaClient
+export function createUserRepository(prismaClient?: PrismaClient): UserRepository {
+    return new UserRepository(prismaClient);
+}
+
+// Singleton instance (for backward compatibility)
+export const userRepository = createUserRepository();

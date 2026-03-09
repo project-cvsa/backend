@@ -6,7 +6,10 @@ export interface CreateSessionData {
     userAgent?: string;
 }
 
+// Session with secret for token generation
+export type SessionWithSecret = Session & { secret: string };
+
 export interface ISessionRepository {
-    create(data: CreateSessionData): Promise<Session>;
+    create(data: CreateSessionData): Promise<SessionWithSecret>;
     findByIdAndSecretHash(id: string, secretHash: string): Promise<Session | null>;
 }

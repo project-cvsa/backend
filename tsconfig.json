@@ -4,7 +4,8 @@
       "@prisma/*": ["./prisma/*"],
       "@routes/*": ["./src/routes/*"],
       "@lib/*": ["./src/lib/*"],
-      "@repositories/*": ["./src/repositories/*"]
+      "@repositories/*": ["./src/repositories/*"],
+      "@services/*": ["./src/services/*"]
     },
 
     // Environment setup & latest features
