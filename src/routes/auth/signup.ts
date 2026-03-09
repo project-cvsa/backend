@@ -1,4 +1,3 @@
-import { authService } from "@services/index";
 import { AppError } from "@lib/error";
 import { Elysia } from "elysia";
 import z from "zod";
@@ -7,6 +6,7 @@ import { ConflictError } from "@lib/error/conflict";
 import { ip } from "elysia-ip";
 import { rateLimit } from "elysia-rate-limit";
 import { RateLimitError } from "@lib/error/rateLimit";
+import { authServicePlugin } from "./index";
 
 const SignupRequestSchema = z.object({
     username: z.string().min(1, { error: "用户名是必填项" }).max(100, { error: "用户名最多100个字符" }),
@@ -29,6 +29,7 @@ const SignupResponse200Schema = z.object({
 export type SignupRequest = z.infer<typeof SignupRequestSchema>;
 
 export const signupHandler = new Elysia()
+    .use(authServicePlugin)
     .use(ip())
     .use(
         rateLimit({
@@ -41,7 +42,7 @@ export const signupHandler = new Elysia()
     )
     .post(
         "/user",
-        async ({ body, status, ip, headers }) => {
+        async ({ body, status, ip, headers, authService }) => {
             try {
                 const userAgent = headers["user-agent"];
                 const requestBody = SignupRequestSchema.parse(body);

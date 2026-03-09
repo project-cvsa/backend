@@ -2,7 +2,7 @@ import { AppError } from "@lib/error";
 import { Elysia } from "elysia";
 import z from "zod";
 import { ErrorResponseSchema } from "@lib/schema";
-import { authService } from "@services/index";
+import { authServicePlugin } from "./index";
 
 const authSchema = z
     .string()
@@ -20,9 +20,11 @@ const GetCurrentUser200Schema = z.object({
     email: z.email().optional().nullable(),
 });
 
-export const getCurrentUserHandler = new Elysia().get(
-    "/me",
-        async ({ headers, status }) => {
+export const getCurrentUserHandler = new Elysia()
+    .use(authServicePlugin)
+    .get(
+        "/me",
+        async ({ headers, status, authService }) => {
             try {
                 const auth = headers.authorization;
                 const token = authSchema.parse(auth);
