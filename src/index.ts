@@ -34,7 +34,7 @@ const errorHandler: ErrorHandler = ({ code, status, error }) => {
     }
     return status(500, {
         code: "SERVER_ERROR",
-        message: "内部错误",
+        message: "Internal server error",
     });
 };
 

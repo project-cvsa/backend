@@ -9,10 +9,10 @@ import { RateLimitError } from "@lib/error/rateLimit";
 import { authServicePlugin } from "./index";
 
 const SignupRequestSchema = z.object({
-    username: z.string().min(1, { error: "用户名是必填项" }).max(100, { error: "用户名最多100个字符" }),
-    password: z.string().min(6, { error: "密码至少需要8位" }).max(1024, { error: "密码最多1024个字符" }),
-    displayName: z.string().max(100, { error: "昵称最多100个字符" }).optional().nullable(),
-    email: z.email({ error: "邮箱格式不正确" }).optional().nullable(),
+    username: z.string().min(1),
+    password: z.string().min(6),
+    displayName: z.string().max(100).optional().nullable(),
+    email: z.email().optional().nullable(),
 });
 
 const SignupResponse200Schema = z.object({
@@ -36,7 +36,7 @@ export const signupHandler = new Elysia()
             scoping: "global",
             max: 50,
             duration: 5 * 60 * 1000,
-            generator: () => "", // 全局限制
+            generator: () => "", // global limit
             errorResponse: new RateLimitError(),
         })
     )
@@ -48,7 +48,7 @@ export const signupHandler = new Elysia()
                 const requestBody = SignupRequestSchema.parse(body);
                 const { user, token } = await authService.register(requestBody, ip, userAgent);
                 return status(200, {
-                    message: "注册成功",
+                    message: "Successfully registered",
                     data: {
                         id: user.id,
                         username: user.username,
@@ -65,14 +65,14 @@ export const signupHandler = new Elysia()
                 } else if (e instanceof z.ZodError) {
                     return status(400, { code: "INVALID_REQUEST", message: e.message });
                 } else {
-                    return status(500, { code: "SERVER_ERROR", message: "内部错误" });
+                    return status(500, { code: "SERVER_ERROR", message: "Internal server error" });
                 }
             }
         },
         {
             body: SignupRequestSchema,
             detail: {
-                summary: "用户注册",
+                summary: "User Registration",
                 description: "",
             },
             response: {

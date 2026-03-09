@@ -38,25 +38,25 @@ export class UserRepository implements IUserRepository {
                     const fields = adapterError?.cause?.constraint?.fields;
 
                     if (fields?.includes("username")) {
-                        throw new ConflictError("username", "USERNAME_DUPLICATED", "该用户名已被占用");
+                        throw new ConflictError("username", "USERNAME_DUPLICATED", "User name duplicated");
                     }
                     if (fields?.includes("email")) {
-                        throw new ConflictError("email", "EMAIL_DUPLICATED", "该邮箱已注册");
+                        throw new ConflictError("email", "EMAIL_DUPLICATED", "This email has been registered");
                     }
-                    // id 生成重复
+                    // we got an id conflict
                     if (fields?.includes("id")) {
                         attempts++;
                         continue;
                     }
-                    // 其他错误直接抛出
+                    // throw other errors
                     throw e;
                 }
-                // 其他错误直接抛出
+                // throw other errors
                 throw e;
             }
         }
 
-        throw new AppError("用户创建失败", "ID_GENERATION_FAILED");
+        throw new AppError("Failed to register", "ID_GENERATION_FAILED");
     }
 
     async findById(id: string): Promise<User | null> {

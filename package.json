@@ -6,9 +6,12 @@
     "private": true,
     "scripts": {
         "format": "bunx --bun biome format --write",
+        "check": "bunx --bun tsc --noEmit",
         "lint": "bunx --bun biome lint",
         "dev": "bun --hot src/index.ts",
         "test": "bun test",
+        "test:coverage": "bun test --coverage",
+        "test:unit": "bun test tests/unit",
         "db-gen": "bunx --bun prisma generate",
         "migrate": "bunx --bun prisma migrate dev --create-only",
         "migrate:dev": "bunx --bun prisma migrate dev"
