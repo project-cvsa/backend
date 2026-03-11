@@ -1,7 +1,7 @@
 import { APIError, betterAuth } from "better-auth";
 import { prismaAdapter } from "@better-auth/prisma-adapter";
-import { prisma } from "@common/prisma";
-import { getRandomId } from "@common/utils";
+import { prisma } from "@project-cvsa/core/common";
+import { getRandomId } from "@project-cvsa/core/common";
 import { username } from "better-auth/plugins";
 import { bearer } from "better-auth/plugins";
 

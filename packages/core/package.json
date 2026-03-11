@@ -1,20 +1,32 @@
 {
-    "name": "@project-cvsa/core",
-    "type": "module",
-    "module": "index.ts",
-    "devDependencies": {
-        "@prisma/adapter-pg": "^7.4.1",
-        "@types/bun": "latest"
-    },
-    "peerDependencies": {
-        "typescript": "^5"
-    },
-    "dependencies": {
-        "@better-auth/prisma-adapter": "^1.5.5",
-        "@project-cvsa/db": "workspace:*",
-        "@t3-oss/env-core": "^0.13.10",
-        "better-auth": "^1.5.5",
-        "nanoid": "^5.1.6",
-        "zod": "^4.3.6"
-    }
+	"name": "@project-cvsa/core",
+	"type": "module",
+	"module": "index.ts",
+	"scripts": {
+		"test": "bun test",
+		"test:coverage": "bun test --coverage",
+		"test:unit": "bun test tests/unit",
+		"test:integration": "bun test tests/integration",
+		"typecheck": "bunx --bun tsc --noEmit"
+	},
+	"devDependencies": {
+		"@prisma/adapter-pg": "^7.4.1",
+		"@types/bun": "latest",
+		"@project-cvsa/typescript-config": "*"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	},
+	"exports": {
+		".": "./index.ts",
+		"./common": "./common/internal.ts"
+	},
+	"dependencies": {
+		"@better-auth/prisma-adapter": "^1.5.5",
+		"@project-cvsa/db": "*",
+		"@t3-oss/env-core": "^0.13.10",
+		"better-auth": "^1.5.5",
+		"nanoid": "^5.1.6",
+		"zod": "^4.3.6"
+	}
 }
