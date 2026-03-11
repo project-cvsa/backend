@@ -1,15 +1,22 @@
 {
-    "extends": "@project-cvsa/configs/tsconfig/server.json",
     "compilerOptions": {
+        "target": "ESNext",
+        "lib": ["ESNext"],
+        "module": "preserve",
+        "allowImportingTsExtensions": true,
+        "noEmit": true,
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "moduleResolution": "bundler",
+        "isolatedModules": true,
+        "incremental": true,
+        "resolveJsonModule": true,
         "paths": {
-            "@routes/*": ["./src/routes/*"],
+            "@common/*": ["./src/common/*"],
+            "@modules/*": ["./src/modules/*"],
             "@lib/*": ["./src/lib/*"],
-            "@repositories/*": ["./src/repositories/*"],
-            "@services/*": ["./src/services/*"],
-            "@controllers/*": ["./src/controllers/*"],
-            "@schemas/*": ["./src/schemas/*"],
-            "@plugins/*": ["./src/plugins/*"],
             "@/*": ["./src/*"]
-        },
+        }
     }
 }

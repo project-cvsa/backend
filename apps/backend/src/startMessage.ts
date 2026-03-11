@@ -1,4 +1,4 @@
-import { env } from "@lib/env";
+import { env } from "@common/env";
 import chalk from "chalk";
 import os from "node:os";
 

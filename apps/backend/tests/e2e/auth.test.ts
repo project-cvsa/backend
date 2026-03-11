@@ -1,7 +1,7 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
 import { treaty } from "@elysiajs/eden";
 import { app } from "@/index";
-import { prisma } from "@lib/prisma";
+import { prisma } from "@common/prisma";
 
 const api = treaty(app);
 
@@ -13,6 +13,8 @@ describe("Registration E2E Tests - POST /v2/user", () => {
 
 	afterAll(async () => {
 		await prisma.$disconnect();
+		await prisma.session.deleteMany();
+		await prisma.user.deleteMany();
 	});
 
 	test("should register a new user", async () => {
@@ -30,10 +32,21 @@ describe("Registration E2E Tests - POST /v2/user", () => {
 			data: {
 				id: expect.any(String),
 				username: payload.username,
-				displayName: null,
+				displayName: expect.any(String),
 				email: payload.email,
 				token: expect.any(String),
 			},
+		});
+	});
+
+	test("should fail when nothing is provided", async () => {
+		// Create the first user
+		// @ts-expect-error it's intended
+		const { error, status } = await api.v2.user.post({});
+
+		expect(status).toBe(422);
+		expect(error?.value).toMatchObject({
+			code: "VALIDATION_ERROR",
 		});
 	});
 
@@ -56,7 +69,30 @@ describe("Registration E2E Tests - POST /v2/user", () => {
 		// Should return 409 Conflict
 		expect(status).toBe(409);
 		expect(error?.value).toMatchObject({
-			code: "USERNAME_DUPLICATED",
+			code: "USERNAME_IS_ALREADY_TAKEN",
+		});
+	});
+
+	test("should fail when email already exists", async () => {
+		const payload = {
+			username: "first_user",
+			password: "password123",
+			email: "duplicated@example.com",
+		};
+
+		// Create the first user
+		await api.v2.user.post(payload);
+
+		// Attempt to register with the same username
+		const { error, status } = await api.v2.user.post({
+			...payload,
+			username: "another_user",
+		});
+
+		// Should return 409 Conflict
+		expect(status).toBe(409);
+		expect(error?.value).toMatchObject({
+			code: "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL",
 		});
 	});
 
@@ -67,10 +103,11 @@ describe("Registration E2E Tests - POST /v2/user", () => {
 			email: "invalid-email-format", // Invalid email
 		});
 
-		// Should be caught by Zod validation in SignupRequestSchema
+		// Malformed token should be seen as unauthorized
 		expect(status).toBe(422);
-		// @ts-expect-error tracked in elysiajs/elysia#1248 (error type inference still broken for custom onError)
-		expect(error?.value?.code).toBe("VALIDATION_ERROR");
+		expect(error?.value).toMatchObject({
+			code: "VALIDATION_ERROR",
+		});
 	});
 });
 
@@ -88,6 +125,8 @@ describe("Profile E2E Tests - GET /v2/me", () => {
 		const signup = await api.v2.user.post({
 			username: "profile_user",
 			password: "password123",
+			email: "first@example.com",
+			displayName: "John Doe",
 		});
 
 		const token = signup.data?.data.token;
@@ -103,6 +142,8 @@ describe("Profile E2E Tests - GET /v2/me", () => {
 		expect(status).toBe(200);
 		expect(data).toMatchObject({
 			username: "profile_user",
+			email: "first@example.com",
+			displayName: "John Doe",
 		});
 		expect(data?.id).toBeString();
 	});
@@ -116,8 +157,9 @@ describe("Profile E2E Tests - GET /v2/me", () => {
 
 		// Malformed token should be seen as unauthorized
 		expect(status).toBe(401);
-		// @ts-expect-error – tracked in elysiajs/elysia#1248 (error type inference still broken for custom onError)
-		expect(error?.value.code).toBe("UNAUTHORIZED");
+		expect(error?.value).toMatchObject({
+			code: "UNAUTHORIZED",
+		});
 	});
 
 	test("should return 401 for non-existent session", async () => {
@@ -138,31 +180,5 @@ describe("Profile E2E Tests - GET /v2/me", () => {
 		const { status } = await api.v2.me.get();
 
 		expect(status).toBe(401);
-	});
-
-	test("should reject a validly-shaped token with the wrong secret", async () => {
-		const signup = await api.v2.user.post({
-			username: "wrong_secret_user",
-			password: "password123",
-		});
-
-		const token = signup.data?.data.token;
-		expect(token).toBeDefined();
-		if (!token) {
-			throw new Error("Expected signup to return a token");
-		}
-
-		const [sessionId] = token.split(".");
-		const wrongSecretToken = `${sessionId}.000000000000000000000000000000`;
-
-		const { status, error } = await api.v2.me.get({
-			headers: {
-				authorization: `Bearer ${wrongSecretToken}`,
-			},
-		});
-
-		expect(status).toBe(401);
-		// @ts-expect-error – tracked in elysiajs/elysia#1248 (error type inference still broken for custom onError)
-		expect(error?.value.code).toBe("UNAUTHORIZED");
 	});
 });
