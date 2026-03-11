@@ -10,7 +10,6 @@
         "skipLibCheck": true,
         "moduleResolution": "bundler",
         "isolatedModules": true,
-        "incremental": true,
         "resolveJsonModule": true,
         "paths": {
             "@modules/*": ["./modules/*"],

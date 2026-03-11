@@ -1,6 +1,6 @@
 import { z } from "zod";
-import type { auth } from "@modules/auth";
-import { getRandomId } from "@common/utils";
+import type { auth } from "@project-cvsa/core";
+import { getRandomId } from "@project-cvsa/core/common";
 
 type BetterAuthUser = Exclude<Awaited<ReturnType<typeof auth.api.getSession>>, null>["user"];
 
