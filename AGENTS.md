@@ -74,18 +74,25 @@ Order imports from farthest to closest. Prioritize path aliases
 3. Aliases: `@/*`, `@modules/*`, `@common/*` pointing to `./src/`.
 4. **[PROHIBITED]**: relative paths (`../`, `./`, `../../../`, etc.)
 
+### Module-Specific Information
+- **Backend**:
+	1. Our endpoints starts with `/v2` and this prefix is already configured in root handler. In all of the rest handlers, always use the complete path **without** the version prefix (e.g. `/song/:id/details`)
+	2. **[PROHIBITED]**: DO NOT use verbs in paths. Endpoints should strictly follows the RESTful style.
+
 ## 5. Execution Commands & Testing
 
 ALWAYS use `bun` as the package manager, test/command runner.
 
 ### Global Monorepo Commands
 ```bash
-bun lint			# Check code issues via Biome
-bun lint:fix		# Auto-fix code issues
-bun format			# Format code via Biome
-bun typecheck		# Run tsc across all packages
-bun test			# Run all tests globally
-bun test:coverage	# Run all tests with coverage
+bun lint				# Check code issues via Biome
+bun lint:fix			# Auto-fix code issues
+bun format				# Format code via Biome
+bun typecheck			# Run tsc across all packages
+# IMPORTANT: ALWAYS use `bun run test`
+# [PROHIBITED]: Directly run `bun test` without `run`
+bun run test			# Run all tests globally
+bun run test:coverage	# Run all tests with coverage
 ```
 
 ### Module-Specific Testing Strategy

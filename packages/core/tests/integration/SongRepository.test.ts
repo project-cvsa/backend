@@ -89,7 +89,7 @@ describe("SongRepository Integration Tests", () => {
 
 			const result = await repository.list();
 
-			expect(result.length).toBe(3);
+			expect(result.songs.length).toBe(3);
 		});
 
 		test("should filter by type", async () => {
@@ -98,8 +98,8 @@ describe("SongRepository Integration Tests", () => {
 
 			const result = await repository.list({ type: "ORIGINAL" });
 
-			expect(result.length).toBe(1);
-			expect(result[0].type).toBe("ORIGINAL");
+			expect(result.songs.length).toBe(1);
+			expect(result.songs[0].type).toBe("ORIGINAL");
 		});
 
 		test("should filter by search term in name", async () => {
@@ -108,8 +108,8 @@ describe("SongRepository Integration Tests", () => {
 
 			const result = await repository.list({ search: "Search" });
 
-			expect(result.length).toBe(1);
-			expect(result[0].name).toBe("Searchable Song");
+			expect(result.songs.length).toBe(1);
+			expect(result.songs[0].name).toBe("Searchable Song");
 		});
 
 		test("should filter by search term in description", async () => {
@@ -118,8 +118,8 @@ describe("SongRepository Integration Tests", () => {
 
 			const result = await repository.list({ search: "Unique" });
 
-			expect(result.length).toBe(1);
-			expect(result[0].name).toBe("Song A");
+			expect(result.songs.length).toBe(1);
+			expect(result.songs[0].name).toBe("Song A");
 		});
 
 		test("should apply pagination with offset and limit", async () => {
@@ -129,7 +129,7 @@ describe("SongRepository Integration Tests", () => {
 
 			const result = await repository.list({ offset: 2, limit: 3 });
 
-			expect(result.length).toBe(3);
+			expect(result.songs.length).toBe(3);
 		});
 
 		test("should exclude soft-deleted songs", async () => {
@@ -138,7 +138,7 @@ describe("SongRepository Integration Tests", () => {
 
 			const result = await repository.list();
 
-			expect(result.length).toBe(0);
+			expect(result.songs.length).toBe(0);
 		});
 	});
 
@@ -184,7 +184,7 @@ describe("SongRepository Integration Tests", () => {
 			expect(result).toBeNull();
 
 			const allSongs = await repository.list();
-			expect(allSongs.length).toBe(0);
+			expect(allSongs.songs.length).toBe(0);
 		});
 	});
 });

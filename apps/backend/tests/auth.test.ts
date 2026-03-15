@@ -12,9 +12,9 @@ describe("Registration E2E Tests - POST /v2/user", () => {
 	});
 
 	afterAll(async () => {
-		await prisma.$disconnect();
 		await prisma.session.deleteMany();
 		await prisma.user.deleteMany();
+		await prisma.$disconnect();
 	});
 
 	test("should register a new user", async () => {

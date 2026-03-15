@@ -13,7 +13,8 @@
 		"enabled": true,
 		"indentStyle": "tab",
 		"indentWidth": 4,
-		"lineWidth": 100
+		"lineWidth": 100,
+		"formatWithErrors": true
 	},
 	"javascript": {
 		"formatter": {

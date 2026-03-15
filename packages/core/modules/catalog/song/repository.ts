@@ -56,12 +56,17 @@ export class SongRepository implements ISongRepository {
 			];
 		}
 
-		return this.prisma.song.findMany({
-			where,
-			skip,
-			take,
-			orderBy: { createdAt: "desc" },
-		});
+		const [songs, total] = await Promise.all([
+			this.prisma.song.findMany({
+				where,
+				skip,
+				take,
+				orderBy: { createdAt: "desc" },
+			}),
+			this.prisma.song.count({ where }),
+		]);
+
+		return { songs, total };
 	}
 
 	async create(input: CreateSongDto) {
@@ -73,6 +78,40 @@ export class SongRepository implements ISongRepository {
 				description: input.description ?? null,
 				coverUrl: input.coverUrl ?? null,
 				publishedAt: input.publishedAt ?? null,
+			},
+		});
+	}
+
+	async createWithRelations(input: CreateSongDto) {
+		const { performances, creations, ...songData } = input;
+
+		return this.prisma.song.create({
+			data: {
+				type: songData.type ?? null,
+				name: songData.name ?? null,
+				duration: songData.duration ?? null,
+				description: songData.description ?? null,
+				coverUrl: songData.coverUrl ?? null,
+				publishedAt: songData.publishedAt ?? null,
+				performances: performances
+					? {
+							create: performances.map((p) => ({
+								singerId: p.singerId,
+								voicebankId: p.voicebankId ?? undefined,
+								svsEngineId: p.svsEngineId ?? undefined,
+								svsEngineVersionId: p.svsEngineVersionId ?? undefined,
+							})),
+						}
+					: undefined,
+				creations: creations
+					? {
+							create: creations.map((c) => ({
+								artistId: c.artistId,
+								roleId: c.roleId,
+								artistRoleId: c.roleId,
+							})),
+						}
+					: undefined,
 			},
 		});
 	}
@@ -89,6 +128,48 @@ export class SongRepository implements ISongRepository {
 				...(input.publishedAt !== undefined ? { publishedAt: input.publishedAt } : {}),
 				...(input.deletedAt !== undefined ? { deletedAt: input.deletedAt } : {}),
 			},
+		});
+	}
+
+	async updateWithRelations(id: SongId, input: UpdateSongDto) {
+		const { performances, creations, ...songData } = input;
+
+		const data: Prisma.SongUpdateInput = {
+			...(songData.type !== undefined ? { type: songData.type } : {}),
+			...(songData.name !== undefined ? { name: songData.name } : {}),
+			...(songData.duration !== undefined ? { duration: songData.duration } : {}),
+			...(songData.description !== undefined ? { description: songData.description } : {}),
+			...(songData.coverUrl !== undefined ? { coverUrl: songData.coverUrl } : {}),
+			...(songData.publishedAt !== undefined ? { publishedAt: songData.publishedAt } : {}),
+			...(songData.deletedAt !== undefined ? { deletedAt: songData.deletedAt } : {}),
+		};
+
+		if (performances !== undefined) {
+			data.performances = {
+				deleteMany: {},
+				create: performances.map((p) => ({
+					singerId: p.singerId,
+					voicebankId: p.voicebankId ?? undefined,
+					svsEngineId: p.svsEngineId ?? undefined,
+					svsEngineVersionId: p.svsEngineVersionId ?? undefined,
+				})),
+			};
+		}
+
+		if (creations !== undefined) {
+			data.creations = {
+				deleteMany: {},
+				create: creations.map((c) => ({
+					artistId: c.artistId,
+					roleId: c.roleId,
+					artistRoleId: c.roleId,
+				})),
+			};
+		}
+
+		return this.prisma.song.update({
+			where: { id },
+			data,
 		});
 	}
 
