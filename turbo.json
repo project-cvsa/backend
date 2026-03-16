@@ -1,9 +1,9 @@
 {
 	"remoteCache": {
-		"teamSlug": "cvsa",
-		"apiUrl": "https://turborepo.projectcvsa.com"
+		"enabled": true
 	},
 	"$schema": "https://turbo.build/schema.json",
+	"ui": "tui",
 	"tasks": {
 		"build": {
 			"dependsOn": ["^build"],
@@ -15,7 +15,6 @@
 		},
 		"lint": {},
 		"test": {},
-		"test:coverage": {},
-		"typecheck": {}
+		"test:coverage": {}
 	}
 }
