@@ -1,4 +1,4 @@
-import { AppError } from "@common/error";
+import { AppError } from "@project-cvsa/core";
 
 export class ConflictError extends AppError {
 	constructor(

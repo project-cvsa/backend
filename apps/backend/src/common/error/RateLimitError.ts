@@ -1,4 +1,4 @@
-import { AppError } from "@common/error";
+import { AppError } from "@project-cvsa/core";
 
 export class RateLimitError extends AppError {
 	constructor(message = "Request rate limit exceeded") {

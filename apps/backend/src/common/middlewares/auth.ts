@@ -1,5 +1,5 @@
-import { AppError } from "@common/error";
-import { auth } from "@modules/auth/lib";
+import { AppError } from "@project-cvsa/core";
+import { auth } from "@project-cvsa/core";
 import { Elysia } from "elysia";
 import type { User } from "@project-cvsa/db";
 
@@ -16,11 +16,14 @@ const convertUser = (user: BetterAuthUser): User => {
 	};
 };
 
+const toBetterAuthHeaders = (headers: Record<string, string | undefined>): [string, string][] =>
+	Object.entries(headers).filter((entry): entry is [string, string] => entry[1] !== undefined);
+
 export const authMiddleware = new Elysia({ name: "authMiddleware" }).derive(
 	{ as: "scoped" },
 	async ({ headers }) => {
 		const session = await auth.api.getSession({
-			headers: headers,
+			headers: toBetterAuthHeaders(headers),
 		});
 
 		if (!session) {
