@@ -1,18 +1,20 @@
 import { source } from "@/lib/source";
-import { createFromSource } from "fumadocs-core/search/server";
 import { createTokenizer } from "@orama/tokenizers/mandarin";
+import { createFromSource } from "fumadocs-core/search/server";
 
-export const { GET } = createFromSource(source, {
-	localeMap: {
-		en: { language: "english" },
-		zh: {
-			components: {
-				tokenizer: createTokenizer(),
-			},
-			search: {
-				threshold: 0,
-				tolerance: 0,
-			},
-		},
-	},
+// statically cached
+export const revalidate = false;
+export const { staticGET: GET } = createFromSource(source, {
+    localeMap: {
+        zh: {
+            components: {
+                tokenizer: createTokenizer(),
+            },
+            search: {
+                threshold: 0,
+                tolerance: 0,
+            },
+        },
+        en: { language: "english" },
+    },
 });

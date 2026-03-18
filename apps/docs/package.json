@@ -7,18 +7,14 @@
         "dev": "bunx --bun next dev --port 13542",
         "start": "bunx --bun next start",
         "types:check": "fumadocs-mdx && next typegen && tsc --noEmit",
-        "postinstall": "fumadocs-mdx",
-        "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
-        "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-        "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
+        "postinstall": "fumadocs-mdx"
     },
     "dependencies": {
-        "@opennextjs/cloudflare": "^1.17.1",
+        "@orama/orama": "^3.1.18",
         "@orama/tokenizers": "^3.1.18",
-        "@takumi-rs/image-response": "^0.70.4",
-        "fumadocs-core": "16.6.14",
-        "fumadocs-mdx": "14.2.9",
-        "fumadocs-ui": "16.6.14",
+        "fumadocs-core": "16.6.17",
+        "fumadocs-mdx": "14.2.10",
+        "fumadocs-ui": "16.6.17",
         "lucide-react": "^0.577.0",
         "next": "16.1.6",
         "react": "^19.2.4",
@@ -29,12 +25,11 @@
     "devDependencies": {
         "@tailwindcss/postcss": "^4.2.1",
         "@types/mdx": "^2.0.13",
-        "@types/node": "^25.3.5",
+        "@types/node": "^25.5.0",
         "@types/react": "^19.2.14",
         "@types/react-dom": "^19.2.3",
         "postcss": "^8.5.8",
         "tailwindcss": "^4.2.1",
-        "typescript": "^5.9.3",
-        "wrangler": "^4.72.0"
+        "typescript": "^5.9.3"
     }
 }
