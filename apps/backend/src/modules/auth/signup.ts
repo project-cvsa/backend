@@ -62,6 +62,7 @@ export const signupHandler = new Elysia()
 				200: SignupResponseSchema,
 				400: ErrorResponseSchema,
 				422: ErrorResponseSchema,
+				429: ErrorResponseSchema,
 				500: ErrorResponseSchema,
 			},
 		}

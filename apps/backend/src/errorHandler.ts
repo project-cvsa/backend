@@ -58,7 +58,7 @@ export const errorHandler: ErrorHandler<{
 		) {
 			return getErrorResponse(status, 401, {
 				code: "INVALID_CREDENTIALS",
-				message: error.body?.message,
+				message: "Provided credentials are invalid.",
 			});
 		}
 		return getErrorResponse(status, error.statusCode, {

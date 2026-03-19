@@ -64,6 +64,8 @@ export const loginHandler = new Elysia()
 				200: LoginResponseSchema,
 				401: ErrorResponseSchema,
 				422: ErrorResponseSchema,
+				429: ErrorResponseSchema,
+				500: ErrorResponseSchema,
 			},
 		}
 	);

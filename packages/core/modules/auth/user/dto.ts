@@ -144,9 +144,9 @@ export const betterAuthUserToEntity = (user: BetterAuthUser): User => {
 	const { image, roleId } = user;
 	return {
 		...user,
-		image: image || null,
-		roleId: roleId || null,
-		username: user.username || "",
-		displayUsername: user.displayUsername || "",
+		image: image ?? null,
+		roleId: roleId ?? null,
+		username: user.username ?? "",
+		displayUsername: user.displayUsername ?? "",
 	};
 };
