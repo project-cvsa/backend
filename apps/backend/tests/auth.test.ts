@@ -182,3 +182,142 @@ describe("Profile E2E Tests - GET /v2/me", () => {
 		expect(status).toBe(401);
 	});
 });
+
+describe("Login E2E Tests - POST /v2/session", () => {
+	beforeEach(async () => {
+		await prisma.session.deleteMany();
+		await prisma.user.deleteMany();
+	});
+
+	afterAll(async () => {
+		await prisma.session.deleteMany();
+		await prisma.user.deleteMany();
+		await prisma.$disconnect();
+	});
+
+	test("should login with valid credentials", async () => {
+		const signupPayload = {
+			username: "login_user",
+			password: "password123",
+			email: "login@example.com",
+		};
+
+		await api.v2.user.post(signupPayload);
+
+		const { data, status } = await api.v2.session.post({
+			email: signupPayload.email,
+			password: signupPayload.password,
+		});
+
+		expect(status).toBe(200);
+		expect(data).toMatchObject({
+			message: "Successfully logged in",
+			data: {
+				id: expect.any(String),
+				username: signupPayload.username,
+				email: signupPayload.email,
+				token: expect.any(String),
+			},
+		});
+	});
+
+	test("should return 401 on invalid email", async () => {
+		const signupPayload = {
+			username: "user_invalid_email",
+			password: "password123",
+			email: "invalid@example.com",
+		};
+
+		await api.v2.user.post(signupPayload);
+
+		const { error, status } = await api.v2.session.post({
+			email: "nonexistent@example.com",
+			password: signupPayload.password,
+		});
+
+		expect(status).toBe(401);
+		expect(error?.value).toMatchObject({
+			code: "INVALID_CREDENTIALS",
+		});
+	});
+
+	test("should return 401 on invalid password", async () => {
+		const signupPayload = {
+			username: "user_invalid_pass",
+			password: "password123",
+			email: "wrongpass@example.com",
+		};
+
+		await api.v2.user.post(signupPayload);
+
+		const { error, status } = await api.v2.session.post({
+			email: signupPayload.email,
+			password: "wrongpassword",
+		});
+
+		expect(status).toBe(401);
+		expect(error?.value).toMatchObject({
+			code: "INVALID_CREDENTIALS",
+		});
+	});
+
+	test("should return 422 on missing fields", async () => {
+		// @ts-expect-error it's intended
+		const { error, status } = await api.v2.session.post({});
+
+		expect(status).toBe(422);
+		expect(error?.value).toMatchObject({
+			code: "VALIDATION_ERROR",
+		});
+	});
+});
+
+describe("Logout E2E Tests - DELETE /v2/session", () => {
+	beforeEach(async () => {
+		await prisma.session.deleteMany();
+		await prisma.user.deleteMany();
+	});
+
+	afterAll(async () => {
+		await prisma.session.deleteMany();
+		await prisma.user.deleteMany();
+		await prisma.$disconnect();
+	});
+
+	test("should logout with valid token", async () => {
+		const signupPayload = {
+			username: "logout_user",
+			password: "password123",
+			email: "logout@example.com",
+		};
+
+		const { data: signUpData } = await api.v2.user.post(signupPayload);
+
+		const { status } = await api.v2.session.delete(
+			null,
+			{
+				headers: {
+					authorization: `Bearer ${signUpData?.data.token}`,
+				},
+			}
+		);
+
+		expect(status).toBe(204);
+	});
+
+	test("should return 401 on invalid/expired token", async () => {
+		const { error, status } = await api.v2.session.delete(
+			null,
+			{
+				headers: {
+					authorization: "Bearer invalid.token.format",
+				},
+			}
+		);
+
+		expect(status).toBe(401);
+		expect(error?.value).toMatchObject({
+			code: "UNAUTHORIZED",
+		});
+	});
+});

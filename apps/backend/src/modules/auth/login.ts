@@ -1,42 +1,44 @@
 import { Elysia } from "elysia";
 import { ip } from "elysia-ip";
 import { rateLimit } from "elysia-rate-limit";
-import {
-	betterAuthToSignupUserInfoDto,
-	SignupRequestSchema,
-	signupRequestToBetterAuth,
-	SignupResponseSchema,
-	toSignUpResponse,
-	ErrorResponseSchema,
-	toBetterAuthHeaders
-} from "@project-cvsa/core";
 import { RateLimitError } from "@common/error";
-import { AppError } from "@project-cvsa/core";
-import { auth } from "@project-cvsa/core";
+import {
+	AppError,
+	auth,
+	LoginRequestSchema,
+	LoginResponseSchema,
+	ErrorResponseSchema,
+	betterAuthToLoginUserInfoDto,
+	toLoginResponse,
+    toBetterAuthHeaders,
+} from "@project-cvsa/core";
 
 const DAY = 86400;
 
-export const signupHandler = new Elysia()
+export const loginHandler = new Elysia()
 	.use(ip())
 	.use(
 		rateLimit({
 			scoping: "global",
 			max: 50,
 			duration: 5 * 60 * 1000,
-			generator: () => "", // global limit
+			generator: () => "",
 			errorResponse: new RateLimitError(),
 		})
 	)
 	.post(
-		"/user",
+		"/session",
 		async ({ body, status, headers, cookie: { token: tokenCookie } }) => {
-			const { user, token } = await auth.api.signUpEmail({
-				body: signupRequestToBetterAuth(body),
+			const { user, token } = await auth.api.signInEmail({
+				body: {
+					email: body.email,
+					password: body.password,
+				},
 				headers: toBetterAuthHeaders(headers),
 			});
 
 			if (!token) {
-				throw new AppError("Cannot create user", "INTERNAL_SERVER_ERROR", 500, {
+				throw new AppError("Cannot login", "INTERNAL_SERVER_ERROR", 500, {
 					cause: "Better Auth responded with no token",
 				});
 			}
@@ -47,22 +49,21 @@ export const signupHandler = new Elysia()
 			tokenCookie.secure = true;
 			tokenCookie.sameSite = "lax";
 
-			const userInfo = betterAuthToSignupUserInfoDto(user, token);
-			const response = toSignUpResponse(userInfo);
+			const userInfo = betterAuthToLoginUserInfoDto(user, token);
+			const response = toLoginResponse(userInfo);
 
 			return status(200, response);
 		},
 		{
-			body: SignupRequestSchema,
+			body: LoginRequestSchema,
 			detail: {
-				summary: "User Registration",
+				summary: "User Login",
 				description: "",
 			},
 			response: {
-				200: SignupResponseSchema,
-				400: ErrorResponseSchema,
+				200: LoginResponseSchema,
+				401: ErrorResponseSchema,
 				422: ErrorResponseSchema,
-				500: ErrorResponseSchema,
 			},
 		}
 	);

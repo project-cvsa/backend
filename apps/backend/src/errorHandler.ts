@@ -48,6 +48,19 @@ export const errorHandler: ErrorHandler<{
 				message: error.body?.message,
 			});
 		}
+		if (
+			[
+				"INVALID_CREDENTIALS",
+				"INVALID_EMAIL_OR_PASSWORD",
+				"USER_NOT_FOUND",
+				"EMAIL_NOT_VERIFIED",
+			].includes(error.body?.code || "")
+		) {
+			return getErrorResponse(status, 401, {
+				code: "INVALID_CREDENTIALS",
+				message: error.body?.message,
+			});
+		}
 		return getErrorResponse(status, error.statusCode, {
 			code: error.body?.code || "AUTH_ERROR",
 			message: error.body?.message,
