@@ -4,7 +4,6 @@
 	"module": "index.ts",
 	"scripts": {
 		"gen": "bunx --bun prisma generate",
-		"deploy": "",
 		"migrate": "bunx --bun prisma migrate dev --create-only",
 		"migrate:dev": "bunx --bun prisma migrate dev",
 		"push": "bunx --bun prisma db push",

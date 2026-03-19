@@ -12,6 +12,9 @@
 	"[javascript]": {
 		"editor.defaultFormatter": "biomejs.biome"
 	},
+	"[json]": {
+		"editor.defaultFormatter": "biomejs.biome"
+	},
 	"[prisma]": {
 		"editor.defaultFormatter": "Prisma.prisma"
 	}

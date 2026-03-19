@@ -1,23 +1,5 @@
-import { AppError } from "@project-cvsa/core";
-import { auth } from "@project-cvsa/core";
 import { Elysia } from "elysia";
-import type { User } from "@project-cvsa/db";
-
-type BetterAuthUser = Exclude<Awaited<ReturnType<typeof auth.api.getSession>>, null>["user"];
-
-const convertUser = (user: BetterAuthUser): User => {
-	const { image, roleId } = user;
-	return {
-		...user,
-		image: image || null,
-		roleId: roleId || null,
-		username: user.username || "",
-		displayUsername: user.displayUsername || "",
-	};
-};
-
-const toBetterAuthHeaders = (headers: Record<string, string | undefined>): [string, string][] =>
-	Object.entries(headers).filter((entry): entry is [string, string] => entry[1] !== undefined);
+import { AppError, auth, betterAuthUserToEntity, toBetterAuthHeaders } from "@project-cvsa/core";
 
 export const authMiddleware = new Elysia({ name: "authMiddleware" }).derive(
 	{ as: "scoped" },
@@ -32,7 +14,7 @@ export const authMiddleware = new Elysia({ name: "authMiddleware" }).derive(
 
 		return {
 			session,
-			user: convertUser(session.user) as User,
+			user: betterAuthUserToEntity(session.user),
 		};
 	}
 );
