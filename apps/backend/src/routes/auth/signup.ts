@@ -14,7 +14,6 @@ export const signupHandler = new Elysia()
 			scoping: "global",
 			max: 50,
 			duration: 5 * 60 * 1000,
-			generator: () => "", // global limit
 			errorResponse: new RateLimitError(),
 		})
 	)
