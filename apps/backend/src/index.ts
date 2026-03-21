@@ -2,14 +2,7 @@ import { Elysia } from "elysia";
 import { onAfterHandler } from "./onAfterHandle";
 import { getBindingInfo, logStartup } from "./startMessage";
 import pkg from "../package.json";
-import {
-	authHandler,
-	songDetailsHandler,
-	songCreateHandler,
-	songUpdateHandler,
-	songDeleteHandler,
-	songListHandler,
-} from "@modules/index";
+import { authHandler, songHandler } from "@modules/index";
 import { AppError } from "@project-cvsa/core";
 import { errorHandler } from "./errorHandler";
 
@@ -27,11 +20,7 @@ export const app = new Elysia({
 	})
 	.onError(errorHandler)
 	.use(authHandler)
-	.use(songDetailsHandler)
-	.use(songCreateHandler)
-	.use(songUpdateHandler)
-	.use(songDeleteHandler)
-	.use(songListHandler)
+	.use(songHandler)
 	.use(onAfterHandler)
 	.listen(16412);
 
