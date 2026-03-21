@@ -15,6 +15,7 @@ export const songDeleteHandler = new Elysia({ name: "songDeleteHandler" })
 			}
 			await new SongService().delete(id);
 			set.status = 204;
+			return null;
 		},
 		{
 			detail: {
@@ -22,7 +23,7 @@ export const songDeleteHandler = new Elysia({ name: "songDeleteHandler" })
 				description: "Soft delete a song (authentication required)",
 			},
 			response: {
-				204: z.undefined(),
+				204: z.null(),
 				400: ErrorResponseSchema,
 				401: ErrorResponseSchema,
 				404: ErrorResponseSchema,

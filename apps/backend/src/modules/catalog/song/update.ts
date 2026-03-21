@@ -1,10 +1,8 @@
 import { Elysia } from "elysia";
-import { z } from "zod";
-import { SongService, UpdateSongSchema, ErrorResponseSchema } from "@cvsa/core";
+import { SongService, UpdateSongRequestSchema, ErrorResponseSchema } from "@cvsa/core";
 import { AppError } from "@cvsa/core";
 import { authMiddleware } from "@common/middlewares/auth";
-
-const UpdateSongRequestSchema = UpdateSongSchema;
+import { SongSchema } from "@cvsa/db";
 
 export const songUpdateHandler = new Elysia({ name: "songUpdateHandler" }).use(authMiddleware).put(
 	"/song/:id",
@@ -23,7 +21,7 @@ export const songUpdateHandler = new Elysia({ name: "songUpdateHandler" }).use(a
 			description: "Update an existing song (authentication required)",
 		},
 		response: {
-			200: z.object({}).passthrough(),
+			200: SongSchema,
 			400: ErrorResponseSchema,
 			401: ErrorResponseSchema,
 			404: ErrorResponseSchema,

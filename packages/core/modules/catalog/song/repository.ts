@@ -1,6 +1,6 @@
 import type { Prisma, PrismaClient } from "@cvsa/db";
 import type { SongDetailsDto } from "./dto";
-import type { CreateSongDto, ListSongsQueryDto, SongId, UpdateSongDto } from "./dto";
+import type { CreateSongRequestDto, ListSongsQueryDto, SongId, UpdateSongDto } from "./dto";
 import type { ISongRepository } from "./repository.interface";
 
 export class SongRepository implements ISongRepository {
@@ -69,7 +69,7 @@ export class SongRepository implements ISongRepository {
 		return { songs, total };
 	}
 
-	async create(input: CreateSongDto) {
+	async create(input: CreateSongRequestDto) {
 		return await this.prisma.song.create({
 			data: {
 				type: input.type ?? null,
@@ -82,7 +82,7 @@ export class SongRepository implements ISongRepository {
 		});
 	}
 
-	async createWithRelations(input: CreateSongDto) {
+	async createWithRelations(input: CreateSongRequestDto) {
 		const { performances, creations, ...songData } = input;
 
 		return this.prisma.song.create({

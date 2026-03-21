@@ -1,6 +1,6 @@
 import { prisma } from "@cvsa/core/common";
 import type { SongDetailsDto, SongId, ListSongsQueryDto, ListSongsResponseDto } from "./dto";
-import type { CreateSongDto, UpdateSongDto } from "./dto";
+import type { CreateSongRequestDto, UpdateSongDto } from "./dto";
 import { SongRepository } from "./repository";
 import { AppError } from "@cvsa/core";
 import type { Song } from "@cvsa/db";
@@ -16,7 +16,7 @@ export class SongService {
 		return result;
 	}
 
-	async create(input: CreateSongDto): Promise<Song> {
+	async create(input: CreateSongRequestDto): Promise<Song> {
 		return this.repository.createWithRelations(input);
 	}
 

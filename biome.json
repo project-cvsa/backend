@@ -16,6 +16,14 @@
 		"lineWidth": 100,
 		"formatWithErrors": true
 	},
+	"linter": {
+		"rules": {
+			"suspicious": {
+				"noExplicitAny": "error",
+				"noDeprecatedImports": "error"
+			}
+		}
+	},
 	"javascript": {
 		"formatter": {
 			"enabled": true,

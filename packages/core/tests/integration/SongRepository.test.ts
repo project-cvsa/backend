@@ -2,7 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:tes
 import { PrismaClient } from "@cvsa/db";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { SongRepository } from "@cvsa/core";
-import type { CreateSongDto, UpdateSongDto } from "@cvsa/core";
+import type { CreateSongRequestDto, UpdateSongDto } from "@cvsa/core";
 import { env } from "@cvsa/core/common";
 
 const prisma = new PrismaClient({
@@ -29,7 +29,7 @@ describe("SongRepository Integration Tests", () => {
 
 	describe("create", () => {
 		test("should create a song with all fields", async () => {
-			const input: CreateSongDto = {
+			const input: CreateSongRequestDto = {
 				type: "ORIGINAL",
 				name: "Test Song",
 				duration: 180,
@@ -51,7 +51,7 @@ describe("SongRepository Integration Tests", () => {
 		});
 
 		test("should create a song with minimal fields", async () => {
-			const input: CreateSongDto = {
+			const input: CreateSongRequestDto = {
 				name: "Minimal Song",
 			};
 
