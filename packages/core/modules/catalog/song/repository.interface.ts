@@ -1,4 +1,4 @@
-import type { Song } from "@project-cvsa/db";
+import type { Song } from "@cvsa/db";
 import type { SongDetailsDto } from "./dto";
 import type { CreateSongDto, ListSongsQueryDto, SongId, UpdateSongDto } from "./dto";
 

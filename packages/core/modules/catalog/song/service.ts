@@ -1,9 +1,9 @@
-import { prisma } from "@project-cvsa/core/common";
+import { prisma } from "@cvsa/core/common";
 import type { SongDetailsDto, SongId, ListSongsQueryDto, ListSongsResponseDto } from "./dto";
 import type { CreateSongDto, UpdateSongDto } from "./dto";
 import { SongRepository } from "./repository";
-import { AppError } from "@project-cvsa/core";
-import type { Song } from "@project-cvsa/db";
+import { AppError } from "@cvsa/core";
+import type { Song } from "@cvsa/db";
 
 export class SongService {
 	constructor(private readonly repository: SongRepository = new SongRepository(prisma)) {}

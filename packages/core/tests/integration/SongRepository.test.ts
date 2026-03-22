@@ -1,9 +1,9 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
-import { PrismaClient } from "@project-cvsa/db";
+import { PrismaClient } from "@cvsa/db";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { SongRepository } from "@project-cvsa/core";
-import type { CreateSongDto, UpdateSongDto } from "@project-cvsa/core";
-import { env } from "@project-cvsa/core/common";
+import { SongRepository } from "@cvsa/core";
+import type { CreateSongDto, UpdateSongDto } from "@cvsa/core";
+import { env } from "@cvsa/core/common";
 
 const prisma = new PrismaClient({
 	adapter: new PrismaPg({

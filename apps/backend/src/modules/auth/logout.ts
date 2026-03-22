@@ -1,7 +1,7 @@
 import { Elysia } from "elysia";
 import { z } from "zod";
 import { authMiddleware } from "@common/middlewares";
-import { auth, ErrorResponseSchema, toBetterAuthHeaders } from "@project-cvsa/core";
+import { auth, ErrorResponseSchema, toBetterAuthHeaders } from "@cvsa/core";
 
 export const logoutHandler = new Elysia().use(authMiddleware).delete(
 	"/session",

@@ -1,6 +1,6 @@
 import { describe, expect, test, mock } from "bun:test";
-import { SongService, AppError } from "@project-cvsa/core";
-import type { SongRepository, SongDetailsDto } from "@project-cvsa/core";
+import { SongService, AppError } from "@cvsa/core";
+import type { SongRepository, SongDetailsDto } from "@cvsa/core";
 
 describe("SongService", () => {
 	const mockGetDetailsById = mock<SongRepository["getDetailsById"]>();

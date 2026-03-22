@@ -46,7 +46,7 @@ These rules are absolute. Violation will cause pipeline or runtime failures.
 - **[PROHIBITED]** Inline type assertions: Do not use `as SomeType`, use type annotations.
 - **[PROHIBITED]** `// @ts-ignore` or `// @ts-expect-error` in first-party code. (Only allowed in third-party code if a GitHub issue URL appended).
 - **[PROHIBITED]** Defining local interfaces scoped to a single file for API contracts.
-- **[REQUIRED]** Import database types directly from `@project-cvsa/db` (e.g., `Song`, `Artist`).
+- **[REQUIRED]** Import database types directly from `@cvsa/db` (e.g., `Song`, `Artist`).
 
 ### Validation & Zod
 - **[PROHIBITED]** `z.any()` in any schema.
@@ -70,7 +70,7 @@ These rules are absolute. Violation will cause pipeline or runtime failures.
 ### Import Hierarchy
 Order imports from farthest to closest. Prioritize path aliases
 1. External: Built-in and external NPM packages.
-2. Workspace: Internal packages (`@project-cvsa/core`, `@project-cvsa/db`).
+2. Workspace: Internal packages (`@cvsa/core`, `@cvsa/db`).
 3. Aliases: `@/*`, `@modules/*`, `@common/*` pointing to `./src/`.
 4. **[PROHIBITED]**: relative paths (`../`, `./`, `../../../`, etc.)
 

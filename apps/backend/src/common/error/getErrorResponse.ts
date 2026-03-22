@@ -1,4 +1,4 @@
-import type { ErrorResponseDto } from "@project-cvsa/core";
+import type { ErrorResponseDto } from "@cvsa/core";
 
 // biome-ignore lint/suspicious/noExplicitAny: Utility type
 type StatusFunc = (code: number, response: any) => any;

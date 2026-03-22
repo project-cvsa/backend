@@ -11,14 +11,14 @@
       },
     },
     "apps/backend": {
-      "name": "@project-cvsa/backend",
+      "name": "@cvsa/backend",
       "version": "0.0.1",
       "dependencies": {
         "@better-auth/prisma-adapter": "^1.5.4",
+        "@cvsa/core": "workspace:*",
+        "@cvsa/db": "workspace:*",
         "@elysiajs/eden": "^1.0.5",
         "@prisma/adapter-pg": "^7.4.1",
-        "@project-cvsa/core": "workspace:*",
-        "@project-cvsa/db": "workspace:*",
         "@t3-oss/env-core": "^0.13.10",
         "argon2": "^0.44.0",
         "better-auth": "^1.5.4",
@@ -31,7 +31,7 @@
       },
       "devDependencies": {
         "@biomejs/biome": "^2.4.4",
-        "@project-cvsa/typescript-config": "workspace:*",
+        "@cvsa/typescript-config": "workspace:*",
         "@types/bun": "latest",
       },
       "peerDependencies": {
@@ -39,18 +39,18 @@
       },
     },
     "packages/core": {
-      "name": "@project-cvsa/core",
+      "name": "@cvsa/core",
       "dependencies": {
         "@better-auth/prisma-adapter": "^1.5.5",
-        "@project-cvsa/db": "*",
+        "@cvsa/db": "*",
         "@t3-oss/env-core": "^0.13.10",
         "better-auth": "^1.5.5",
         "nanoid": "^5.1.6",
         "zod": "^4.3.6",
       },
       "devDependencies": {
+        "@cvsa/typescript-config": "workspace:*",
         "@prisma/adapter-pg": "^7.4.1",
-        "@project-cvsa/typescript-config": "workspace:*",
         "@types/bun": "latest",
       },
       "peerDependencies": {
@@ -58,14 +58,14 @@
       },
     },
     "packages/db": {
-      "name": "@project-cvsa/db",
+      "name": "@cvsa/db",
       "dependencies": {
         "@prisma/adapter-pg": "^7.4.1",
         "@prisma/client": "^7.4.1",
         "@types/pg": "^8.16.0",
       },
       "devDependencies": {
-        "@project-cvsa/typescript-config": "workspace:*",
+        "@cvsa/typescript-config": "workspace:*",
         "prisma": "^7.4.1",
         "prisma-json-types-generator": "^4.1.1",
       },
@@ -74,7 +74,7 @@
       },
     },
     "packages/typescript-config": {
-      "name": "@project-cvsa/typescript-config",
+      "name": "@cvsa/typescript-config",
     },
   },
   "packages": {
@@ -125,6 +125,14 @@
     "@chevrotain/types": ["@chevrotain/types@10.5.0", "", {}, "sha512-f1MAia0x/pAVPWH/T73BJVyO2XU5tI4/iE7cnxb7tqdNTNhQI3Uq3XkqcoteTmD4t1aM0LbHCJOhgIDn07kl2A=="],
 
     "@chevrotain/utils": ["@chevrotain/utils@10.5.0", "", {}, "sha512-hBzuU5+JjB2cqNZyszkDHZgOSrUUT8V3dhgRl8Q9Gp6dAj/H5+KILGjbhDpc3Iy9qmqlm/akuOI2ut9VUtzJxQ=="],
+
+    "@cvsa/backend": ["@cvsa/backend@workspace:apps/backend"],
+
+    "@cvsa/core": ["@cvsa/core@workspace:packages/core"],
+
+    "@cvsa/db": ["@cvsa/db@workspace:packages/db"],
+
+    "@cvsa/typescript-config": ["@cvsa/typescript-config@workspace:packages/typescript-config"],
 
     "@electric-sql/pglite": ["@electric-sql/pglite@0.3.15", "", {}, "sha512-Cj++n1Mekf9ETfdc16TlDi+cDDQF0W7EcbyRHYOAeZdsAe8M/FJg18itDTSwyHfar2WIezawM9o0EKaRGVKygQ=="],
 
@@ -179,14 +187,6 @@
     "@prisma/query-plan-executor": ["@prisma/query-plan-executor@7.2.0", "", {}, "sha512-EOZmNzcV8uJ0mae3DhTsiHgoNCuu1J9mULQpGCh62zN3PxPTd+qI9tJvk5jOst8WHKQNwJWR3b39t0XvfBB0WQ=="],
 
     "@prisma/studio-core": ["@prisma/studio-core@0.21.1", "", { "peerDependencies": { "@types/react": "^18.0.0 || ^19.0.0", "react": "^18.0.0 || ^19.0.0", "react-dom": "^18.0.0 || ^19.0.0" } }, "sha512-bOGqG/eMQtKC0XVvcVLRmhWWzm/I+0QUWqAEhEBtetpuS3k3V4IWqKGUONkAIT223DNXJMxMtZp36b1FmcdPeg=="],
-
-    "@project-cvsa/backend": ["@project-cvsa/backend@workspace:apps/backend"],
-
-    "@project-cvsa/core": ["@project-cvsa/core@workspace:packages/core"],
-
-    "@project-cvsa/db": ["@project-cvsa/db@workspace:packages/db"],
-
-    "@project-cvsa/typescript-config": ["@project-cvsa/typescript-config@workspace:packages/typescript-config"],
 
     "@sinclair/typebox": ["@sinclair/typebox@0.34.48", "", {}, "sha512-kKJTNuK3AQOrgjjotVxMrCn1sUJwM76wMszfq1kdU4uYVJjvEWuFQ6HgvLt4Xz3fSmZlTOxJ/Ie13KnIcWQXFA=="],
 
@@ -482,6 +482,8 @@
 
     "zod": ["zod@4.3.6", "", {}, "sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg=="],
 
+    "@cvsa/core/@types/bun": ["@types/bun@1.3.11", "", { "dependencies": { "bun-types": "1.3.11" } }, "sha512-5vPne5QvtpjGpsGYXiFyycfpDF2ECyPcTSsFBMa0fraoxiQyMJ3SmuQIGhzPg2WJuWxVBoxWJ2kClYTcw/4fAg=="],
+
     "@prisma/adapter-pg/@types/pg": ["@types/pg@8.11.11", "", { "dependencies": { "@types/node": "*", "pg-protocol": "*", "pg-types": "^4.0.1" } }, "sha512-kGT1qKM8wJQ5qlawUrEkXgvMSXoV213KfMGXcwfDwUIfUHXqXYXOfS1nE1LINRJVVVx5wCm70XnFlMHaIcQAfw=="],
 
     "@prisma/engines/@prisma/get-platform": ["@prisma/get-platform@7.5.0", "", { "dependencies": { "@prisma/debug": "7.5.0" } }, "sha512-7I+2y1nu/gkEKSiHHbcZ1HPe/euGdEqJZxEEMT0246q4De1+hla0ZzlTgvaT9dHcVCgLSuCG8v39db5qUUWNgw=="],
@@ -497,6 +499,8 @@
     "pg-types/postgres-array": ["postgres-array@2.0.0", "", {}, "sha512-VpZrUqU5A69eQyW2c5CA1jtLecCsN2U/bD6VilrFDWq5+5UIEVO7nazS3TEcHf1zuPYO/sqGvUvW62g86RXZuA=="],
 
     "proper-lockfile/signal-exit": ["signal-exit@3.0.7", "", {}, "sha512-wnD2ZE+l+SPC/uoS0vXeE9L1+0wuaMqKlfz9AMUo38JsyLSBWSFcHR1Rri62LZc12vLr1gb3jl7iwQhgwpAbGQ=="],
+
+    "@cvsa/core/@types/bun/bun-types": ["bun-types@1.3.11", "", { "dependencies": { "@types/node": "*" } }, "sha512-1KGPpoxQWl9f6wcZh57LvrPIInQMn2TQ7jsgxqpRzg+l0QPOFvJVH7HmvHo/AiPgwXy+/Thf6Ov3EdVn1vOabg=="],
 
     "@prisma/adapter-pg/@types/pg/pg-types": ["pg-types@4.1.0", "", { "dependencies": { "pg-int8": "1.0.1", "pg-numeric": "1.0.2", "postgres-array": "~3.0.1", "postgres-bytea": "~3.0.0", "postgres-date": "~2.1.0", "postgres-interval": "^3.0.0", "postgres-range": "^1.1.1" } }, "sha512-o2XFanIMy/3+mThw69O8d4n1E5zsLhdO+OPqswezu7Z5ekP4hYDqlDjlmOpYMbzY2Br0ufCwJLdDIXeNVwcWFg=="],
 

@@ -1,7 +1,7 @@
 import { Elysia } from "elysia";
 import { z } from "zod";
-import { SongService, ErrorResponseSchema, type SongDetailsDto } from "@project-cvsa/core";
-import { AppError } from "@project-cvsa/core";
+import { SongService, ErrorResponseSchema, type SongDetailsDto } from "@cvsa/core";
+import { AppError } from "@cvsa/core";
 
 const SongDetailsResponseSchema: z.ZodType<SongDetailsDto> = z.any();
 

@@ -3,7 +3,7 @@ import { onAfterHandler } from "./onAfterHandle";
 import { getBindingInfo, logStartup } from "./startMessage";
 import pkg from "../package.json";
 import { authHandler, songHandler } from "@modules/index";
-import { AppError } from "@project-cvsa/core";
+import { AppError } from "@cvsa/core";
 import { errorHandler } from "./errorHandler";
 
 const [host, port] = getBindingInfo();

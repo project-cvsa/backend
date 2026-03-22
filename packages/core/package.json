@@ -1,5 +1,5 @@
 {
-	"name": "@project-cvsa/core",
+	"name": "@cvsa/core",
 	"type": "module",
 	"module": "index.ts",
 	"scripts": {
@@ -13,7 +13,7 @@
 	"devDependencies": {
 		"@prisma/adapter-pg": "^7.4.1",
 		"@types/bun": "latest",
-		"@project-cvsa/typescript-config": "workspace:*"
+		"@cvsa/typescript-config": "workspace:*"
 	},
 	"peerDependencies": {
 		"typescript": "^5"
@@ -24,7 +24,7 @@
 	},
 	"dependencies": {
 		"@better-auth/prisma-adapter": "^1.5.5",
-		"@project-cvsa/db": "*",
+		"@cvsa/db": "*",
 		"@t3-oss/env-core": "^0.13.10",
 		"better-auth": "^1.5.5",
 		"nanoid": "^5.1.6",

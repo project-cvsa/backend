@@ -11,7 +11,7 @@ import {
 	betterAuthToLoginUserInfoDto,
 	toLoginResponse,
     toBetterAuthHeaders,
-} from "@project-cvsa/core";
+} from "@cvsa/core";
 
 const DAY = 86400;
 

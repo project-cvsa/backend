@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { Song, Singer, Artist, ArtistRole } from "@project-cvsa/db";
+import type { Song, Singer, Artist, ArtistRole } from "@cvsa/db";
 
 export const SongTypeSchema = z.enum([
 	"ORIGINAL",

@@ -1,6 +1,6 @@
 import { Elysia } from "elysia";
 import { z } from "zod";
-import { SongService, createSongSchema, ErrorResponseSchema } from "@project-cvsa/core";
+import { SongService, createSongSchema, ErrorResponseSchema } from "@cvsa/core";
 import { authMiddleware } from "@common/middlewares/auth";
 
 const CreateSongRequestSchema = createSongSchema;

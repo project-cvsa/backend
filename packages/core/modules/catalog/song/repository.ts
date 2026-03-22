@@ -1,4 +1,4 @@
-import type { Prisma, PrismaClient } from "@project-cvsa/db";
+import type { Prisma, PrismaClient } from "@cvsa/db";
 import type { SongDetailsDto } from "./dto";
 import type { CreateSongDto, ListSongsQueryDto, SongId, UpdateSongDto } from "./dto";
 import type { ISongRepository } from "./repository.interface";

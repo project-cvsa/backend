@@ -1,7 +1,7 @@
 import { ZodError } from "zod";
 import { APIError } from "better-auth";
 import type { ErrorHandler } from "elysia";
-import { AppError } from "@project-cvsa/core";
+import { AppError } from "@cvsa/core";
 import { getErrorResponse } from "@/common/error";
 
 export const errorHandler: ErrorHandler<{

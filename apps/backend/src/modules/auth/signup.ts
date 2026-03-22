@@ -9,10 +9,10 @@ import {
 	toSignUpResponse,
 	ErrorResponseSchema,
 	toBetterAuthHeaders
-} from "@project-cvsa/core";
+} from "@cvsa/core";
 import { RateLimitError } from "@common/error";
-import { AppError } from "@project-cvsa/core";
-import { auth } from "@project-cvsa/core";
+import { AppError } from "@cvsa/core";
+import { auth } from "@cvsa/core";
 
 const DAY = 86400;
 

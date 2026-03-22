@@ -1,7 +1,7 @@
 import { Elysia } from "elysia";
 import { z } from "zod";
-import { SongService, UpdateSongSchema, ErrorResponseSchema } from "@project-cvsa/core";
-import { AppError } from "@project-cvsa/core";
+import { SongService, UpdateSongSchema, ErrorResponseSchema } from "@cvsa/core";
+import { AppError } from "@cvsa/core";
 import { authMiddleware } from "@common/middlewares/auth";
 
 const UpdateSongRequestSchema = UpdateSongSchema;
