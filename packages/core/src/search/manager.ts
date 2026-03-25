@@ -1,7 +1,8 @@
 import { MeiliSearch, type Settings, type RecordAny } from "meilisearch";
 import { env } from "@cvsa/env";
 import { INDEX_SETTINGS } from "./config";
-import { deepEqualUnordered } from "@cvsa/core/internal";
+import { deepEqualUnordered } from "../utils";
+import { appLogger } from "@cvsa/logger";
 
 interface SearchManagerConstructor {
 	client: MeiliSearch;
@@ -42,7 +43,9 @@ export class SearchManager {
 				apiKey: adminKey,
 			});
 			return new SearchManager({ client, adminClient });
-		} catch {
+		} catch (e) {
+			appLogger.warn("Cannot create SearchManager.");
+			appLogger.error(Bun.inspect(e));
 			return;
 		}
 	}
