@@ -3,6 +3,8 @@ name: Deploy Docs to Cloudflare Pages
 on:
   push:
     branches: [main]
+    paths:
+        - 'apps/docs/**'
   workflow_dispatch:
 
 concurrency:
@@ -12,7 +14,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: production 
+    environment: production
 
     steps:
       - name: Checkout
@@ -27,8 +29,8 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Build docs app
-        run: bun run build --filter=docs 
-      
+        run: bun run build --filter=docs
+
       - name: Verify build output
         run: |
           if [ ! -d "apps/docs/out" ]; then

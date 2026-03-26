@@ -37,7 +37,7 @@ docker run \
 
 ## 克隆仓库
 
-档案馆使用单一代码库 (monorepo)。为了参与开发，首先需要从 GitHub 克隆档案馆的代码仓库：
+为了参与开发，首先需要从 GitHub 克隆档案馆的代码仓库：
 
 ```bash
 git clone https://github.com/project-cvsa/cvsa
@@ -56,110 +56,71 @@ git checkout -b feat/alikia-233-some-changes
 
 > 关于分支的命名，参见[流程规范](./workflow.md#分支命名)
 
-之后，进行对应的代码编写。
+之后，进行对应的代码编写。下面的说明信息可能有助于你开发。
 
-在编写完成后，需要在根目录运行 `bun run test`，查看测试情况。  
-如果所有测试通过，最后别忘了运行 `bun lint` 来查看代码是否符合 lint 规则。  
-还可以运行 `bun format` 来确保所有代码都被正确格式化。
+## 目录结构
 
-完成开发后，可以通过 `git commit -a` 提交。这会打开默认文本编辑器，你需要编写恰当的提交信息描述本次提交。
+档案馆使用 monorepo 的方式组织项目，在 `apps` 和 `packages` 下分别有若干个 package。目录结构如下：
+
+```
+cvsa/
+├── apps/
+│   ├── backend/			# 主后端
+│   ├── docs/				# 文档站点
+│   └── web/				# 网站前端
+├── packages/
+│   ├── core/				# 通用代码
+│   ├── db/					# 数据库 schema 与 ORM
+│   └── typescript-config/	# tsconfig（TypeScript）配置
+├── package.json			# 主 package.json 文件
+└── turbo.json				# Turborepo 配置
+```
+
+## 环境变量
+
+每个 package 中通常会有对应的环境变量样例文件 `.env.example`，你需要将它们复制一份，并根据情况修改对应的值：
+
+```bash
+# 复制 core package 的 .env.test 用于测试
+cp packages/core/.env.example packages/core/.env.test
+# 复制 db package 的 .env 用于数据库迁移
+cp packages/db/.env.example packages/db/.env
+# 复制 backend package 的 .env 用于本地测试/部署
+cp apps/backend/.env.example apps/backend/.env
+cp apps/backend/.env.example apps/backend/.env.test
+```
+
+## 数据库配置
+
+环境变量 `DATABASE_URL` 用于指定主数据库的连接字符串。
+在配置好对应的 `.env` 文件后，你需要运行数据库迁移命令：
+
+```bash
+bun run db:deploy
+```
+
+这会将当前的代码库中的迁移记录应用到选定的数据库中。
+
+## 依赖安装与其它命令
+
+在根目录下，运行 `bun i` 以安装所需依赖。
+
+此外，在根目录下，有如下命令可供使用：
+
+```bash
+bun run dev				# 启动每个 package 的开发服务器
+bun run test			# 运行所有 package 的测试
+bun run test:coverage	# 运行测试并报告覆盖率
+bun run lint			# 运行 linter
+bun run format			# 运行代码格式化
+bun run typecheck		# 检查类型错误
+```
+
+你也可以切换到某个 package 内执行对应命令。
+
+## 提交与推送
+
+开发完成后，需要创建对应的提交。代码提交到本地分支后，需要将其推送到 GitHub 远程仓库，并创建 PR 以合并到主分支或开发分支。
 
 > 关于提交信息的编写，参见[流程规范](./workflow.md#提交信息)
-
-## 提交拉取请求
-
-代码提交到本地分支后，需要将其推送到 GitHub 远程仓库，并创建拉取请求（Pull Request，简称 PR）以请求合并到主分支。
-
-### 推送分支
-
-首先，将你的开发分支推送到 GitHub：
-
-```bash
-git push -u origin feat/alikia-233-some-changes
-```
-
-### 创建 PR
-
-前往 GitHub 仓库页面，通常会自动提示你为刚推送的分支创建 PR。如果没有，请手动点击 "New Pull Request" 按钮。
-
-在创建 PR 时，请遵循以下规范：
-
-#### 标题
-
-PR 的标题需要与你最终的 commit message 保持一致。由于我们在合并时将使用 "Squash & Merge" 策略，PR 标题将直接成为合并后主分支上的唯一提交信息。
-
-*   **格式**：`<类型>(<范围>): <简短描述>`
-*   **示例**：`feat(auth): add two-factor authentication support`
-*   **注意**：确保标题清晰、简洁，并能准确概括本次变更的核心内容。
-
-#### 描述
-
-PR 的描述部分应包含足够的信息供审查者（Reviewer）理解变更背景和具体内容。推荐使用以下模板结构：
-
-```markdown
-## Changes
-- 简要列出主要的功能变更或修复点。
-- 可以使用列表形式清晰展示。
-- 例如：
-  - 新增了用户登录的双因素认证接口。
-  - 修复了在高并发下会话过期的问题。
-
-## Related
-- 关联相关的 Issue 编号，使用 `#` 符号引用。
-- 例如：
-  - Closes #123
-  - Related to #456
-
-## Screenshots (Optional)
-- 如果涉及 UI 变更，请提供截图或录屏以辅助审查。
-```
-
-### 代码审查
-
-PR 创建后，项目维护者或其他贡献者将对代码进行审查。你可能需要根据反馈进行修改：
-
-1.  在本地修改代码。
-2.  再次运行测试和 lint 检查 (`bun run test`, `bun lint`, `bun format`)。
-3.  提交新的 commit 并推送到同一分支 (`git push`)。
-4.  GitHub 会自动将新的提交添加到现有的 PR 中。
-
-重复此过程直到所有审查意见得到解决并获得批准（Approval）。
-
-### 合并
-
-当 PR 获得必要的批准且所有自动化检查（CI/CD）通过后，项目维护者将执行合并操作。
-
-档案馆项目对 `develop` 分支使用 **Squash & Merge** 策略：
-
--   **操作方式**：维护者在合并时会选择 "Squash and merge"。
--   **结果**：你在开发分支上的所有 commit 将被压缩（squash）为一个单独的 commit，然后合并到 `develop` 分支。
--   **提交信息**：这个新生成的 commit 的消息将直接采用你的 **PR 标题**。
-
-### 清理分支
-
-PR 合并后，GitHub 通常会提供删除远程分支的选项。建议及时清理已合并的分支，保持仓库整洁：
-
-```bash
-# 删除远程分支
-git push origin --delete feat/alikia-233-some-changes
-
-# 切换回 develop 分支并更新
-git checkout develop
-git pull
-
-# 删除本地开发分支
-git branch -d feat/alikia-233-some-changes
-```
-
-## 常见问题
-
-**Q: 如果我的 PR 落后于 `develop` 分支怎么办？**  
-A: 请在本地执行 `git rebase develop` 来变基你的分支，解决可能出现的冲突，然后强制推送 (`git push --force-with-lease`) 到远程分支。尽量避免使用 `git merge develop`，以保持提交历史的线性整洁。
-
-> 这段是 Qwen 写的，不包对。我现在玩不来 git 了。 ——星寒
-
-**Q: 我可以合并自己的 PR 吗？**  
-A: 通常情况下，不允许作者自行合并 PR。你需要至少一位其他贡献者或维护者的批准。~~话说除了星寒以外我们真的会有人做code review吗~~
-
-**Q: 如果我发现已合并的 PR 引入了 Bug 怎么办？**  
-A: 请立即创建一个新的 Issue 描述该 Bug，并尽可能提供复现步骤。如果需要修复，请创建一个新的 PR 指向该 Issue。
+> 关于 PR 的格式规范，参见[流程规范](./workflow.md#pr-格式)
