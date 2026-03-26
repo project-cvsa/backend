@@ -73,6 +73,33 @@ description: 了解档案馆的开发工作流和相关规范。
     Closes #12
     ```
 
+## PR 格式
+
+### 标题
+
+PR 的标题需要与你最终的 commit message 保持一致。由于我们在开发分支上合并时将使用 "Squash & Merge" 策略，PR 标题将直接成为合并后主分支上的唯一提交信息。
+
+### 描述
+
+PR 的描述部分应包含足够的信息供审查者理解变更背景和具体内容。推荐使用以下模板结构：
+
+```markdown
+## Changes
+- 简要列出主要的功能变更或修复点。
+- 可以使用列表形式清晰展示。
+- 例如：
+	- Added login endpoint with email/password authentication and session token management
+
+## Related
+- 关联相关的 Issue 编号，使用 `#` 符号引用。
+- 例如：
+	- Closes #123
+	- Related to #456
+
+## Screenshots (Optional)
+- 如果涉及 UI 变更，请提供截图或录屏以辅助审查。
+```
+
 ## 类型列表
 
 以下是项目中允许使用的提交与分支类型：

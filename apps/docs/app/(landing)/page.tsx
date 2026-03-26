@@ -22,6 +22,7 @@ export default function Page() {
                     <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extralight tracking-tight mb-6 leading-[1.1]">
                         {titleWords.map((word, index) => (
                             <span
+                                // biome-ignore lint/suspicious/noArrayIndexKey: fine for this case
                                 key={index}
                                 className="inline-block mr-[0.25em] animate-blur-in"
                                 style={{ animationDelay: `${1200 + index * 100}ms` }}
@@ -32,7 +33,7 @@ export default function Page() {
                     </h1>
 
                     <p
-                        className="text-black/70 dark:text-white/60 text-lg 
+                        className="text-black/70 dark:text-white/60 text-lg
                             lg:text-xl mb-10 leading-relaxed max-w-2xl"
                     >
                         <Description />

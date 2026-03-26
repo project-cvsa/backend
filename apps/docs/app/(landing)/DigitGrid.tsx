@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from "react";
 export const DigitGrid = () => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const [isLargeScreen, setIsLargeScreen] = useState<boolean>(true);
-    // 新增：主题状态
     const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
 
     const cellWidth = 8;
@@ -17,17 +16,13 @@ export const DigitGrid = () => {
     const introStartTimeRef = useRef<number | null>(null);
 
     useEffect(() => {
-        // 1. 主题检测逻辑
         const themeQuery = window.matchMedia("(prefers-color-scheme: dark)");
         const checkTheme = () => {
-            // 如果你使用了 Tailwind 的 .dark 类切换，请取消注释下面这行：
-            // setIsDarkMode(document.documentElement.classList.contains("dark"));
             setIsDarkMode(themeQuery.matches);
         };
 
         checkTheme();
         themeQuery.addEventListener("change", checkTheme);
-        // 如果是手动切换 class 的模式，建议加一个 MutationObserver 监听 html 标签
 
         const checkScreenSize = () => {
             setIsLargeScreen(window.innerWidth >= MOBILE_THRESHOLD);
@@ -48,7 +43,7 @@ export const DigitGrid = () => {
         let lastMouseTick = 0;
         const gridFps = 12;
         const gridInterval = 1000 / gridFps;
-        const mouseFps = 24;
+        const mouseFps = 30;
         const mouseInterval = 1000 / mouseFps;
 
         let charMatrix: string[][] = [];
@@ -60,7 +55,9 @@ export const DigitGrid = () => {
         const mousePos = { x: 0, y: 0 };
         const lastMousePos = { x: 0, y: 0 };
         const mouseCellOpacities = new Map<string, number>();
-        const mouseBrushRadius = 4;
+		const mouseBrushRadius = 4;
+		const idleOpacity = isDarkMode ? 0.04 : 0.02;
+        const scaleFactor = cellHeight / cellWidth;
 
         const generateChar = () => Math.floor(Math.random() * 16).toString(16);
 
@@ -91,8 +88,7 @@ export const DigitGrid = () => {
                 const tailLength = Math.PI * 1.2;
                 const glow = Math.max(0, 1 - diff / tailLength);
                 const baseOpacity = 0.12 + 0.8 * glow ** 3;
-
-                for (let dc = -brushRadius; dc <= brushRadius; dc++) {
+                for (let dc = -Math.round(brushRadius * scaleFactor); dc <= Math.round(brushRadius * scaleFactor); dc++) {
                     for (let dr = -brushRadius; dr <= brushRadius; dr++) {
                         const distSq = dc * dc + dr * dr;
                         if (distSq > brushRadius * brushRadius) continue;
@@ -129,7 +125,6 @@ export const DigitGrid = () => {
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
 
-            // 2. 根据主题选择颜色基准 (黑色模式下用白色文字，反之亦然)
             const colorBase = isDarkMode ? "255, 255, 255" : "0, 0, 0";
 
             if (introStartTimeRef.current === null) introStartTimeRef.current = currentTime;
@@ -166,11 +161,11 @@ export const DigitGrid = () => {
                 if (!charMatrix[c]) continue;
                 for (let r = 0; r < rows; r++) {
                     const xPos = c * cellWidth + cellWidth / 2;
-                    const yPos = r * cellHeight + cellHeight / 2;
+					const yPos = r * cellHeight + cellHeight / 2;
 
-                    const gridOp = cachedGridOpacities.get(`${c},${r}`) || 0.02;
+					const gridOp = cachedGridOpacities.get(`${c},${r}`) || idleOpacity;
                     const mouseOp = mouseCellOpacities.get(`${c},${r}`) || 0;
-                    const baseLogicOpacity = Math.max(gridOp, mouseOp, 0.02);
+                    const baseLogicOpacity = Math.max(gridOp, mouseOp, idleOpacity);
 
                     let finalOpacity = baseLogicOpacity;
 
@@ -191,9 +186,10 @@ export const DigitGrid = () => {
                             finalOpacity = Math.max(baseLogicOpacity, waveIntensity);
                         }
                         if (elapsed < ignitionDuration) finalOpacity *= elapsed / ignitionDuration;
-                    }
+					}
 
-                    // 3. 应用动态颜色
+					if (finalOpacity <= idleOpacity) continue;
+
                     ctx.fillStyle = `rgba(${colorBase}, ${finalOpacity})`;
                     ctx.fillText(charMatrix[c][r], xPos, yPos);
                 }
@@ -232,7 +228,6 @@ export const DigitGrid = () => {
                         const lerpY = lastMousePos.y + dy * (s / steps);
                         const mCol = Math.floor(lerpX / cellWidth);
                         const mRow = Math.floor(lerpY / cellHeight);
-                        const scaleFactor = cellHeight / cellWidth;
                         for (
                             let dc = -Math.round(mouseBrushRadius * scaleFactor);
                             dc <= Math.round(mouseBrushRadius * scaleFactor);
@@ -308,7 +303,7 @@ export const DigitGrid = () => {
             window.removeEventListener("resize", checkScreenSize);
             window.removeEventListener("mousemove", handleMouseMove);
         };
-    }, [isLargeScreen, isDarkMode]); // 当主题变化时重新运行逻辑
+    }, [isLargeScreen, isDarkMode]);
 
     if (!isLargeScreen) return null;
 
