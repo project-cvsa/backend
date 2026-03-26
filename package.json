@@ -13,7 +13,8 @@
 		"format": "biome format --write .",
 		"test": "bunx --bun turbo run test",
 		"test:coverage": "bunx --bun turbo run test:coverage",
-		"typecheck": "bunx --bun turbo typecheck"
+		"typecheck": "bunx --bun turbo typecheck",
+		"db:deploy": "bunx --bun turbo db:deploy"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.8",

@@ -7,6 +7,7 @@
 		"migrate": "bunx --bun prisma migrate dev --create-only",
 		"migrate:dev": "bunx --bun prisma migrate dev",
 		"push": "bunx --bun prisma db push",
+		"db:deploy": "bunx --bun prisma migrate deploy",
 		"test:setup": "NODE_ENV=test bunx --bun prisma migrate reset --force",
 		"studio": "bunx --bun prisma studio",
 		"typecheck": "bunx --bun tsc --noEmit"
