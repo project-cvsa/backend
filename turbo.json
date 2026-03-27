@@ -15,6 +15,7 @@
 		},
 		"lint": {},
 		"test": {},
-		"test:coverage": {}
+		"test:coverage": {},
+		"db:deploy": {}
 	}
 }
