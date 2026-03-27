@@ -15,9 +15,6 @@
 		"@types/bun": "latest",
 		"@cvsa/typescript-config": "workspace:*"
 	},
-	"peerDependencies": {
-		"typescript": "^5"
-	},
 	"dependencies": {
 		"@better-auth/prisma-adapter": "^1.5.4",
 		"@elysiajs/eden": "^1.0.5",

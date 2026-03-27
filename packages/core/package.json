@@ -15,9 +15,6 @@
 		"@types/bun": "latest",
 		"@cvsa/typescript-config": "workspace:*"
 	},
-	"peerDependencies": {
-		"typescript": "^5"
-	},
 	"exports": {
 		".": "./index.ts",
 		"./common": "./common/internal.ts"
@@ -28,6 +25,7 @@
 		"@t3-oss/env-core": "^0.13.10",
 		"better-auth": "^1.5.5",
 		"nanoid": "^5.1.6",
+		"remeda": "^2.33.6",
 		"zod": "^4.3.6"
 	}
 }

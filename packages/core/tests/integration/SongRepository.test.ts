@@ -2,7 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:tes
 import { PrismaClient } from "@cvsa/db";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { SongRepository } from "@cvsa/core";
-import type { CreateSongRequestDto, UpdateSongDto } from "@cvsa/core";
+import type { CreateSongRequestDto, UpdateSongRequestDto } from "@cvsa/core";
 import { env } from "@cvsa/core/common";
 
 const prisma = new PrismaClient({
@@ -146,7 +146,7 @@ describe("SongRepository Integration Tests", () => {
 		test("should update all fields", async () => {
 			const created = await repository.create({ name: "Old Name", type: "ORIGINAL" });
 
-			const input: UpdateSongDto = {
+			const input: UpdateSongRequestDto = {
 				name: "New Name",
 				type: "COVER",
 				duration: 200,

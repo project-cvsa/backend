@@ -1,6 +1,6 @@
 import { describe, expect, test, mock } from "bun:test";
 import { SongService, AppError } from "@cvsa/core";
-import type { SongRepository, SongDetailsDto } from "@cvsa/core";
+import type { SongRepository, SongDetailsResponseDto } from "@cvsa/core";
 
 describe("SongService", () => {
 	const mockGetDetailsById = mock<SongRepository["getDetailsById"]>();
@@ -9,7 +9,7 @@ describe("SongService", () => {
 	} as unknown as SongRepository;
 	const songService = new SongService(mockRepository);
 
-	const mockSongDetails: SongDetailsDto = {
+	const mockSongDetails: SongDetailsResponseDto = {
 		id: 1,
 		type: "ORIGINAL",
 		name: "Test Song",
@@ -30,6 +30,7 @@ describe("SongService", () => {
 		moegirlId: null,
 		singers: [],
 		artists: [],
+		lyrics: []
 	};
 
 	describe("getDetails", () => {
