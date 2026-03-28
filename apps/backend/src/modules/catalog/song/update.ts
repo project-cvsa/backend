@@ -1,5 +1,5 @@
 import { Elysia } from "elysia";
-import { SongService, UpdateSongRequestSchema, ErrorResponseSchema } from "@cvsa/core";
+import { UpdateSongRequestSchema, ErrorResponseSchema, songService } from "@cvsa/core";
 import { AppError } from "@cvsa/core";
 import { authMiddleware } from "@common/middlewares/auth";
 import { SongSchema } from "@cvsa/db";
@@ -11,7 +11,7 @@ export const songUpdateHandler = new Elysia({ name: "songUpdateHandler" }).use(a
 		if (Number.isNaN(id)) {
 			throw new AppError("Invalid song ID", "VALIDATION_ERROR", 400);
 		}
-		const song = await new SongService().update(id, body);
+		const song = await songService.update(id, body);
 		return song;
 	},
 	{

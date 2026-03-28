@@ -1,17 +1,25 @@
 import type { Prisma, PrismaClient } from "@cvsa/db";
-import type { SongDetailsResponseDto } from "./dto";
-import type { CreateSongRequestDto, ListSongsQueryDto, SongId, UpdateSongRequestDto } from "./dto";
+import type {
+	CreateSongRequestDto,
+	ListSongsQueryDto,
+	SongId,
+	UpdateSongRequestDto,
+	SongDetailsResponseDto,
+} from "./dto";
 import type { ISongRepository } from "./repository.interface";
+import type { TxClient } from "@cvsa/core/common";
 
 export class SongRepository implements ISongRepository {
 	constructor(private readonly prisma: PrismaClient) {}
 
-	async getById(id: SongId) {
-		return this.prisma.song.findFirst({ where: { id, deletedAt: null } });
+	async getById(id: SongId, tx?: TxClient) {
+		const client = tx ?? this.prisma;
+		return client.song.findFirst({ where: { id, deletedAt: null } });
 	}
 
-	async getDetailsById(id: SongId): Promise<SongDetailsResponseDto | null> {
-		const data = await this.prisma.song.findFirst({
+	async getDetailsById(id: SongId, tx?: TxClient): Promise<SongDetailsResponseDto | null> {
+		const client = tx ?? this.prisma;
+		const data = await client.song.findFirst({
 			where: { id, deletedAt: null },
 			include: {
 				performances: {
@@ -49,7 +57,8 @@ export class SongRepository implements ISongRepository {
 		};
 	}
 
-	async list(query: ListSongsQueryDto = {}) {
+	async list(query: ListSongsQueryDto = {}, tx?: TxClient) {
+		const client = tx ?? this.prisma;
 		const { offset: skip = 0, limit: take = 50, type, search } = query;
 
 		const where: Prisma.SongWhereInput = {
@@ -65,22 +74,23 @@ export class SongRepository implements ISongRepository {
 		}
 
 		const [songs, total] = await Promise.all([
-			this.prisma.song.findMany({
+			client.song.findMany({
 				where,
 				skip,
 				take,
 				orderBy: { createdAt: "desc" },
 			}),
-			this.prisma.song.count({ where }),
+			client.song.count({ where }),
 		]);
 
 		return { songs, total };
 	}
 
-	async create(input: CreateSongRequestDto) {
+	async create(input: CreateSongRequestDto, tx?: TxClient) {
+		const client = tx ?? this.prisma;
 		const { performances, creations, ...songData } = input;
 
-		return this.prisma.song.create({
+		return client.song.create({
 			data: {
 				type: songData.type ?? null,
 				name: songData.name ?? null,
@@ -101,7 +111,8 @@ export class SongRepository implements ISongRepository {
 		});
 	}
 
-	async update(id: SongId, input: UpdateSongRequestDto) {
+	async update(id: SongId, input: UpdateSongRequestDto, tx?: TxClient) {
+		const client = tx ?? this.prisma;
 		const songData = input;
 
 		const data: Prisma.SongUpdateInput = {
@@ -113,13 +124,14 @@ export class SongRepository implements ISongRepository {
 			...(songData.publishedAt !== undefined ? { publishedAt: songData.publishedAt } : {}),
 		};
 
-		return this.prisma.song.update({
+		return client.song.update({
 			where: { id },
 			data,
 		});
 	}
 
-	async softDelete(id: SongId) {
-		await this.prisma.song.update({ where: { id }, data: { deletedAt: new Date() } });
+	async softDelete(id: SongId, tx?: TxClient) {
+		const client = tx ?? this.prisma;
+		await client.song.update({ where: { id }, data: { deletedAt: new Date() } });
 	}
 }

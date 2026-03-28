@@ -1,18 +1,18 @@
-import { prisma } from "@cvsa/core/common";
+import { pick, map } from "remeda";
+import { AppError } from "@cvsa/core";
+import type { Song } from "@cvsa/db";
 import type {
 	SongDetailsResponseDto,
 	SongId,
 	ListSongsQueryDto,
 	ListSongsResponseDto,
+	CreateSongRequestDto,
+	UpdateSongRequestDto,
 } from "./dto";
-import type { CreateSongRequestDto, UpdateSongRequestDto } from "./dto";
-import { SongRepository } from "./repository";
-import { AppError } from "@cvsa/core";
-import type { Song } from "@cvsa/db";
-import { pick, map } from "remeda";
+import type { ISongRepository } from "./repository.interface";
 
 export class SongService {
-	constructor(private readonly repository: SongRepository = new SongRepository(prisma)) {}
+	constructor(private readonly repository: ISongRepository) {}
 
 	async getDetails(id: SongId): Promise<SongDetailsResponseDto> {
 		const result = await this.repository.getDetailsById(id);

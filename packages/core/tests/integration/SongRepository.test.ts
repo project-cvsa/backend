@@ -1,17 +1,8 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
-import { PrismaClient } from "@cvsa/db";
-import { PrismaPg } from "@prisma/adapter-pg";
-import { SongRepository } from "@cvsa/core";
-import type { CreateSongRequestDto, UpdateSongRequestDto } from "@cvsa/core";
-import { env } from "@cvsa/core/common";
+import { songRepository, type CreateSongRequestDto, type UpdateSongRequestDto } from "@cvsa/core";
+import { prisma } from "@cvsa/core/common";
 
-const prisma = new PrismaClient({
-	adapter: new PrismaPg({
-		connectionString: env.DATABASE_URL,
-	}),
-});
-
-const repository = new SongRepository(prisma);
+const repository = songRepository;
 
 describe("SongRepository Integration Tests", () => {
 	beforeAll(async () => {
