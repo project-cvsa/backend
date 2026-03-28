@@ -11,7 +11,7 @@ import {
 	betterAuthToLoginUserInfoDto,
 	toLoginResponse,
     toBetterAuthHeaders,
-} from "@project-cvsa/core";
+} from "@cvsa/core";
 
 const DAY = 86400;
 
@@ -19,7 +19,7 @@ export const loginHandler = new Elysia()
 	.use(ip())
 	.use(
 		rateLimit({
-			scoping: "global",
+			scoping: "scoped",
 			max: 50,
 			duration: 5 * 60 * 1000,
 			generator: () => "",

@@ -1,63 +1,39 @@
 import { z } from "zod";
-import type { Song, Singer, Artist, ArtistRole } from "@project-cvsa/db";
-
-export const SongTypeSchema = z.enum([
-	"ORIGINAL",
-	"COVER",
-	"REMIX",
-	"REMASTER",
-	"MASHUP",
-	"INSTRUMENTAL",
-	"OTHERS",
-]);
+import { SongSchema, SingerSchema, ArtistSchema, ArtistRoleSchema, SongTypeSchema } from "@cvsa/db";
 
 export type SongId = number;
 
-// Performance DTOs
-export const CreatePerformanceSchema = z.object({
-	singerId: z.number().int().positive(),
-	voicebankId: z.number().int().positive().nullable().optional(),
-	svsEngineId: z.number().int().positive().nullable().optional(),
-	svsEngineVersionId: z.number().int().positive().nullable().optional(),
+const CreateCreationSchema = z.object({
+	artistId: z.int().positive(),
+	roleId: z.int().positive(),
 });
 
-export type CreatePerformanceDto = z.infer<typeof CreatePerformanceSchema>;
-
-// Creation DTOs
-export const CreateCreationSchema = z.object({
-	artistId: z.number().int().positive(),
-	roleId: z.number().int().positive(),
+const CreatePerformanceSchema = z.object({
+	singerId: z.int().positive(),
+	voicebankId: z.int().positive().nullable().optional(),
+	svsEngineId: z.int().positive().nullable().optional(),
+	svsEngineVersionId: z.int().positive().nullable().optional(),
 });
 
-export type CreateCreationDto = z.infer<typeof CreateCreationSchema>;
-
-// Song with relations DTOs
-export const createSongSchema = z.object({
+export const CreateSongRequestSchema = z.object({
 	type: SongTypeSchema.nullable().optional(),
 	name: z.string().nullable().optional(),
 	duration: z.number().nullable().optional(),
 	description: z.string().nullable().optional(),
-	coverUrl: z.string().url().nullable().optional(),
+	coverUrl: z.url().nullable().optional(),
 	publishedAt: z.date().nullable().optional(),
 	performances: z.array(CreatePerformanceSchema).optional(),
 	creations: z.array(CreateCreationSchema).optional(),
 });
 
-export type CreateSongDto = z.infer<typeof createSongSchema>;
-
-export const UpdateSongSchema = z.object({
-	type: SongTypeSchema.nullable().optional(),
+export const UpdateSongRequestSchema = z.object({
 	name: z.string().nullable().optional(),
-	duration: z.number().nullable().optional(),
+	type: SongTypeSchema.nullable().optional(),
+	duration: z.int().nullable().optional(),
 	description: z.string().nullable().optional(),
-	coverUrl: z.string().url().nullable().optional(),
-	publishedAt: z.date().nullable().optional(),
-	deletedAt: z.date().nullable().optional(),
-	performances: z.array(CreatePerformanceSchema).optional(),
-	creations: z.array(CreateCreationSchema).optional(),
+	coverUrl: z.url().nullable().optional(),
+	publishedAt: z.date().nullable().optional()
 });
-
-export type UpdateSongDto = z.infer<typeof UpdateSongSchema>;
 
 export const ListSongsQuerySchema = z.object({
 	search: z.string().optional(),
@@ -66,8 +42,6 @@ export const ListSongsQuerySchema = z.object({
 	limit: z.coerce.number().int().min(1).max(100).optional(),
 });
 
-export type ListSongsQueryDto = z.infer<typeof ListSongsQuerySchema>;
-
 export const ListSongsResponseSchema = z.object({
 	songs: z.array(
 		z.object({
@@ -75,11 +49,8 @@ export const ListSongsResponseSchema = z.object({
 			type: SongTypeSchema.nullable(),
 			name: z.string().nullable(),
 			duration: z.number().nullable(),
-			description: z.string().nullable(),
-			coverUrl: z.string().url().nullable(),
+			coverUrl: z.url().nullable(),
 			publishedAt: z.date().nullable(),
-			createdAt: z.date(),
-			updatedAt: z.date(),
 		})
 	),
 	total: z.number(),
@@ -87,11 +58,23 @@ export const ListSongsResponseSchema = z.object({
 	limit: z.number(),
 });
 
-export type ListSongsResponseDto = z.infer<typeof ListSongsResponseSchema>;
+export const SongDetailsResponseSchema = z.intersection(
+	SongSchema,
+	z.object({
+		singers: SingerSchema.array(),
+		artists: z.intersection(ArtistSchema, z.object({ role: ArtistRoleSchema })).array(),
+		lyrics: z.array(
+			z.object({
+				plainText: z.string().nullable(),
+				isTranslated: z.boolean(),
+				language: z.string().nullable(),
+			})
+		),
+	})
+);
 
-export type SongDetailsDto = Song & {
-	singers: Singer[];
-	artists: (Artist & {
-		role: ArtistRole;
-	})[];
-};
+export type CreateSongRequestDto = z.infer<typeof CreateSongRequestSchema>;
+export type UpdateSongRequestDto = z.infer<typeof UpdateSongRequestSchema>;
+export type ListSongsResponseDto = z.infer<typeof ListSongsResponseSchema>;
+export type ListSongsQueryDto = z.infer<typeof ListSongsQuerySchema>;
+export type SongDetailsResponseDto = z.infer<typeof SongDetailsResponseSchema>;

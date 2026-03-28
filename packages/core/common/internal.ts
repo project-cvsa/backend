@@ -1,6 +1,6 @@
 /**
  * Internal entry point for the core package.
- * * Provides access to internal members and objects from `@project-cvsa/core/common`
+ * * Provides access to internal members and objects from `@cvsa/core/common`
  * that are intended for internal use only and are not part of the public API.
  */
 

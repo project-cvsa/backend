@@ -1,5 +1,5 @@
 import { Elysia } from "elysia";
-import { SongService, ListSongsQuerySchema, ListSongsResponseSchema } from "@project-cvsa/core";
+import { SongService, ListSongsQuerySchema, ListSongsResponseSchema } from "@cvsa/core";
 
 export const songListHandler = new Elysia({ name: "songListHandler" }).get(
 	"/song",

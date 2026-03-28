@@ -1,7 +1,6 @@
 {
-	"extends": "@project-cvsa/typescript-config/base.json",
+	"extends": "@cvsa/typescript-config/base.json",
 	"compilerOptions": {
-		"baseUrl": ".",
 		"paths": {
 			"@/*": ["./src/*"],
 			"@modules/*": ["./src/modules/*"],

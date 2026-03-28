@@ -1,9 +1,9 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
-import { PrismaClient } from "@project-cvsa/db";
+import { PrismaClient } from "@cvsa/db";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { SongRepository } from "@project-cvsa/core";
-import type { CreateSongDto, UpdateSongDto } from "@project-cvsa/core";
-import { env } from "@project-cvsa/core/common";
+import { SongRepository } from "@cvsa/core";
+import type { CreateSongRequestDto, UpdateSongRequestDto } from "@cvsa/core";
+import { env } from "@cvsa/core/common";
 
 const prisma = new PrismaClient({
 	adapter: new PrismaPg({
@@ -29,7 +29,7 @@ describe("SongRepository Integration Tests", () => {
 
 	describe("create", () => {
 		test("should create a song with all fields", async () => {
-			const input: CreateSongDto = {
+			const input: CreateSongRequestDto = {
 				type: "ORIGINAL",
 				name: "Test Song",
 				duration: 180,
@@ -51,7 +51,7 @@ describe("SongRepository Integration Tests", () => {
 		});
 
 		test("should create a song with minimal fields", async () => {
-			const input: CreateSongDto = {
+			const input: CreateSongRequestDto = {
 				name: "Minimal Song",
 			};
 
@@ -146,7 +146,7 @@ describe("SongRepository Integration Tests", () => {
 		test("should update all fields", async () => {
 			const created = await repository.create({ name: "Old Name", type: "ORIGINAL" });
 
-			const input: UpdateSongDto = {
+			const input: UpdateSongRequestDto = {
 				name: "New Name",
 				type: "COVER",
 				duration: 200,

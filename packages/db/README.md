@@ -1,4 +1,4 @@
-# @project-cvsa/db
+# @cvsa/db
 
 ## Available Scripts
 

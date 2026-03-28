@@ -3,7 +3,7 @@ import {
 	CurrentUserInfoSchema,
 	betterAuthToCurrentUserInfoDto,
 	ErrorResponseSchema,
-} from "@project-cvsa/core";
+} from "@cvsa/core";
 import { authMiddleware } from "@common/middlewares";
 
 export const getCurrentUserHandler = new Elysia().use(authMiddleware).get(

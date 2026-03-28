@@ -1,26 +1,12 @@
 import { Elysia } from "elysia";
-import { z } from "zod";
-import { SongService, ErrorResponseSchema, type SongDetailsDto } from "@project-cvsa/core";
-import { AppError } from "@project-cvsa/core";
-
-const SongDetailsResponseSchema: z.ZodType<SongDetailsDto> = z.any();
+import { SongService, ErrorResponseSchema, SongDetailsResponseSchema } from "@cvsa/core";
+import z from "zod";
 
 export const songDetailsHandler = new Elysia().get(
 	"/song/:id/details",
-	async ({ params, status }) => {
-		const id = Number(params.id);
-		try {
-			const song = await new SongService().getDetails(id);
-			return song;
-		} catch (e) {
-			if (e instanceof AppError && e.code === "NOT_FOUND") {
-				return status(404, {
-					code: e.code,
-					message: e.message,
-				});
-			}
-			throw e;
-		}
+	async ({ params }) => {
+		const song = await new SongService().getDetails(params.id);
+		return song;
 	},
 	{
 		detail: {
@@ -29,7 +15,11 @@ export const songDetailsHandler = new Elysia().get(
 		},
 		response: {
 			200: SongDetailsResponseSchema,
+			400: ErrorResponseSchema,
 			404: ErrorResponseSchema,
 		},
+		params: z.object({
+			id: z.int().positive(),
+		}),
 	}
 );

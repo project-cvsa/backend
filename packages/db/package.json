@@ -1,5 +1,5 @@
 {
-	"name": "@project-cvsa/db",
+	"name": "@cvsa/db",
 	"type": "module",
 	"module": "index.ts",
 	"scripts": {
@@ -13,16 +13,15 @@
 		"typecheck": "bunx --bun tsc --noEmit"
 	},
 	"devDependencies": {
-		"prisma": "^7.4.1",
-		"prisma-json-types-generator": "^4.1.1",
-		"@project-cvsa/typescript-config": "workspace:*"
-	},
-	"peerDependencies": {
-		"typescript": "^5"
+		"@cvsa/prisma-zod": "^3.3.0",
+		"@cvsa/typescript-config": "workspace:*",
+		"prisma": "^7.6.0",
+		"prisma-json-types-generator": "^4.1.1"
 	},
 	"dependencies": {
-		"@prisma/adapter-pg": "^7.4.1",
-		"@prisma/client": "^7.4.1",
-		"@types/pg": "^8.16.0"
+		"@prisma/adapter-pg": "^7.6.0",
+		"@prisma/client": "^7.6.0",
+		"@types/pg": "^8.16.0",
+		"zod": "^4.3.6"
 	}
 }

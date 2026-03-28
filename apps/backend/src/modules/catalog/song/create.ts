@@ -1,9 +1,7 @@
 import { Elysia } from "elysia";
-import { z } from "zod";
-import { SongService, createSongSchema, ErrorResponseSchema } from "@project-cvsa/core";
+import { SongService, CreateSongRequestSchema, ErrorResponseSchema } from "@cvsa/core";
 import { authMiddleware } from "@common/middlewares/auth";
-
-const CreateSongRequestSchema = createSongSchema;
+import { SongSchema } from "@cvsa/db";
 
 export const songCreateHandler = new Elysia({ name: "songCreateHandler" }).use(authMiddleware).post(
 	"/song",
@@ -18,7 +16,7 @@ export const songCreateHandler = new Elysia({ name: "songCreateHandler" }).use(a
 			description: "Create a new song (authentication required)",
 		},
 		response: {
-			201: z.object({}).passthrough(),
+			201: SongSchema,
 			401: ErrorResponseSchema,
 		},
 	}
