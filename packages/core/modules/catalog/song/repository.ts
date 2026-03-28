@@ -42,8 +42,8 @@ export class SongRepository implements ISongRepository {
 				return {
 					plainText: item.plainText,
 					language: item.language,
-					isTranslated: item.isTranslated
-				}
+					isTranslated: item.isTranslated,
+				};
 			}),
 			...song,
 		};
@@ -102,31 +102,16 @@ export class SongRepository implements ISongRepository {
 	}
 
 	async update(id: SongId, input: UpdateSongRequestDto) {
-		const { performances, creations, ...songData } = input;
+		const songData = input;
 
 		const data: Prisma.SongUpdateInput = {
-			...(songData.type && { type: songData.type }),
-			...(songData.name && { name: songData.name }),
-			...(songData.duration && { duration: songData.duration }),
-			...(songData.description && { description: songData.description }),
-			...(songData.coverUrl && { coverUrl: songData.coverUrl }),
-			...(songData.publishedAt && { publishedAt: songData.publishedAt }),
+			...(songData.type !== undefined ? { type: songData.type } : {}),
+			...(songData.name !== undefined ? { name: songData.name } : {}),
+			...(songData.duration !== undefined ? { duration: songData.duration } : {}),
+			...(songData.description !== undefined ? { description: songData.description } : {}),
+			...(songData.coverUrl !== undefined ? { coverUrl: songData.coverUrl } : {}),
+			...(songData.publishedAt !== undefined ? { publishedAt: songData.publishedAt } : {}),
 		};
-
-		if (performances !== undefined) {
-			data.performances = {
-				create: performances,
-			};
-		}
-
-		if (creations !== undefined) {
-			data.creations = {
-				create: creations.map((c) => ({
-					artistId: c.artistId,
-					artistRoleId: c.roleId,
-				})),
-			};
-		}
 
 		return this.prisma.song.update({
 			where: { id },

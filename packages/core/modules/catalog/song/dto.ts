@@ -32,9 +32,7 @@ export const UpdateSongRequestSchema = z.object({
 	duration: z.int().nullable().optional(),
 	description: z.string().nullable().optional(),
 	coverUrl: z.url().nullable().optional(),
-	publishedAt: z.date().nullable().optional(),
-	performances: z.array(CreatePerformanceSchema).optional(),
-	creations: z.array(CreateCreationSchema).optional(),
+	publishedAt: z.date().nullable().optional()
 });
 
 export const ListSongsQuerySchema = z.object({

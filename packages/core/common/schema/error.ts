@@ -12,6 +12,7 @@ const errorCodes = [
 	"INVALID_EMAIL_OR_PASSWORD",
 	"USER_NOT_FOUND",
 	"EMAIL_NOT_VERIFIED",
+	"UNAUTHORIZED",
 ] as const;
 
 export const ErrorResponseSchema = z.object({
