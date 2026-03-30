@@ -11,9 +11,9 @@ type BetterAuthSignupRequestBody = Exclude<
 >["body"];
 
 export const SignupRequestSchema = z.object({
-	username: z.string().min(1),
+	username: z.string().min(1).max(100),
 	password: z.string().min(8),
-	displayName: z.string().max(100).optional().nullable(),
+	displayName: z.string().min(1).max(100).optional().nullable(),
 	email: z.email().optional().nullable(),
 });
 
@@ -30,7 +30,7 @@ export const CurrentUserInfoSchema = z.object({
 	username: z.string(),
 	displayName: z.string().optional().nullable(),
 	email: z.email().optional().nullable(),
-	createdAt: z.date().optional().nullable(),
+	createdAt: z.iso.datetime().nullish(),
 	image: z.string().optional().nullable(),
 });
 
@@ -44,10 +44,12 @@ export type SignupUserInfoDto = z.infer<typeof SignupUserInfoSchema>;
 export type CurrentUserInfoDto = z.infer<typeof CurrentUserInfoSchema>;
 export type SignupResponseDto = z.infer<typeof SignupResponseSchema>;
 
-export function toBetterAuthHeaders(headers: Record<string, string | undefined>): [string, string][] {
+export function toBetterAuthHeaders(
+	headers: Record<string, string | undefined>
+): [string, string][] {
 	return Object.entries(headers).filter(
 		(entry): entry is [string, string] => entry[1] !== undefined
-	)
+	);
 }
 
 export function signupRequestToBetterAuth(body: SignupRequestDto): BetterAuthSignupRequestBody {
@@ -80,7 +82,7 @@ export function betterAuthToCurrentUserInfoDto(user: BetterAuthUser): CurrentUse
 		username: user.username ?? "",
 		displayName: user.name,
 		email: user.email,
-		createdAt: user.createdAt ?? null,
+		createdAt: user.createdAt.toISOString() ?? null,
 		image: user.image ?? null,
 	};
 }

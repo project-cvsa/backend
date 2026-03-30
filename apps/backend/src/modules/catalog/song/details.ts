@@ -4,9 +4,9 @@ import z from "zod";
 
 export const songDetailsHandler = new Elysia().get(
 	"/song/:id/details",
-	async ({ params }) => {
+	async ({ params, status }) => {
 		const song = await songService.getDetails(params.id);
-		return song;
+		return status(200, song);
 	},
 	{
 		detail: {
@@ -19,7 +19,7 @@ export const songDetailsHandler = new Elysia().get(
 			404: ErrorResponseSchema,
 		},
 		params: z.object({
-			id: z.int().positive(),
+			id: z.coerce.number().int().positive(),
 		}),
 	}
 );

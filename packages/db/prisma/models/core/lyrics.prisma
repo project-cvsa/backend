@@ -2,7 +2,7 @@ model Lyrics {
     id           Int       @id @default(autoincrement())
     song         Song      @relation(fields: [songId], references: [id])
     songId       Int       @map("song_id")
-    language     String?
+    language     String   @default("zh")
     isTranslated Boolean   @default(false) @map("is_translated")
     plainText    String?   @map("plain_text")
     ttml         String?

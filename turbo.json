@@ -16,6 +16,16 @@
 		"lint": {},
 		"test": {},
 		"test:coverage": {},
-		"db:deploy": {}
+		"db:deploy": {},
+		"db:setup": {
+			"cache": false,
+			"dependsOn": ["@cvsa/db#push", "@cvsa/db#test:setup"]
+		},
+		"@cvsa/db#test:setup": {
+			"cache": false
+		},
+		"@cvsa/db#push": {
+			"cache": false
+		}
 	}
 }

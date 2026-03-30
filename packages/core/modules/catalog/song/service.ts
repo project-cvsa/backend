@@ -1,20 +1,21 @@
-import { pick, map } from "remeda";
-import { AppError } from "@cvsa/core";
+import { AppError, type SongSearchService } from "@cvsa/core";
 import type { Song } from "@cvsa/db";
 import type {
 	SongDetailsResponseDto,
 	SongId,
-	ListSongsQueryDto,
-	ListSongsResponseDto,
 	CreateSongRequestDto,
 	UpdateSongRequestDto,
 } from "./dto";
 import type { ISongRepository } from "./repository.interface";
+import type { IDetailsService, Serialized } from "@cvsa/core/common";
 
-export class SongService {
-	constructor(private readonly repository: ISongRepository) {}
+export class SongService implements IDetailsService<SongDetailsResponseDto> {
+	constructor(
+		private readonly repository: ISongRepository,
+		private readonly search: SongSearchService
+	) {}
 
-	async getDetails(id: SongId): Promise<SongDetailsResponseDto> {
+	async getDetails(id: SongId) {
 		const result = await this.repository.getDetailsById(id);
 		if (result === null) {
 			throw new AppError("Song not found", "NOT_FOUND", 404);
@@ -22,16 +23,28 @@ export class SongService {
 		return result;
 	}
 
-	async create(input: CreateSongRequestDto): Promise<Song> {
-		return this.repository.create(input);
+	async create(input: CreateSongRequestDto): Promise<Serialized<Song>> {
+		const result = await this.repository.create(input);
+		try {
+			this.search.sync(result.id);
+		} catch (e) {
+			console.error(e);
+		}
+		return result;
 	}
 
-	async update(id: SongId, input: UpdateSongRequestDto): Promise<Song> {
+	async update(id: SongId, input: UpdateSongRequestDto): Promise<Serialized<Song>> {
 		const existing = await this.repository.getById(id);
 		if (existing === null) {
 			throw new AppError("Song not found", "NOT_FOUND", 404);
 		}
-		return this.repository.update(id, input);
+		const result = await this.repository.update(id, input);
+		try {
+			this.search.sync(id);
+		} catch (e) {
+			console.error(e);
+		}
+		return result;
 	}
 
 	async delete(id: SongId): Promise<void> {
@@ -40,19 +53,10 @@ export class SongService {
 			throw new AppError("Song not found", "NOT_FOUND", 404);
 		}
 		await this.repository.softDelete(id);
-	}
-
-	async list(query: ListSongsQueryDto = {}): Promise<ListSongsResponseDto> {
-		const { offset = 0, limit = 50 } = query;
-		const result = await this.repository.list(query);
-		return {
-			songs: map(
-				result.songs,
-				pick(["id", "type", "name", "duration", "coverUrl", "publishedAt"])
-			),
-			total: result.total,
-			offset,
-			limit,
-		};
+		try {
+			this.search.sync(id);
+		} catch (e) {
+			console.error(e);
+		}
 	}
 }

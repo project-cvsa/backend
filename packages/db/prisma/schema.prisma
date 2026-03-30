@@ -13,8 +13,10 @@ datasource db {
 }
 
 generator zod {
-	provider = "prisma-zod"
-    output   = "./zod"
+	provider     = "prisma-zod"
+    output       = "./zod"
+    extendSchema = "zodSchema"
+    dateSchema   = "string"
 }
 
 /*

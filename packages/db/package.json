@@ -13,7 +13,7 @@
 		"typecheck": "bunx --bun tsc --noEmit"
 	},
 	"devDependencies": {
-		"@cvsa/prisma-zod": "^3.3.0",
+		"@cvsa/prisma-zod": "^3.5.0",
 		"@cvsa/typescript-config": "workspace:*",
 		"prisma": "^7.6.0",
 		"prisma-json-types-generator": "^4.1.1"
