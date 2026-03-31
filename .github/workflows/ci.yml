@@ -20,7 +20,7 @@ jobs:
           bun-version: 1.3.11
 
       - name: Copy env file for Docker Compose
-        run: cp .env.docker.example .env
+        run: cp .env.docker.example .env.docker
 
       - name: Start services with Docker Compose
         run: docker compose up -d
