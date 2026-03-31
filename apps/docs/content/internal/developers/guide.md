@@ -7,7 +7,7 @@ description: 了解如何参与档案馆的开发工作。
 
 档案馆的开发与协作集中在 [GitHub](https://github.com) 上。你需要准备一台能够访问 GitHub 的计算机。
 
-此外，几乎所有主要模块的开发都依赖 [Bun](https://bun.sh) 运行时。你可以通过如下方法来安装 bun 到你的电脑上：
+此外，几乎所有主要模块的开发都依赖 [Bun](https://bun.sh) 运行时。可以通过下面命令来在电脑上安装 Bun。
 
 ```bash tab="Linux/macOS"
 curl -fsSL https://bun.sh/install | bash
@@ -17,30 +17,48 @@ curl -fsSL https://bun.sh/install | bash
 powershell -c "irm bun.sh/install.ps1 | iex"
 ```
 
-此外，你还需要准备一个 PostgreSQL 18 数据库实例来辅助开发和调试。我们推荐使用 Docker，因为它易于管理和隔离。  
-可以参考以下命令启动一个 PostgreSQL 18 容器：
+## 克隆代码
 
-```bash
-docker run \
-  --name cvsa-db \
-  --volume "cvsa-data:/var/lib/postgresql" \
-  --restart "always" \
-  -p 127.0.0.1:5432:5432 \
-  --env "POSTGRES_USER=cvsa" \
-  --env "POSTGRES_PASSWORD=password" \
-  --env "POSTGRES_DB=cvsa" \
-  --env "PGDATA=/var/lib/postgresql/18/docker" \
-  --detach \
-  "postgres:18-alpine" \
-  "postgres"
-```
-
-## 克隆仓库
-
-为了参与开发，首先需要从 GitHub 克隆档案馆的代码仓库：
+从 GitHub 克隆档案馆的代码仓库并切换到 `develop` 分支：
 
 ```bash
 git clone https://github.com/project-cvsa/cvsa
+cd cvsa
+git checkout develop
+```
+
+## 准备环境变量
+
+在启动任何服务或安装依赖之前，需要先准备好环境配置文件。
+
+```bash
+cp .env.docker.example .env.docker
+
+cp packages/db/.env.example packages/db/.env
+cp packages/db/.env.example packages/db/.env.test
+
+cp packages/core/.env.example packages/core/.env.test
+
+cp apps/backend/.env.example apps/backend/.env
+cp apps/backend/.env.example apps/backend/.env.test
+```
+
+## 启动外部服务
+
+你需要准备一个 PostgreSQL 18 以及 MeiliSearch 1.40 实例来辅助开发和调试。推荐使用 Docker，因为它易于管理和隔离。  
+确保你安装了 [Docker Compose](https://docs.docker.com/compose/install/)，之后便可以在根路径下通过 compose 拉起这两个容器。
+
+```bash
+docker compose up -d
+```
+
+## 初始化项目
+
+在开始开发前，需要安装依赖并运行初始化脚本。
+
+```bash
+bun install # 安装依赖
+bun setup   # 初始化本地配置与数据库
 ```
 
 ## 进行开发
@@ -60,7 +78,7 @@ git checkout -b feat/alikia-233-some-changes
 
 ## 目录结构
 
-档案馆使用 monorepo 的方式组织项目，在 `apps` 和 `packages` 下分别有若干个 package。目录结构如下：
+档案馆使用 monorepo 方式组织项目：
 
 ```
 cvsa/
@@ -71,35 +89,10 @@ cvsa/
 ├── packages/
 │   ├── core/				# 通用代码
 │   ├── db/					# 数据库 schema 与 ORM
-│   └── typescript-config/	# tsconfig（TypeScript）配置
-├── package.json			# 主 package.json 文件
+│   └── typescript-config/	# tsconfig 配置
+├── package.json			# 主配置
 └── turbo.json				# Turborepo 配置
 ```
-
-## 环境变量
-
-每个 package 中通常会有对应的环境变量样例文件 `.env.example`，你需要将它们复制一份，并根据情况修改对应的值：
-
-```bash
-# 复制 core package 的 .env.test 用于测试
-cp packages/core/.env.example packages/core/.env.test
-# 复制 db package 的 .env 用于数据库迁移
-cp packages/db/.env.example packages/db/.env
-# 复制 backend package 的 .env 用于本地测试/部署
-cp apps/backend/.env.example apps/backend/.env
-cp apps/backend/.env.example apps/backend/.env.test
-```
-
-## 数据库配置
-
-环境变量 `DATABASE_URL` 用于指定主数据库的连接字符串。
-在配置好对应的 `.env` 文件后，你需要运行数据库迁移命令：
-
-```bash
-bun run db:deploy
-```
-
-这会将当前的代码库中的迁移记录应用到选定的数据库中。
 
 ## 依赖安装与其它命令
 
@@ -120,7 +113,7 @@ bun run typecheck		# 检查类型错误
 
 ## 提交与推送
 
-开发完成后，需要创建对应的提交。代码提交到本地分支后，需要将其推送到 GitHub 远程仓库，并创建 PR 以合并到主分支或开发分支。
+代码开发完成后，请确保通过了本地的 `test` 和 `ci` 任务，随后将其推送到远程仓库并创建指向 `develop` 的 PR。
 
-> 关于提交信息的编写，参见[流程规范](./workflow.md#提交信息)
+> 关于提交信息的编写，参见[流程规范](./workflow.md#提交信息)  
 > 关于 PR 的格式规范，参见[流程规范](./workflow.md#pr-格式)
