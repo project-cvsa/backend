@@ -1,4 +1,4 @@
-import type { Prisma, PrismaClient } from "@cvsa/db";
+import type { PrismaClient } from "@cvsa/db";
 import type {
 	CreateSongRequestDto,
 	SongId,

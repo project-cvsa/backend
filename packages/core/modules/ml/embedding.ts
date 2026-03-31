@@ -69,11 +69,15 @@ export class EmbeddingManager {
 			return_tensor: false,
 		});
 
-		const cumsum = (arr: number[]): number[] =>
-			arr.reduce(
-				(acc: number[], num: number, i: number) => [...acc, num + (acc[i - 1] || 0)],
-				[]
-			);
+		const cumsum = (arr: number[]): number[] => {
+			const result: number[] = new Array(arr.length);
+			let currentSum = 0;
+			for (let i = 0; i < arr.length; i++) {
+				currentSum += arr[i];
+				result[i] = currentSum;
+			}
+			return result;
+		};
 
 		const offsets: number[] = [
 			0,
