@@ -17,6 +17,7 @@ generator zod {
     output       = "./zod"
     extendSchema = "zodSchema"
     dateSchema   = "string"
+    bigintSchema = "number"
 }
 
 /*

@@ -66,7 +66,7 @@
         "zod": "^4.3.6",
       },
       "devDependencies": {
-        "@cvsa/prisma-zod": "^3.5.0",
+        "@cvsa/prisma-zod": "^3.6.0",
         "@cvsa/typescript-config": "workspace:*",
         "prisma": "^7.6.0",
         "prisma-json-types-generator": "^4.1.1",
@@ -127,7 +127,7 @@
 
     "@cvsa/db": ["@cvsa/db@workspace:packages/db"],
 
-    "@cvsa/prisma-zod": ["@cvsa/prisma-zod@3.5.0", "", { "dependencies": { "@prisma/generator-helper": "^7.5.0" }, "peerDependencies": { "@prisma/client": ">= 7.0.0", "prisma": ">= 7.0.0", "zod": ">= 4.0.0" }, "bin": { "prisma-zod": "dist/index.js" } }, "sha512-HMGUaS83WiX/Bb5y0GLS7qkBOJ+iDm0cQ/Acy+3P2utwfWGAm+1b3aT6J09H+vA4tdUNzToEoREoqlSypNXYbA=="],
+    "@cvsa/prisma-zod": ["@cvsa/prisma-zod@3.6.0", "", { "dependencies": { "@prisma/generator-helper": "^7.5.0" }, "peerDependencies": { "@prisma/client": ">= 7.0.0", "prisma": ">= 7.0.0", "zod": ">= 4.0.0" }, "bin": { "prisma-zod": "dist/index.js" } }, "sha512-5/Vh93EqlaXwwJk9cudIclmZG8fX4XsQ2LiGSSN5JcszOzm/MPXuyuGJU9M70X1P+KAB8Vza8RsvXdXmTTJbSw=="],
 
     "@cvsa/typescript-config": ["@cvsa/typescript-config@workspace:packages/typescript-config"],
 

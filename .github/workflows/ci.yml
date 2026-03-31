@@ -23,6 +23,7 @@ jobs:
         run:  |
             cp .env.docker.example .env.docker
             cp packages/db/.env.example packages/db/.env
+            cp packages/db/.env.example packages/db/.env.test
             cp packages/core/.env.example packages/core/.env.test
             cp apps/backend/.env.example apps/backend/.env.test
 
@@ -33,7 +34,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Setup environment
-        run: bun run setup
+        run: bun run setup:ci
 
       - name: Test
         run: bun run test
