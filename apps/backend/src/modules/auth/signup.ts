@@ -8,7 +8,7 @@ import {
 	SignupResponseSchema,
 	toSignUpResponse,
 	ErrorResponseSchema,
-	toBetterAuthHeaders
+	toBetterAuthHeaders,
 } from "@cvsa/core";
 import { RateLimitError } from "@common/error";
 import { AppError } from "@cvsa/core";

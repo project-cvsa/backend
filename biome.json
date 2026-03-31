@@ -50,6 +50,6 @@
 		"useIgnoreFile": true
 	},
 	"files": {
-		"includes": ["**/*", "!.zed/*", "!packages/typescript-config/base.json"]
+		"includes": ["**/*", "!.zed/*", "!packages/typescript-config/base.json", "!**/*.grit"]
 	}
 }

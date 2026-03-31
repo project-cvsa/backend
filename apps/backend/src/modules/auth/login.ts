@@ -10,7 +10,7 @@ import {
 	ErrorResponseSchema,
 	betterAuthToLoginUserInfoDto,
 	toLoginResponse,
-    toBetterAuthHeaders,
+	toBetterAuthHeaders,
 } from "@cvsa/core";
 
 const DAY = 86400;

@@ -48,7 +48,7 @@ export const auth = betterAuth({
 			minUsernameLength: 1,
 			maxUsernameLength: 100,
 			// We don't have any limitations of username
-			usernameValidator: () => true
+			usernameValidator: () => true,
 		}),
 		bearer(),
 	],

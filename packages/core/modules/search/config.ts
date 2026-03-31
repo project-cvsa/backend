@@ -20,31 +20,31 @@ export const INDEX_SETTINGS: Record<string, Settings> = {
 				source: "userProvided",
 				dimensions: 256,
 			},
-// TODO: Remove this
-// 			"qwen3-embedding-8b-openrouter": {
-// 				source: "rest",
-// 				url: "https://openrouter.ai/api/v1/embeddings",
-// 				request: {
-// 					model: "qwen/qwen3-embedding-8b",
-// 					input: ["{{text}}", "{{..}}"],
-// 					encoding_format: "float",
-// 				},
-// 				response: {
-// 					data: [{ embedding: "{{embedding}}" }, "{{..}}"],
-// 				},
-// 				apiKey: env.OPENROUTER_KEY,
-// 				dimensions: 4096,
-// 				documentTemplate: `Instruct: You are providing search results for songs in the database.
-// Query: This song has the following properties.
-// Name: {{doc.name}},
+			// TODO: Remove this
+			// 			"qwen3-embedding-8b-openrouter": {
+			// 				source: "rest",
+			// 				url: "https://openrouter.ai/api/v1/embeddings",
+			// 				request: {
+			// 					model: "qwen/qwen3-embedding-8b",
+			// 					input: ["{{text}}", "{{..}}"],
+			// 					encoding_format: "float",
+			// 				},
+			// 				response: {
+			// 					data: [{ embedding: "{{embedding}}" }, "{{..}}"],
+			// 				},
+			// 				apiKey: env.OPENROUTER_KEY,
+			// 				dimensions: 4096,
+			// 				documentTemplate: `Instruct: You are providing search results for songs in the database.
+			// Query: This song has the following properties.
+			// Name: {{doc.name}},
 
-// Singers: {% for singer in doc.singers %}
-//   {{ singer }}
-// {% endfor %}
-// Artists: {% for artist in doc.artists %}
-//   {{ artist }}
-// {% endfor %}`,
-// 			},
+			// Singers: {% for singer in doc.singers %}
+			//   {{ singer }}
+			// {% endfor %}
+			// Artists: {% for artist in doc.artists %}
+			//   {{ artist }}
+			// {% endfor %}`,
+			// 			},
 		},
 	},
 };

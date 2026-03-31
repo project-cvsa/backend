@@ -293,27 +293,21 @@ describe("Logout E2E Tests - DELETE /v2/session", () => {
 
 		const { data: signUpData } = await api.v2.user.post(signupPayload);
 
-		const { status } = await api.v2.session.delete(
-			null,
-			{
-				headers: {
-					authorization: `Bearer ${signUpData?.data.token}`,
-				},
-			}
-		);
+		const { status } = await api.v2.session.delete(null, {
+			headers: {
+				authorization: `Bearer ${signUpData?.data.token}`,
+			},
+		});
 
 		expect(status).toBe(204);
 	});
 
 	test("should return 401 on invalid/expired token", async () => {
-		const { error, status } = await api.v2.session.delete(
-			null,
-			{
-				headers: {
-					authorization: "Bearer invalid.token.format",
-				},
-			}
-		);
+		const { error, status } = await api.v2.session.delete(null, {
+			headers: {
+				authorization: "Bearer invalid.token.format",
+			},
+		});
 
 		expect(status).toBe(401);
 		expect(error?.value).toMatchObject({
