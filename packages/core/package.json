@@ -23,7 +23,8 @@
 	"dependencies": {
 		"@better-auth/prisma-adapter": "^1.5.5",
 		"@cvsa/db": "*",
-		"@huggingface/transformers": "^3.8.1",
+		"@huggingface/hub": "^2.11.0",
+		"@huggingface/transformers": "^4.0.0",
 		"@t3-oss/env-core": "^0.13.10",
 		"better-auth": "^1.5.5",
 		"meilisearch": "^0.56.0",

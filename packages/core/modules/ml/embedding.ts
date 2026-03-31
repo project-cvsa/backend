@@ -1,5 +1,6 @@
 import path from "node:path";
 import { AutoTokenizer, type PreTrainedTokenizer } from "@huggingface/transformers";
+import { downloadFile } from "@huggingface/hub";
 import * as ort from "onnxruntime-node";
 
 const modelDir = path.join(import.meta.dir, "../../../../model/");
@@ -14,6 +15,7 @@ export class EmbeddingManager {
 	private session: ort.InferenceSession | null = null;
 
 	public async init(): Promise<void> {
+		await this.downloadModel();
 		await this.initTokenizer();
 		await this.initSession();
 	}
@@ -58,6 +60,25 @@ export class EmbeddingManager {
 		}
 
 		return result;
+	}
+
+	// TODO: progress indicator
+	private async downloadModel() {
+		const modelFile = Bun.file(modelPath);
+		if (await modelFile.exists()) {
+			return;
+		}
+		console.log("Downloading embedding model...");
+		const blob = await downloadFile({
+			repo: "alikia2x/potion-multilingual-128M-int8",
+			path: "onnx/model.onnx",
+		});
+		if (!blob) {
+			throw new Error("Cannot download model file.");
+		}
+		const buffer = await blob.arrayBuffer();
+		console.log("Embedding model downloaded.");
+		modelFile.write(buffer);
 	}
 
 	public async getEmbedding(texts: string[]): Promise<number[][]> {
