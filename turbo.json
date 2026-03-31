@@ -20,6 +20,10 @@
 			"cache": false,
 			"dependsOn": ["@cvsa/db#push", "@cvsa/db#test:setup", "@cvsa/db#gen"]
 		},
+		"setup:ci": {
+			"cache": false,
+			"dependsOn": ["@cvsa/db#test:setup", "@cvsa/db#gen"]
+		},
 		"@cvsa/db#test:setup": {
 			"cache": false
 		},

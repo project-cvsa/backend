@@ -17,7 +17,8 @@
 		"test:core": "bunx --bun turbo run test --filter=@cvsa/core",
 		"test:coverage": "bunx --bun turbo run test:coverage",
 		"typecheck": "bunx --bun turbo typecheck",
-		"setup": "bunx --bun turbo setup"
+		"setup": "bunx --bun turbo setup",
+		"setup:ci": "bunx --bun turbo setup:ci"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.10",
