@@ -43,6 +43,14 @@ cp apps/backend/.env.example apps/backend/.env
 cp apps/backend/.env.example apps/backend/.env.test
 ```
 
+为了避免开发和测试环境冲突，你需要将所有 `.env.test` 中的 `DATABASE_URL` 修改为用于测试的数据库。例如：
+```bash
+# 在 .env 中
+DATABASE_URL=postgres://cvsa:password@localhost:5432/cvsa
+# 在 .env.test 中
+DATABASE_URL=postgres://cvsa:password@localhost:5432/cvsa_test
+```
+
 ## 启动外部服务
 
 你需要准备一个 PostgreSQL 18 以及 MeiliSearch 1.40 实例来辅助开发和调试。推荐使用 Docker，因为它易于管理和隔离。  
