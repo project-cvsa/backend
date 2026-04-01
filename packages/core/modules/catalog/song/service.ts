@@ -7,7 +7,7 @@ import type {
 	UpdateSongRequestDto,
 } from "./dto";
 import type { ISongRepository } from "./repository.interface";
-import type { IDetailsService, Serialized } from "@cvsa/core/common";
+import { type IDetailsService, type Serialized, traceTask } from "@cvsa/core/common";
 
 export class SongService implements IDetailsService<SongDetailsResponseDto> {
 	constructor(
@@ -16,15 +16,19 @@ export class SongService implements IDetailsService<SongDetailsResponseDto> {
 	) {}
 
 	async getDetails(id: SongId) {
-		const result = await this.repository.getDetailsById(id);
-		if (result === null) {
-			throw new AppError("Song not found", "NOT_FOUND", 404);
-		}
-		return result;
+		return traceTask("db findOne song", async () => {
+			const result = await this.repository.getDetailsById(id);
+			if (result === null) {
+				throw new AppError("Song not found", "NOT_FOUND", 404);
+			}
+			return result;
+		});
 	}
 
 	async create(input: CreateSongRequestDto): Promise<Serialized<Song>> {
-		const result = await this.repository.create(input);
+		const result = await traceTask("db create song", async () => {
+			return await this.repository.create(input);
+		});
 		try {
 			this.search.sync(result.id);
 		} catch (e) {
@@ -38,7 +42,9 @@ export class SongService implements IDetailsService<SongDetailsResponseDto> {
 		if (existing === null) {
 			throw new AppError("Song not found", "NOT_FOUND", 404);
 		}
-		const result = await this.repository.update(id, input);
+		const result = await traceTask("db update song", async () => {
+			return await this.repository.update(id, input);
+		});
 		try {
 			this.search.sync(id);
 		} catch (e) {
@@ -52,7 +58,9 @@ export class SongService implements IDetailsService<SongDetailsResponseDto> {
 		if (existing === null) {
 			throw new AppError("Song not found", "NOT_FOUND", 404);
 		}
-		await this.repository.softDelete(id);
+		await traceTask("db delete song", async () => {
+			return await this.repository.softDelete(id);
+		});
 		try {
 			this.search.sync(id);
 		} catch (e) {

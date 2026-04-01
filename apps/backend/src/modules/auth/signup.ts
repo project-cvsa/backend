@@ -13,6 +13,7 @@ import {
 import { RateLimitError } from "@common/error";
 import { AppError } from "@cvsa/core";
 import { auth } from "@cvsa/core";
+import { traceTask } from "@/common/trace";
 
 const DAY = 86400;
 
@@ -30,9 +31,11 @@ export const signupHandler = new Elysia()
 	.post(
 		"/user",
 		async ({ body, status, headers, cookie: { token: tokenCookie } }) => {
-			const { user, token } = await auth.api.signUpEmail({
-				body: signupRequestToBetterAuth(body),
-				headers: toBetterAuthHeaders(headers),
+			const { user, token } = await traceTask("auth.signUpEmail", async () => {
+				return await auth.api.signUpEmail({
+					body: signupRequestToBetterAuth(body),
+					headers: toBetterAuthHeaders(headers),
+				});
 			});
 
 			if (!token) {

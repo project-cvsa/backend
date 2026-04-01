@@ -2,12 +2,15 @@ import { Elysia } from "elysia";
 import { z } from "zod";
 import { authMiddleware } from "@common/middlewares";
 import { auth, ErrorResponseSchema, toBetterAuthHeaders } from "@cvsa/core";
+import { traceTask } from "@/common/trace";
 
 export const logoutHandler = new Elysia().use(authMiddleware).delete(
 	"/session",
 	async ({ set, headers, cookie: { token: tokenCookie } }) => {
-		await auth.api.signOut({
-			headers: toBetterAuthHeaders(headers),
+		await traceTask("auth.signOut", async () => {
+			return await auth.api.signOut({
+				headers: toBetterAuthHeaders(headers),
+			});
 		});
 
 		tokenCookie.remove();

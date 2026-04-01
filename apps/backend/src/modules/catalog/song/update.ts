@@ -1,23 +1,25 @@
 import { Elysia } from "elysia";
+import { z } from "zod";
 import { UpdateSongRequestSchema, ErrorResponseSchema, songService } from "@cvsa/core";
-import { AppError } from "@cvsa/core";
 import { authMiddleware } from "@common/middlewares/auth";
 import { SongSchema } from "@cvsa/db";
+import { traceTask } from "@/common/trace";
 
 export const songUpdateHandler = new Elysia({ name: "songUpdateHandler" })
 	.use(authMiddleware)
 	.patch(
 		"/song/:id",
 		async ({ params, body, status }) => {
-			const id = Number(params.id);
-			if (Number.isNaN(id)) {
-				throw new AppError("Invalid song ID", "VALIDATION_ERROR", 400);
-			}
-			const song = await songService.update(id, body);
+			const song = await traceTask("songService.update", async () => {
+				return await songService.update(params.id, body);
+			});
 			return status(200, song);
 		},
 		{
 			body: UpdateSongRequestSchema,
+			params: z.object({
+				id: z.coerce.number().int().positive(),
+			}),
 			detail: {
 				summary: "Update Song",
 				description: "Update an existing song (authentication required)",

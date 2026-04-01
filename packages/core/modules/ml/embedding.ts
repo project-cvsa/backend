@@ -14,10 +14,16 @@ export class EmbeddingManager {
 	private tokenizer: PreTrainedTokenizer | null = null;
 	private session: ort.InferenceSession | null = null;
 
-	public async init(): Promise<void> {
-		await this.downloadModel();
-		await this.initTokenizer();
-		await this.initSession();
+	public async init(): Promise<boolean> {
+		try {
+			await this.downloadModel();
+			await this.initTokenizer();
+			await this.initSession();
+			return true;
+		} catch (e) {
+			console.error(e)
+			return false;
+		}
 	}
 
 	private async initTokenizer(): Promise<void> {
@@ -120,5 +126,6 @@ export class EmbeddingManager {
 	}
 }
 
-export const embeddingManager = new EmbeddingManager();
-await embeddingManager.init();
+const manager = new EmbeddingManager();
+const success = await manager.init();
+export const embeddingManager = success ? manager : undefined;

@@ -1,7 +1,7 @@
 {
 	"name": "@cvsa/backend",
 	"type": "module",
-	"version": "0.0.1",
+	"version": "2.1.0",
 	"scripts": {
 		"lint": "bunx --bun biome lint",
 		"dev": "bun --hot src/index.ts",
@@ -21,6 +21,7 @@
 		"@cvsa/db": "workspace:*",
 		"@elysiajs/eden": "^1.0.5",
 		"@elysiajs/openapi": "^1.4.14",
+		"@elysiajs/opentelemetry": "^1.4.10",
 		"@prisma/adapter-pg": "^7.4.1",
 		"@t3-oss/env-core": "^0.13.10",
 		"argon2": "^0.44.0",

@@ -1,10 +1,25 @@
 import Elysia, { ElysiaFile } from "elysia";
+import { trace, context } from "@opentelemetry/api";
+
+const getTraceId = () => {
+	const currentSpan = trace.getSpan(context.active());
+
+	if (currentSpan) {
+		const spanContext = currentSpan.spanContext();
+
+		return spanContext.traceId;
+	}
+};
 
 const encoder = new TextEncoder();
 
 export const onAfterHandler = new Elysia().onAfterHandle(
 	{ as: "global" },
-	({ responseValue, request }) => {
+	({ responseValue, request, set }) => {
+		const traceId = getTraceId();
+		if (traceId) {
+			set.headers["X-Trace-ID"] = traceId;
+		}
 		const contentType = request.headers.get("Content-Type") || "";
 		const accept = request.headers.get("Accept") || "";
 		const secFetchMode = request.headers.get("Sec-Fetch-Mode");
@@ -18,11 +33,13 @@ export const onAfterHandler = new Elysia().onAfterHandle(
 		if (responseValue instanceof ElysiaFile || responseValue instanceof Response) {
 			return;
 		}
+		if (responseValue === null) {
+			return;
+		}
 		const realResponse = responseValue as { code?: number; response?: unknown };
-		if (realResponse.code) {
-			const text = isBrowser
-				? JSON.stringify(realResponse.response, null, 2)
-				: JSON.stringify(realResponse.response);
+
+		if (realResponse.code && isBrowser) {
+			const text = JSON.stringify(realResponse.response, null, 4);
 			return new Response(encoder.encode(text), {
 				headers: {
 					"Content-Type": "application/json; charset=utf-8",
@@ -30,13 +47,14 @@ export const onAfterHandler = new Elysia().onAfterHandle(
 				status: realResponse.code,
 			});
 		}
-		const text = isBrowser
-			? JSON.stringify(realResponse, null, 2)
-			: JSON.stringify(realResponse);
-		return new Response(encoder.encode(text), {
-			headers: {
-				"Content-Type": "application/json; charset=utf-8",
-			},
-		});
+		if (isBrowser) {
+			const text = JSON.stringify(realResponse, null, 4);
+
+			return new Response(encoder.encode(text), {
+				headers: {
+					"Content-Type": "application/json; charset=utf-8",
+				},
+			});
+		}
 	}
 );

@@ -1,6 +1,6 @@
-import { APIError } from "better-auth";
+import type { APIError } from "better-auth";
 import type { ErrorHandler } from "elysia";
-import { AppError } from "@cvsa/core";
+import { AppError, BetterAuthAPIError } from "@cvsa/core";
 import type { ErrorResponseDto } from "@cvsa/core";
 import { getErrorResponse } from "@/common/error";
 
@@ -70,9 +70,15 @@ const response = {
 		}),
 } as const;
 
-export const errorHandler: ErrorHandler<{
-	readonly AppError: AppError;
-}> = ({ code, status, error }) => {
+export const errorHandler: ErrorHandler<
+	{
+		readonly AppError: AppError;
+	},
+	// biome-ignore lint/complexity/noBannedTypes: sync with Elysia
+	{},
+	// biome-ignore lint/complexity/noBannedTypes: sync with Elysia
+	{ decorator: {}; store: {}; derive: { ip: string }; resolve: {} }
+> = ({ code, status, error }) => {
 	if (AppError.isAppError(error)) {
 		return response.appError(status, error);
 	}
@@ -85,7 +91,7 @@ export const errorHandler: ErrorHandler<{
 		return response.validation(status, error);
 	}
 
-	if (error instanceof APIError) {
+	if (error instanceof BetterAuthAPIError) {
 		const bodyCode = error.body?.code || "";
 
 		if (AUTH_CONFLICT_CODES.includes(bodyCode as AuthConflictCode)) {

@@ -12,6 +12,7 @@ import {
 	toLoginResponse,
 	toBetterAuthHeaders,
 } from "@cvsa/core";
+import { traceTask } from "@/common/trace";
 
 const DAY = 86400;
 
@@ -29,12 +30,14 @@ export const loginHandler = new Elysia()
 	.post(
 		"/session",
 		async ({ body, status, headers, cookie: { token: tokenCookie } }) => {
-			const { user, token } = await auth.api.signInEmail({
-				body: {
-					email: body.email,
-					password: body.password,
-				},
-				headers: toBetterAuthHeaders(headers),
+			const { user, token } = await traceTask("auth.signInEmail", async () => {
+				return await auth.api.signInEmail({
+					body: {
+						email: body.email,
+						password: body.password,
+					},
+					headers: toBetterAuthHeaders(headers),
+				});
 			});
 
 			if (!token) {

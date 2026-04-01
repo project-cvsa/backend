@@ -5,11 +5,14 @@ import {
 	ErrorResponseSchema,
 } from "@cvsa/core";
 import { authMiddleware } from "@common/middlewares";
+import { traceTask } from "@/common/trace";
 
 export const getCurrentUserHandler = new Elysia().use(authMiddleware).get(
 	"/me",
 	async ({ status, session }) => {
-		const userInfo = betterAuthToCurrentUserInfoDto(session.user);
+		const userInfo = await traceTask("getCurrentUser", async () => {
+			return betterAuthToCurrentUserInfoDto(session.user);
+		});
 		return status(200, userInfo);
 	},
 	{

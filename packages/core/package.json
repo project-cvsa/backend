@@ -2,6 +2,7 @@
 	"name": "@cvsa/core",
 	"type": "module",
 	"module": "index.ts",
+	"version": "0.1.0",
 	"scripts": {
 		"lint": "bunx --bun biome lint",
 		"test": "bun test",
@@ -18,19 +19,29 @@
 	"exports": {
 		".": "./index.ts",
 		"./common": "./common/internal.ts",
+		"./common/logger": "./common/logger/index.ts",
 		"./modules": "./modules/internal.ts"
 	},
 	"dependencies": {
-		"@better-auth/prisma-adapter": "^1.5.5",
+		"@better-auth/prisma-adapter": "^1.5.6",
 		"@cvsa/db": "*",
 		"@huggingface/hub": "^2.11.0",
 		"@huggingface/transformers": "^4.0.0",
-		"@t3-oss/env-core": "^0.13.10",
-		"better-auth": "^1.5.5",
+		"@opentelemetry/api": "^1.9.0",
+		"@opentelemetry/api-logs": "^0.214.0",
+		"@opentelemetry/exporter-logs-otlp-http": "^0.214.0",
+		"@opentelemetry/resources": "^2.6.1",
+		"@opentelemetry/sdk-logs": "^0.214.0",
+		"@opentelemetry/sdk-node": "^0.214.0",
+		"@opentelemetry/semantic-conventions": "^1.27.0",
+		"@t3-oss/env-core": "^0.13.11",
+		"better-auth": "^1.5.6",
 		"meilisearch": "^0.56.0",
 		"nanoid": "^5.1.6",
 		"onnxruntime-node": "^1.24.3",
-		"remeda": "^2.33.6",
+		"pino": "^10.3.1",
+		"pino-pretty": "^13.1.3",
+		"remeda": "^2.33.7",
 		"zod": "^4.3.6"
 	}
 }

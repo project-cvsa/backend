@@ -88,10 +88,11 @@ jj log --limit n # Show recent n commits
 jj log --revisions @ --no-graph --template "description" # See description of working copy
 
 # Diff (always use --git or -s to prevent GUI hang)
-jj diff --git # Show diff of working copy vs parent
-jj diff --git -r x # Show diff between x and its parent
+# We exclude lock files using filesets syntax
+jj diff --git '~*.lock' # Show diff of working copy vs parent
+jj diff --git -r x '~*.lock' # Show diff between x and its parent
 jj diff --git [paths] # Show diff for specific paths
-jj diff --git --from x --to y # Show diff from x to y
+jj diff --git --from x --to y '~*.lock' # Show diff from x to y
 jj diff -s # Show only whether modified, added, or deleted
 
 # Show commit info (use --summary to prevent GUI hang)

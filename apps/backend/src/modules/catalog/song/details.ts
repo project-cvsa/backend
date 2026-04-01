@@ -1,11 +1,14 @@
 import { Elysia } from "elysia";
 import { ErrorResponseSchema, SongDetailsResponseSchema, songService } from "@cvsa/core";
 import z from "zod";
+import { traceTask } from "@/common/trace";
 
 export const songDetailsHandler = new Elysia().get(
 	"/song/:id/details",
 	async ({ params, status }) => {
-		const song = await songService.getDetails(params.id);
+		const song = await traceTask("songService.getDetails", async () => {
+			return await songService.getDetails(params.id);
+		});
 		return status(200, song);
 	},
 	{

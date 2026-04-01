@@ -1,6 +1,7 @@
 import { PrismaClient } from "@cvsa/db";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { env } from "./env";
+import { appLogger, traceTask } from "./observability";
 
 const adapter = new PrismaPg({
 	connectionString: env.DATABASE_URL,
@@ -47,4 +48,24 @@ export function transformPrismaResult<T>(obj: T): Serialized<T> {
 	return obj as Serialized<T>;
 }
 
-export const prisma = new PrismaClient({ adapter });
+export const prisma = new PrismaClient({
+	adapter,
+	log: [
+		{ level: "query", emit: "event" },
+		{ level: "info", emit: "stdout" },
+		{ level: "warn", emit: "stdout" },
+		{ level: "error", emit: "stdout" },
+	],
+});
+
+prisma.$on("query", (e) => {
+	traceTask(
+		"prisma rawQuery",
+		() => {
+			appLogger.debug(`Query: ${e.query}`);
+			appLogger.debug(`Params: ${e.params}`);
+			appLogger.debug(`Duration: ${e.duration}ms`);
+		},
+		Date.now() - e.duration
+	);
+});

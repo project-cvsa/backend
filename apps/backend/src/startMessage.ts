@@ -18,7 +18,7 @@ function getLocalIpAddress(): string {
 	return "localhost";
 }
 
-export function logStartup(hostname: string, port: number) {
+export function logStartup(hostname: string, port: number, otelAvailable: boolean) {
 	const isTest = env.NODE_ENV === "test";
 	if (isTest) return;
 	const localUrl = `http://localhost:${port}`;
@@ -32,6 +32,9 @@ export function logStartup(hostname: string, port: number) {
 	if (networkIp) {
 		console.log(`${chalk.red("> Network:")}  ${chalk.blue(networkUrl)}`);
 	}
+	console.log(
+		`Observability: ${otelAvailable ? chalk.green("OTel active") : chalk.yellow("stdout only")}`
+	);
 	console.log("\nPress Ctrl+C to quit.");
 }
 

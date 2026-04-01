@@ -1,23 +1,24 @@
 import { Elysia } from "elysia";
 import { z } from "zod";
 import { ErrorResponseSchema, songService } from "@cvsa/core";
-import { AppError } from "@cvsa/core";
 import { authMiddleware } from "@common/middlewares/auth";
+import { traceTask } from "@/common/trace";
 
 export const songDeleteHandler = new Elysia({ name: "songDeleteHandler" })
 	.use(authMiddleware)
 	.delete(
 		"/song/:id",
 		async ({ params, set }) => {
-			const id = Number(params.id);
-			if (Number.isNaN(id)) {
-				throw new AppError("Invalid song ID", "VALIDATION_ERROR", 400);
-			}
-			await songService.delete(id);
+			await traceTask("songService.delete", async () => {
+				return await songService.delete(params.id);
+			});
 			set.status = 204;
 			return null;
 		},
 		{
+			params: z.object({
+				id: z.coerce.number().int().positive(),
+			}),
 			detail: {
 				summary: "Delete Song",
 				description: "Soft delete a song (authentication required)",
