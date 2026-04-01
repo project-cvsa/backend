@@ -2,7 +2,7 @@ import { Elysia } from "elysia";
 import { onAfterHandler } from "./onAfterHandle";
 import { getBindingInfo, logStartup } from "./startMessage";
 import pkg from "../package.json";
-import { authHandler, songHandler } from "@modules/index";
+import { authHandler, songHandler } from "@handlers/index";
 import { AppError, observability } from "@cvsa/core";
 import { errorHandler } from "./errorHandler";
 import { openapi } from "@elysiajs/openapi";

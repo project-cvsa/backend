@@ -3,7 +3,7 @@
 	"compilerOptions": {
 		"paths": {
 			"@/*": ["./src/*"],
-			"@modules/*": ["./src/modules/*"],
+			"@handlers/*": ["./src/handlers/*"],
 			"@common/*": ["./src/common/*"]
 		}
 	},
