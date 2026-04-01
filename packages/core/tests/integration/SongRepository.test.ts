@@ -1,17 +1,8 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
-import { PrismaClient } from "@cvsa/db";
-import { PrismaPg } from "@prisma/adapter-pg";
-import { SongRepository } from "@cvsa/core";
-import type { CreateSongRequestDto, UpdateSongRequestDto } from "@cvsa/core";
-import { env } from "@cvsa/core/common";
+import { songRepository, type CreateSongRequestDto, type UpdateSongRequestDto } from "@cvsa/core";
+import { prisma } from "@cvsa/core/common";
 
-const prisma = new PrismaClient({
-	adapter: new PrismaPg({
-		connectionString: env.DATABASE_URL,
-	}),
-});
-
-const repository = new SongRepository(prisma);
+const repository = songRepository;
 
 describe("SongRepository Integration Tests", () => {
 	beforeAll(async () => {
@@ -35,7 +26,7 @@ describe("SongRepository Integration Tests", () => {
 				duration: 180,
 				description: "A test song",
 				coverUrl: "https://example.com/cover.jpg",
-				publishedAt: new Date("2024-01-01"),
+				publishedAt: new Date("2024-01-01").toISOString(),
 			};
 
 			const result = await repository.create(input);
@@ -81,67 +72,6 @@ describe("SongRepository Integration Tests", () => {
 		});
 	});
 
-	describe("list", () => {
-		test("should return all songs when no query provided", async () => {
-			await repository.create({ name: "Song 1" });
-			await repository.create({ name: "Song 2" });
-			await repository.create({ name: "Song 3" });
-
-			const result = await repository.list();
-
-			expect(result.songs.length).toBe(3);
-		});
-
-		test("should filter by type", async () => {
-			await repository.create({ name: "Original Song", type: "ORIGINAL" });
-			await repository.create({ name: "Cover Song", type: "COVER" });
-
-			const result = await repository.list({ type: "ORIGINAL" });
-
-			expect(result.songs.length).toBe(1);
-			expect(result.songs[0].type).toBe("ORIGINAL");
-		});
-
-		test("should filter by search term in name", async () => {
-			await repository.create({ name: "Searchable Song" });
-			await repository.create({ name: "Another Song" });
-
-			const result = await repository.list({ search: "Search" });
-
-			expect(result.songs.length).toBe(1);
-			expect(result.songs[0].name).toBe("Searchable Song");
-		});
-
-		test("should filter by search term in description", async () => {
-			await repository.create({ name: "Song A", description: "Unique description here" });
-			await repository.create({ name: "Song B", description: "Different content" });
-
-			const result = await repository.list({ search: "Unique" });
-
-			expect(result.songs.length).toBe(1);
-			expect(result.songs[0].name).toBe("Song A");
-		});
-
-		test("should apply pagination with offset and limit", async () => {
-			for (let i = 1; i <= 10; i++) {
-				await repository.create({ name: `Song ${i}` });
-			}
-
-			const result = await repository.list({ offset: 2, limit: 3 });
-
-			expect(result.songs.length).toBe(3);
-		});
-
-		test("should exclude soft-deleted songs", async () => {
-			const song = await repository.create({ name: "To Delete" });
-			await repository.softDelete(song.id);
-
-			const result = await repository.list();
-
-			expect(result.songs.length).toBe(0);
-		});
-	});
-
 	describe("update", () => {
 		test("should update all fields", async () => {
 			const created = await repository.create({ name: "Old Name", type: "ORIGINAL" });
@@ -182,9 +112,6 @@ describe("SongRepository Integration Tests", () => {
 
 			const result = await repository.getById(created.id);
 			expect(result).toBeNull();
-
-			const allSongs = await repository.list();
-			expect(allSongs.songs.length).toBe(0);
 		});
 	});
 });

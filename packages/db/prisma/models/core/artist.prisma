@@ -3,6 +3,7 @@ model Artist {
     name                  String?
     /// [LocalizedField]
     localizedNames        Json?      @map("localized_names")
+    language              String    @default("zh")
     aliases               String[]
     description           String?
     /// [LocalizedField]

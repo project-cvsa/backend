@@ -1,6 +1,6 @@
 import { Elysia } from "elysia";
 import { z } from "zod";
-import { SongService, ErrorResponseSchema } from "@cvsa/core";
+import { ErrorResponseSchema, songService } from "@cvsa/core";
 import { AppError } from "@cvsa/core";
 import { authMiddleware } from "@common/middlewares/auth";
 
@@ -13,7 +13,7 @@ export const songDeleteHandler = new Elysia({ name: "songDeleteHandler" })
 			if (Number.isNaN(id)) {
 				throw new AppError("Invalid song ID", "VALIDATION_ERROR", 400);
 			}
-			await new SongService().delete(id);
+			await songService.delete(id);
 			set.status = 204;
 			return null;
 		},

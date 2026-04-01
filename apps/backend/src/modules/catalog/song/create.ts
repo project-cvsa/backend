@@ -1,12 +1,12 @@
 import { Elysia } from "elysia";
-import { SongService, CreateSongRequestSchema, ErrorResponseSchema } from "@cvsa/core";
+import { CreateSongRequestSchema, ErrorResponseSchema, songService } from "@cvsa/core";
 import { authMiddleware } from "@common/middlewares/auth";
 import { SongSchema } from "@cvsa/db";
 
 export const songCreateHandler = new Elysia({ name: "songCreateHandler" }).use(authMiddleware).post(
 	"/song",
 	async ({ body, status }) => {
-		const song = await new SongService().create(body);
+		const song = await songService.create(body);
 		return status(201, song);
 	},
 	{

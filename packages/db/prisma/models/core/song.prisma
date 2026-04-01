@@ -4,12 +4,13 @@ model Song {
     originalVersion       Song?          @relation(name: "originalSong", fields: [originalSongId], references: [id])
     originalSongId        Int?           @map("original_song_id")
     derivations           Song[]         @relation(name: "originalSong")
+    language              String        @default("zh")
     name                  String?
+    /// [LocalizedField]
+    localizedNames        Json?          @map("localized_names")
     duration              Int?
     lyrics                Lyrics[]
     songTags              SongTag[]
-    /// [LocalizedField]
-    localizedNames        Json?          @map("localized_names")
     description           String?
     /// [LocalizedField]
     localizedDescriptions Json?          @map("localized_descriptions")

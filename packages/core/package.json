@@ -17,14 +17,19 @@
 	},
 	"exports": {
 		".": "./index.ts",
-		"./common": "./common/internal.ts"
+		"./common": "./common/internal.ts",
+		"./modules": "./modules/internal.ts"
 	},
 	"dependencies": {
 		"@better-auth/prisma-adapter": "^1.5.5",
 		"@cvsa/db": "*",
+		"@huggingface/hub": "^2.11.0",
+		"@huggingface/transformers": "^4.0.0",
 		"@t3-oss/env-core": "^0.13.10",
 		"better-auth": "^1.5.5",
+		"meilisearch": "^0.56.0",
 		"nanoid": "^5.1.6",
+		"onnxruntime-node": "^1.24.3",
 		"remeda": "^2.33.6",
 		"zod": "^4.3.6"
 	}

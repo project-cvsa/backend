@@ -9,15 +9,19 @@
 		"dev": "bunx --bun turbo run dev",
 		"build": "bunx --bun turbo run build",
 		"lint": "bunx --bun turbo run lint",
-		"lint:fix": "biome check --write --unsafe .",
-		"format": "biome format --write .",
+		"lint:fix": "bunx --bun biome check --write --unsafe .",
+		"format": "bunx --bun biome format --write .",
+		"ci": "bunx --bun biome ci .",
 		"test": "bunx --bun turbo run test",
+		"test:backend": "bunx --bun turbo run test --filter=@cvsa/backend",
+		"test:core": "bunx --bun turbo run test --filter=@cvsa/core",
 		"test:coverage": "bunx --bun turbo run test:coverage",
 		"typecheck": "bunx --bun turbo typecheck",
-		"db:deploy": "bunx --bun turbo db:deploy"
+		"setup": "bunx --bun turbo setup",
+		"setup:ci": "bunx --bun turbo setup:ci"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^2.4.8",
+		"@biomejs/biome": "^2.4.10",
 		"@types/bun": "^1.3.10",
 		"turbo": "^2.8.18",
 		"typescript": "^6.0.2"

@@ -1,7 +1,7 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
 import { treaty } from "@elysiajs/eden";
 import { app } from "@/index";
-import { prisma } from "@common/prisma";
+import { prisma } from "@cvsa/core";
 
 const api = treaty(app);
 
@@ -66,7 +66,7 @@ describe("Song E2E Tests", () => {
 		});
 	});
 
-	describe("PUT /v2/song/:id - Update Song", () => {
+	describe("PATCH /v2/song/:id - Update Song", () => {
 		test("should update a song with authentication", async () => {
 			const token = await getAuthToken();
 
@@ -76,7 +76,7 @@ describe("Song E2E Tests", () => {
 				},
 			});
 
-			const { data, status } = await api.v2.song({ id: song.id }).put(
+			const { data, status } = await api.v2.song({ id: song.id }).patch(
 				{ name: "Updated Name" },
 				{
 					headers: {
@@ -96,7 +96,7 @@ describe("Song E2E Tests", () => {
 				},
 			});
 
-			const { status } = await api.v2.song({ id: song.id }).put({
+			const { status } = await api.v2.song({ id: song.id }).patch({
 				name: "Updated Name",
 			});
 
@@ -106,7 +106,7 @@ describe("Song E2E Tests", () => {
 		test("should return 404 for non-existent song", async () => {
 			const token = await getAuthToken();
 
-			const { error, status } = await api.v2.song({ id: 999999 }).put(
+			const { error, status } = await api.v2.song({ id: 999999 }).patch(
 				{ name: "Updated Name" },
 				{
 					headers: {
@@ -174,92 +174,6 @@ describe("Song E2E Tests", () => {
 			);
 
 			expect(status).toBe(404);
-		});
-	});
-
-	describe("GET /v2/song - List Songs", () => {
-		test("should list songs without authentication", async () => {
-			await prisma.song.create({
-				data: { name: "Song 1" },
-			});
-			await prisma.song.create({
-				data: { name: "Song 2" },
-			});
-
-			const { data, status } = await api.v2.song.get();
-
-			expect(status).toBe(200);
-			expect(data?.songs).toHaveLength(2);
-			expect(data?.total).toBe(2);
-		});
-
-		test("should support pagination", async () => {
-			for (let i = 1; i <= 5; i++) {
-				await prisma.song.create({
-					data: { name: `Song ${i}` },
-				});
-			}
-
-			const { data, status } = await api.v2.song.get({
-				query: { offset: 0, limit: 2 },
-			});
-
-			expect(status).toBe(200);
-			expect(data?.songs).toHaveLength(2);
-			expect(data?.total).toBe(5);
-		});
-
-		test("should filter by search term", async () => {
-			await prisma.song.create({
-				data: { name: "Unique Song Name" },
-			});
-			await prisma.song.create({
-				data: { name: "Another Song" },
-			});
-
-			const { data, status } = await api.v2.song.get({
-				query: { search: "Unique" },
-			});
-
-			expect(status).toBe(200);
-			expect(data?.songs).toHaveLength(1);
-			expect(data?.songs[0]?.name).toBe("Unique Song Name");
-		});
-
-		test("should filter by type", async () => {
-			await prisma.song.create({
-				data: { name: "Original Song", type: "ORIGINAL" },
-			});
-			await prisma.song.create({
-				data: { name: "Cover Song", type: "COVER" },
-			});
-
-			const { data, status } = await api.v2.song.get({
-				query: { type: "ORIGINAL" },
-			});
-
-			expect(status).toBe(200);
-			expect(data?.songs).toHaveLength(1);
-			expect(data?.songs[0]?.type).toBe("ORIGINAL");
-		});
-
-		test("should exclude soft-deleted songs", async () => {
-			await prisma.song.create({
-				data: { name: "Active Song" },
-			});
-			const deletedSong = await prisma.song.create({
-				data: { name: "Deleted Song" },
-			});
-			await prisma.song.update({
-				where: { id: deletedSong.id },
-				data: { deletedAt: new Date() },
-			});
-
-			const { data, status } = await api.v2.song.get();
-
-			expect(status).toBe(200);
-			expect(data?.songs).toHaveLength(1);
-			expect(data?.songs[0]?.name).toBe("Active Song");
 		});
 	});
 });

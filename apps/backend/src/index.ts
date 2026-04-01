@@ -5,6 +5,7 @@ import pkg from "../package.json";
 import { authHandler, songHandler } from "@modules/index";
 import { AppError } from "@cvsa/core";
 import { errorHandler } from "./errorHandler";
+import { openapi } from "@elysiajs/openapi";
 
 const [host, port] = getBindingInfo();
 logStartup(host, port);
@@ -19,6 +20,7 @@ export const app = new Elysia({
 		AppError,
 	})
 	.onError(errorHandler)
+	.use(openapi())
 	.use(authHandler)
 	.use(songHandler)
 	.use(onAfterHandler)

@@ -1,5 +1,5 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.4.8/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.4.10/schema.json",
 	"assist": {
 		"actions": {
 			"source": {
@@ -21,7 +21,8 @@
 			"suspicious": {
 				"noExplicitAny": "error",
 				"noDeprecatedImports": "error"
-			}
+			},
+			"nursery": {}
 		}
 	},
 	"javascript": {
@@ -50,6 +51,6 @@
 		"useIgnoreFile": true
 	},
 	"files": {
-		"includes": ["**/*", "!.zed/*", "!packages/typescript-config/base.json"]
+		"includes": ["**/*", "!.zed/*", "!packages/typescript-config/base.json", "!**/*.grit"]
 	}
 }

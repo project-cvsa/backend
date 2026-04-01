@@ -43,7 +43,15 @@ export const auth = betterAuth({
 	emailAndPassword: {
 		enabled: true,
 	},
-	plugins: [username(), bearer()],
+	plugins: [
+		username({
+			minUsernameLength: 1,
+			maxUsernameLength: 100,
+			// We don't have any limitations of username
+			usernameValidator: () => true,
+		}),
+		bearer(),
+	],
 });
 
 export { APIError as BetterAuthAPIError };
