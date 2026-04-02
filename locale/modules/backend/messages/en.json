@@ -1,0 +1,6 @@
+{
+	"error.unauthorized": "Unauthorized",
+	"error.song.notfound": "Song not found",
+	"error.signup.failed": "Failed to sign up",
+	"error.login.failed": "Failed to log in"
+}

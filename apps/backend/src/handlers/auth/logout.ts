@@ -1,6 +1,6 @@
 import { Elysia } from "elysia";
 import { z } from "zod";
-import { authMiddleware } from "@common/middlewares";
+import { authMiddleware } from "@/middlewares";
 import { auth, ErrorResponseSchema, toBetterAuthHeaders } from "@cvsa/core";
 import { traceTask } from "@/common/trace";
 
@@ -21,7 +21,8 @@ export const logoutHandler = new Elysia().use(authMiddleware).delete(
 	{
 		detail: {
 			summary: "User Logout",
-			description: "",
+			description:
+				"Terminate the current user session. Removes the authentication cookie and invalidates the session server-side.",
 		},
 		response: {
 			204: z.null(),

@@ -62,7 +62,7 @@ describe("SongService", () => {
 			mockRepository.getDetailsById.mockResolvedValue(null);
 
 			expect(songService.getDetails(999)).rejects.toThrow(AppError);
-			expect(songService.getDetails(999)).rejects.toThrow("Song not found");
+			expect(songService.getDetails(999)).rejects.toThrow("error.song.notfound");
 			expect(songService.getDetails(999)).rejects.toMatchObject({
 				code: "NOT_FOUND",
 				statusCode: 404,

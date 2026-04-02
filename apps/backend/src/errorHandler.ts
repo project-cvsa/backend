@@ -1,8 +1,9 @@
-import type { APIError } from "better-auth";
-import type { ErrorHandler } from "elysia";
+import { Elysia } from "elysia";
 import { AppError, BetterAuthAPIError } from "@cvsa/core";
 import type { ErrorResponseDto } from "@cvsa/core";
 import { getErrorResponse } from "@/common/error";
+import { getTraceId } from "./onAfterHandle";
+import { i18nMiddleware } from "@/middlewares/i18n";
 
 const AUTH_CONFLICT_CODES = [
 	"USERNAME_IS_ALREADY_TAKEN",
@@ -19,91 +20,68 @@ const AUTH_INVALID_CODES = [
 type AuthConflictCode = (typeof AUTH_CONFLICT_CODES)[number];
 type AuthInvalidCode = (typeof AUTH_INVALID_CODES)[number];
 
-type StatusDecorator = ReturnType<ErrorHandler<{ readonly AppError: AppError }>>["status"];
+export const errorHandler = new Elysia()
+	.error({
+		AppError,
+	})
 
-const response = {
-	appError: (status: StatusDecorator, error: AppError) =>
-		getErrorResponse(status, error.statusCode, {
-			code: error.code as ErrorResponseDto["code"],
-			message: error.message,
-		}),
+	.use(i18nMiddleware)
+	.onError({ as: "global" }, ({ code, status, error, set, locale }) => {
+		const traceId = getTraceId();
+		if (traceId) {
+			set.headers["X-Trace-ID"] = traceId;
+		}
 
-	notFound: (status: StatusDecorator) =>
-		getErrorResponse(status, 404, {
-			code: "NOT_FOUND",
-			message: "The requested resource was not found.",
-		}),
+		if (AppError.isAppError(error)) {
+			return getErrorResponse(status, error.statusCode, locale, {
+				code: error.code as ErrorResponseDto["code"],
+				message: error.message,
+			});
+		}
 
-	validation: (
-		status: StatusDecorator,
-		error: { message: string; detail: (msg: string) => unknown }
-	) => {
-		const detail = error.detail(error.message);
-		return getErrorResponse(status, 422, {
-			code: "VALIDATION_ERROR",
-			message: typeof detail === "string" ? detail : (detail as { summary: string }).summary,
-		});
-	},
+		if (code === "NOT_FOUND") {
+			return getErrorResponse(status, 404, locale, {
+				code: "NOT_FOUND",
+				message: "The requested resource was not found.",
+			});
+		}
 
-	betterAuthConflict: (status: StatusDecorator, error: APIError) =>
-		getErrorResponse(status, 409, {
-			code: (error.body?.code || "ENTITY_CONFLICT") as ErrorResponseDto["code"],
-			message: error.body?.message,
-		}),
+		if (code === "VALIDATION") {
+			const detail = error.detail(error.message);
+			const message = typeof detail === "string" ? detail : detail.summary;
+			return getErrorResponse(status, 422, locale, {
+				code: "VALIDATION_ERROR",
+				message,
+			});
+		}
 
-	betterAuthInvalidCred: (status: StatusDecorator) =>
-		getErrorResponse(status, 401, {
-			code: "INVALID_CREDENTIALS",
-			message: "Provided credentials are invalid.",
-		}),
+		if (error instanceof BetterAuthAPIError) {
+			const bodyCode = error.body?.code || "";
 
-	betterAuthGeneral: (status: StatusDecorator, error: APIError) =>
-		getErrorResponse(status, error.statusCode, {
-			code: (error.body?.code || "AUTH_ERROR") as ErrorResponseDto["code"],
-			message: error.body?.message,
-		}),
+			if (AUTH_CONFLICT_CODES.includes(bodyCode as AuthConflictCode)) {
+				return getErrorResponse(status, 409, locale, {
+					code: (error.body?.code || "ENTITY_CONFLICT") as ErrorResponseDto["code"],
+					message: error.body?.message,
+				});
+			}
 
-	internal: (status: StatusDecorator) =>
-		getErrorResponse(status, 500, {
+			if (AUTH_INVALID_CODES.includes(bodyCode as AuthInvalidCode)) {
+				return getErrorResponse(status, 401, locale, {
+					code: "INVALID_CREDENTIALS",
+					message: "Provided credentials are invalid.",
+				});
+			}
+
+			if (error.statusCode < 500) {
+				return getErrorResponse(status, error.statusCode, locale, {
+					code: "UNAUTHORIZED",
+					message: error.body?.message,
+				});
+			}
+		}
+
+		return getErrorResponse(status, 500, locale, {
 			code: "INTERNAL_SERVER_ERROR",
 			message: "Internal server error",
-		}),
-} as const;
-
-export const errorHandler: ErrorHandler<
-	{
-		readonly AppError: AppError;
-	},
-	// biome-ignore lint/complexity/noBannedTypes: sync with Elysia
-	{},
-	// biome-ignore lint/complexity/noBannedTypes: sync with Elysia
-	{ decorator: {}; store: {}; derive: { ip: string }; resolve: {} }
-> = ({ code, status, error }) => {
-	if (AppError.isAppError(error)) {
-		return response.appError(status, error);
-	}
-
-	if (code === "NOT_FOUND") {
-		return response.notFound(status);
-	}
-
-	if (code === "VALIDATION") {
-		return response.validation(status, error);
-	}
-
-	if (error instanceof BetterAuthAPIError) {
-		const bodyCode = error.body?.code || "";
-
-		if (AUTH_CONFLICT_CODES.includes(bodyCode as AuthConflictCode)) {
-			return response.betterAuthConflict(status, error);
-		}
-
-		if (AUTH_INVALID_CODES.includes(bodyCode as AuthInvalidCode)) {
-			return response.betterAuthInvalidCred(status);
-		}
-
-		return response.betterAuthGeneral(status, error);
-	}
-
-	return response.internal(status);
-};
+		});
+	});

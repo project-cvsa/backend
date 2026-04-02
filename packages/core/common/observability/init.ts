@@ -1,15 +1,25 @@
-import {
-	env,
-	createPinoLogger,
-	createApplicationLogger,
-	initializeOtelSdk,
-} from "@cvsa/core/common";
 import { logs } from "@opentelemetry/api-logs";
+import { resourceFromAttributes } from "@opentelemetry/resources";
+import { NodeSDK } from "@opentelemetry/sdk-node";
+import { env, createPinoLogger, createApplicationLogger } from "@cvsa/core/common";
+
+export async function initOtelSdk() {
+	const resource = resourceFromAttributes({
+		"service.name": env.OTEL_SERVICE_NAME,
+		"service.version": env.OTEL_SERVICE_VERSION,
+		"deployment.environment": env.NODE_ENV ?? "development",
+	});
+
+	const sdk = new NodeSDK({
+		resource,
+	});
+
+	sdk.start();
+}
 
 export interface Observability {
 	pinoLogger: ReturnType<typeof createPinoLogger>;
 	appLogger: ReturnType<typeof createApplicationLogger>;
-	otelAvailable: boolean;
 }
 
 async function initializeObservability(): Promise<Observability> {
@@ -18,29 +28,15 @@ async function initializeObservability(): Promise<Observability> {
 		NODE_ENV: env.NODE_ENV,
 	});
 
-	const otelResult = await initializeOtelSdk({
-		OTEL_ENABLED: env.OTEL_ENABLED,
-		OTEL_EXPORTER_OTLP_ENDPOINT: env.OTEL_EXPORTER_OTLP_ENDPOINT,
-		OTEL_EXPORTER_OTLP_PROTOCOL: env.OTEL_EXPORTER_OTLP_PROTOCOL,
-		OTEL_SERVICE_NAME: env.OTEL_SERVICE_NAME,
-		OTEL_SERVICE_VERSION: env.OTEL_SERVICE_VERSION,
-		OTEL_COLLECTOR_TIMEOUT_MS: env.OTEL_COLLECTOR_TIMEOUT_MS,
-		OTEL_RETRY_ON_FAILURE: env.OTEL_RETRY_ON_FAILURE,
-		OTEL_QUEUE_SIZE: env.OTEL_QUEUE_SIZE,
-		OTEL_DEV_MODE_SKIP_EXPORTER: env.OTEL_DEV_MODE_SKIP_EXPORTER,
-		NODE_ENV: env.NODE_ENV || "development",
-	});
+	await initOtelSdk();
 
-	const otelLogger = otelResult.isAvailable
-		? logs.getLogger(env.OTEL_SERVICE_NAME || "@cvsa/core")
-		: undefined;
+	const otelLogger = logs.getLogger(env.OTEL_SERVICE_NAME || "@cvsa/core");
 
-	const appLogger = createApplicationLogger(pinoLogger, otelLogger, otelResult.isAvailable);
+	const appLogger = createApplicationLogger(pinoLogger, otelLogger);
 
 	return {
 		pinoLogger,
 		appLogger,
-		otelAvailable: otelResult.isAvailable,
 	};
 }
 

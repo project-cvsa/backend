@@ -19,7 +19,7 @@ export class SongService implements IDetailsService<SongDetailsResponseDto> {
 		return traceTask("db findOne song", async () => {
 			const result = await this.repository.getDetailsById(id);
 			if (result === null) {
-				throw new AppError("Song not found", "NOT_FOUND", 404);
+				throw new AppError("error.song.notfound", "NOT_FOUND", 404);
 			}
 			return result;
 		});
@@ -40,7 +40,7 @@ export class SongService implements IDetailsService<SongDetailsResponseDto> {
 	async update(id: SongId, input: UpdateSongRequestDto): Promise<Serialized<Song>> {
 		const existing = await this.repository.getById(id);
 		if (existing === null) {
-			throw new AppError("Song not found", "NOT_FOUND", 404);
+			throw new AppError("error.song.notfound", "NOT_FOUND", 404);
 		}
 		const result = await traceTask("db update song", async () => {
 			return await this.repository.update(id, input);
@@ -56,7 +56,7 @@ export class SongService implements IDetailsService<SongDetailsResponseDto> {
 	async delete(id: SongId): Promise<void> {
 		const existing = await this.repository.getById(id);
 		if (existing === null) {
-			throw new AppError("Song not found", "NOT_FOUND", 404);
+			throw new AppError("error.song.notfound", "NOT_FOUND", 404);
 		}
 		await traceTask("db delete song", async () => {
 			return await this.repository.softDelete(id);

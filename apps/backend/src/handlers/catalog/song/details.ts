@@ -14,7 +14,8 @@ export const songDetailsHandler = new Elysia().get(
 	{
 		detail: {
 			summary: "Song Details",
-			description: "",
+			description:
+				"Retrieve detailed information about a specific song by its ID. Includes all metadata such as title, artists, album, duration, and audio sources.",
 		},
 		response: {
 			200: SongDetailsResponseSchema,

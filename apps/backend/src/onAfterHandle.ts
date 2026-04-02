@@ -1,7 +1,7 @@
 import Elysia, { ElysiaFile } from "elysia";
 import { trace, context } from "@opentelemetry/api";
 
-const getTraceId = () => {
+export const getTraceId = () => {
 	const currentSpan = trace.getSpan(context.active());
 
 	if (currentSpan) {
@@ -13,13 +13,14 @@ const getTraceId = () => {
 
 const encoder = new TextEncoder();
 
-export const onAfterHandler = new Elysia().onAfterHandle(
-	{ as: "global" },
-	({ responseValue, request, set }) => {
+export const onAfterHandler = new Elysia()
+	.onBeforeHandle({ as: "global" }, ({ set }) => {
 		const traceId = getTraceId();
 		if (traceId) {
 			set.headers["X-Trace-ID"] = traceId;
 		}
+	})
+	.onAfterHandle({ as: "global" }, ({ responseValue, request }) => {
 		const contentType = request.headers.get("Content-Type") || "";
 		const accept = request.headers.get("Accept") || "";
 		const secFetchMode = request.headers.get("Sec-Fetch-Mode");
@@ -56,5 +57,4 @@ export const onAfterHandler = new Elysia().onAfterHandle(
 				},
 			});
 		}
-	}
-);
+	});

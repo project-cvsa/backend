@@ -39,7 +39,7 @@ export const signupHandler = new Elysia()
 			});
 
 			if (!token) {
-				throw new AppError("Cannot create user", "INTERNAL_SERVER_ERROR", 500, {
+				throw new AppError("error.signup.failed", "INTERNAL_SERVER_ERROR", 500, {
 					cause: "Better Auth responded with no token",
 				});
 			}
@@ -59,7 +59,8 @@ export const signupHandler = new Elysia()
 			body: SignupRequestSchema,
 			detail: {
 				summary: "User Registration",
-				description: "",
+				description:
+					"Register a new user account with email and password. Returns the created user info and sets an httpOnly authentication cookie.",
 			},
 			response: {
 				200: SignupResponseSchema,

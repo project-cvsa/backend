@@ -1,7 +1,7 @@
 import { Elysia } from "elysia";
 import { z } from "zod";
 import { ErrorResponseSchema, songService } from "@cvsa/core";
-import { authMiddleware } from "@common/middlewares/auth";
+import { authMiddleware } from "@/middlewares";
 import { traceTask } from "@/common/trace";
 
 export const songDeleteHandler = new Elysia({ name: "songDeleteHandler" })
@@ -21,7 +21,8 @@ export const songDeleteHandler = new Elysia({ name: "songDeleteHandler" })
 			}),
 			detail: {
 				summary: "Delete Song",
-				description: "Soft delete a song (authentication required)",
+				description:
+					"Soft delete a song from the catalog. Requires authentication. The song record is marked as deleted but retained in the database for data integrity.",
 			},
 			response: {
 				204: z.null(),

@@ -1,7 +1,7 @@
 import { Elysia } from "elysia";
 import { z } from "zod";
 import { UpdateSongRequestSchema, ErrorResponseSchema, songService } from "@cvsa/core";
-import { authMiddleware } from "@common/middlewares/auth";
+import { authMiddleware } from "@/middlewares";
 import { SongSchema } from "@cvsa/db";
 import { traceTask } from "@/common/trace";
 
@@ -22,7 +22,8 @@ export const songUpdateHandler = new Elysia({ name: "songUpdateHandler" })
 			}),
 			detail: {
 				summary: "Update Song",
-				description: "Update an existing song (authentication required)",
+				description:
+					"Update metadata of an existing song identified by its ID. Requires authentication.",
 			},
 			response: {
 				200: SongSchema,

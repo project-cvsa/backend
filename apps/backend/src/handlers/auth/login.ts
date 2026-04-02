@@ -41,7 +41,7 @@ export const loginHandler = new Elysia()
 			});
 
 			if (!token) {
-				throw new AppError("Cannot login", "INTERNAL_SERVER_ERROR", 500, {
+				throw new AppError("error.login.failed", "INTERNAL_SERVER_ERROR", 500, {
 					cause: "Better Auth responded with no token",
 				});
 			}
@@ -61,7 +61,8 @@ export const loginHandler = new Elysia()
 			body: LoginRequestSchema,
 			detail: {
 				summary: "User Login",
-				description: "",
+				description:
+					"Authenticate an existing user with email and password credentials. Returns user info and sets an httpOnly authentication cookie.",
 			},
 			response: {
 				200: LoginResponseSchema,

@@ -9,7 +9,7 @@ export const authMiddleware = new Elysia({ name: "authMiddleware" }).derive(
 		});
 
 		if (!session) {
-			throw new AppError("Unauthorized", "UNAUTHORIZED", 401);
+			throw new AppError("error.unauthorized", "UNAUTHORIZED", 401);
 		}
 
 		return {

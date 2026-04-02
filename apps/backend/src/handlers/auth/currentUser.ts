@@ -4,7 +4,7 @@ import {
 	betterAuthToCurrentUserInfoDto,
 	ErrorResponseSchema,
 } from "@cvsa/core";
-import { authMiddleware } from "@common/middlewares";
+import { authMiddleware } from "@/middlewares";
 import { traceTask } from "@/common/trace";
 
 export const getCurrentUserHandler = new Elysia().use(authMiddleware).get(
@@ -18,7 +18,8 @@ export const getCurrentUserHandler = new Elysia().use(authMiddleware).get(
 	{
 		detail: {
 			summary: "Get current user",
-			description: "",
+			description:
+				"Retrieve the currently authenticated user's profile information. Requires a valid session cookie or a valid token in Authorization header.",
 		},
 		response: {
 			200: CurrentUserInfoSchema,

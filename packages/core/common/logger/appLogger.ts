@@ -39,7 +39,6 @@ function createLogMethod(level: PinoLevel) {
 	return function logMethod(
 		pinoLogger: PinoLogger,
 		otelLogger: Logger | undefined,
-		isOtelAvailable: boolean,
 		msg: string,
 		attrs?: LogAttrs
 	): void {
@@ -69,7 +68,7 @@ function createLogMethod(level: PinoLevel) {
 			(pinoMethod as (msg: string, ...args: unknown[]) => void)(msg, mergedAttrs);
 		}
 
-		if (isOtelAvailable && otelLogger) {
+		if (otelLogger) {
 			const otelAttrs: Attributes = {
 				...(attrs || {}),
 				...(spanContextAttrs || {}),
@@ -102,8 +101,7 @@ function createLogMethod(level: PinoLevel) {
 
 export function createApplicationLogger(
 	pinoLogger: PinoLogger,
-	otelLogger: Logger | undefined,
-	isOtelAvailable: boolean
+	otelLogger: Logger | undefined
 ): ApplicationLogger {
 	const traceMethod = createLogMethod("trace");
 	const debugMethod = createLogMethod("debug");
@@ -114,22 +112,22 @@ export function createApplicationLogger(
 
 	return {
 		trace(msg: string, attrs?: LogAttrs): void {
-			traceMethod(pinoLogger, otelLogger, isOtelAvailable, msg, attrs);
+			traceMethod(pinoLogger, otelLogger, msg, attrs);
 		},
 		debug(msg: string, attrs?: LogAttrs): void {
-			debugMethod(pinoLogger, otelLogger, isOtelAvailable, msg, attrs);
+			debugMethod(pinoLogger, otelLogger, msg, attrs);
 		},
 		info(msg: string, attrs?: LogAttrs): void {
-			infoMethod(pinoLogger, otelLogger, isOtelAvailable, msg, attrs);
+			infoMethod(pinoLogger, otelLogger, msg, attrs);
 		},
 		warn(msg: string, attrs?: LogAttrs): void {
-			warnMethod(pinoLogger, otelLogger, isOtelAvailable, msg, attrs);
+			warnMethod(pinoLogger, otelLogger, msg, attrs);
 		},
 		error(msg: string, attrs?: LogAttrs): void {
-			errorMethod(pinoLogger, otelLogger, isOtelAvailable, msg, attrs);
+			errorMethod(pinoLogger, otelLogger, msg, attrs);
 		},
 		fatal(msg: string, attrs?: LogAttrs): void {
-			fatalMethod(pinoLogger, otelLogger, isOtelAvailable, msg, attrs);
+			fatalMethod(pinoLogger, otelLogger, msg, attrs);
 		},
 	};
 }

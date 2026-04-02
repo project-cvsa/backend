@@ -15,7 +15,8 @@ export const songSearchHandler = new Elysia().get(
 	{
 		detail: {
 			summary: "Search for Songs",
-			description: "",
+			description:
+				"Full-text search across song titles, artist names, and album titles. Returns a list of matching songs ordered by relevance.",
 		},
 		query: z.object({
 			q: z.string().optional(),

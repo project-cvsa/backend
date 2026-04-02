@@ -1,0 +1,6 @@
+{
+	"error.unauthorized": "未登录",
+	"error.song.notfound": "歌曲不存在",
+	"error.signup.failed": "无法注册",
+	"error.login.failed": "无法登录"
+}
