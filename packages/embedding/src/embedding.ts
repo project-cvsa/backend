@@ -3,11 +3,11 @@ import { AutoTokenizer, type PreTrainedTokenizer } from "@huggingface/transforme
 import { downloadFile } from "@huggingface/hub";
 import * as ort from "onnxruntime-node";
 
-const modelDir = path.join(import.meta.dir, "../../../../model/");
+const modelDir = path.join(import.meta.dir, "../../../model/");
 
 // TODO: More formalized config
-const tokenizerModel = "minishlab/potion-multilingual-128M";
-const modelPath = path.join(modelDir, "./potion-quant/model.onnx");
+const modelName = "alikia2x/potion-multilingual-128M-int8-strip";
+const modelPath = path.join(modelDir, "./potion-strip/model.onnx");
 
 // TODO: Unit test for this
 export class EmbeddingManager {
@@ -30,7 +30,7 @@ export class EmbeddingManager {
 		if (this.tokenizer !== null) {
 			return;
 		}
-		this.tokenizer = await AutoTokenizer.from_pretrained(tokenizerModel);
+		this.tokenizer = await AutoTokenizer.from_pretrained(modelName);
 	}
 
 	private async initSession(): Promise<void> {
@@ -42,7 +42,7 @@ export class EmbeddingManager {
 
 	private async getTokenizer(): Promise<PreTrainedTokenizer> {
 		if (this.tokenizer === null) {
-			this.tokenizer = await AutoTokenizer.from_pretrained(tokenizerModel);
+			this.tokenizer = await AutoTokenizer.from_pretrained(modelName);
 		}
 		return this.tokenizer;
 	}
@@ -76,7 +76,7 @@ export class EmbeddingManager {
 		}
 		console.log("Downloading embedding model...");
 		const blob = await downloadFile({
-			repo: "alikia2x/potion-multilingual-128M-int8",
+			repo: modelName,
 			path: "onnx/model.onnx",
 		});
 		if (!blob) {

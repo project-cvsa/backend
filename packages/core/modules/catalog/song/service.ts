@@ -32,6 +32,7 @@ export class SongService implements IDetailsService<SongDetailsResponseDto> {
 		try {
 			this.search.sync(result.id);
 		} catch (e) {
+			// TODO: replace log
 			console.error(e);
 		}
 		return result;
@@ -48,6 +49,7 @@ export class SongService implements IDetailsService<SongDetailsResponseDto> {
 		try {
 			this.search.sync(id);
 		} catch (e) {
+			// TODO: Should we mark this as dirty and sync it later?
 			console.error(e);
 		}
 		return result;

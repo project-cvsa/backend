@@ -1,8 +1,10 @@
 import { prisma } from "@cvsa/core/common";
 import { SongRepository } from "./repository";
 import { SongService } from "./service";
-import { SongSearchService, searchManager, embeddingManager } from "@cvsa/core/modules";
-
+import { SongSearchService, searchManager } from "@cvsa/core/modules";
+import type { EmbeddingApp } from "@cvsa/embedding";
+import { treaty } from "@elysiajs/eden";
+export const embeddingManager = treaty<EmbeddingApp>("localhost:14900");
 export const songRepository = new SongRepository(prisma);
 export const songSearchService = new SongSearchService(
 	songRepository,

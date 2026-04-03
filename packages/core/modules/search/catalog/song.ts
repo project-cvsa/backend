@@ -28,10 +28,6 @@ export class SongSearchService extends ISearchService<SongDetailsResponseDto> {
 		song: SongDetailsResponseDto,
 		language: string
 	): Promise<SongSearchIndex> {
-		if (!this.embeddingManager) {
-			// TODO: Use unified Error object
-			throw new Error("Embedding service not available");
-		}
 		const getDesc = () => {
 			if (language === song.language) return song.description;
 			return song.localizedDescriptions?.[language];
@@ -54,14 +50,16 @@ export class SongSearchService extends ISearchService<SongDetailsResponseDto> {
 		const getArtists = () => {
 			return getLocalizedName("artists");
 		};
-		const vectors = await this.embeddingManager.getEmbedding([
-			`Name: ${song.name ?? ""}
+		const vectors = await this.embeddingManager.embeddings.post({
+			texts: [
+				`Name: ${song.name ?? ""}
 Lyrics: ${song.lyrics ?? ""}
 Description: ${getDesc() ?? ""}
 Singers: ${getSingers().join(", ")}
 Artists: ${getArtists().join(", ")}
 `,
-		]);
+			],
+		});
 		return {
 			id: song.id,
 			name: song.name ?? undefined,
@@ -76,9 +74,12 @@ Artists: ${getArtists().join(", ")}
 				.map((item) => item.engine ?? undefined)
 				.filter(Boolean) as string[],
 			publishedAt: song.publishedAt ? new Date(song.publishedAt).getTime() : undefined,
-			_vectors: {
-				"potion-multilingual-128M": vectors[0],
-			},
+			// TODO: Error handling.
+			_vectors: vectors.data?.embeddings[0]
+				? {
+						"potion-multilingual-128M": vectors.data?.embeddings[0],
+					}
+				: undefined,
 		};
 	}
 
@@ -112,13 +113,16 @@ Artists: ${getArtists().join(", ")}
 	}
 
 	public async search(query: string, language: string = "zh") {
-		if (!this.manager || !this.embeddingManager) {
+		if (!this.manager) {
 			throw new Error("Search or embedding service not available");
 		}
 
 		const index = this.manager.getSearchIndex(`song_${language}`);
+		const embeddingResponse = await this.embeddingManager.embeddings.post({
+			texts: [query],
+		});
 		return index.search(query, {
-			vector: (await this.embeddingManager.getEmbedding([query]))[0],
+			vector: embeddingResponse?.data?.embeddings[0],
 			hybrid: {
 				embedder: "potion-multilingual-128M",
 				semanticRatio: 0.25,

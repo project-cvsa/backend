@@ -23,6 +23,9 @@
 		"@elysiajs/openapi": "^1.4.14",
 		"@elysiajs/opentelemetry": "^1.4.10",
 		"@fanee/runtime-node": "^0.2.1",
+		"@opentelemetry/api": "^1.9.1",
+		"@opentelemetry/exporter-trace-otlp-proto": "^0.214.0",
+		"@opentelemetry/sdk-trace-node": "^2.6.1",
 		"@prisma/adapter-pg": "^7.4.1",
 		"@t3-oss/env-core": "^0.13.10",
 		"argon2": "^0.44.0",
@@ -32,6 +35,7 @@
 		"elysia-ip": "^1.0.10",
 		"elysia-rate-limit": "^4.5.0",
 		"nanoid": "^5.1.6",
+		"pino": "^10.3.1",
 		"zod": "^4.3.6"
 	}
 }
