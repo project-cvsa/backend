@@ -9,6 +9,7 @@ describe("Song E2E Tests", () => {
 	beforeEach(async () => {
 		await prisma.session.deleteMany();
 		await prisma.user.deleteMany();
+		await prisma.lyrics.deleteMany();
 		await prisma.song.deleteMany();
 	});
 
@@ -62,6 +63,49 @@ describe("Song E2E Tests", () => {
 			expect(status).toBe(401);
 			expect(error?.value).toMatchObject({
 				code: "UNAUTHORIZED",
+			});
+		});
+
+		test("should create a song with lyrics", async () => {
+			const token = await getAuthToken();
+
+			const payload = {
+				name: "Lyrics Song",
+				type: "ORIGINAL" as const,
+				lyrics: [
+					{
+						language: "zh",
+						isTranslated: false,
+						plainText: "第一行歌词\n第二行歌词",
+						lrc: "[00:00.00]第一行歌词\n[00:05.00]第二行歌词",
+						ttml: "<tt></tt>",
+					},
+				],
+			};
+
+			const { data, status } = await api.v2.song.post(payload, {
+				headers: {
+					authorization: `Bearer ${token}`,
+				},
+			});
+
+			expect(status).toBe(201);
+			expect(data).toMatchObject({
+				id: expect.any(Number),
+				name: "Lyrics Song",
+			});
+
+			// Verify lyrics were persisted to DB
+			const lyrics = await prisma.lyrics.findMany({
+				where: { songId: data!.id },
+			});
+			expect(lyrics).toHaveLength(1);
+			expect(lyrics[0]).toMatchObject({
+				language: "zh",
+				isTranslated: false,
+				plainText: "第一行歌词\n第二行歌词",
+				lrc: "[00:00.00]第一行歌词\n[00:05.00]第二行歌词",
+				ttml: "<tt></tt>",
 			});
 		});
 	});

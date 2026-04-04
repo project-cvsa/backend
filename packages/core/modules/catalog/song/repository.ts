@@ -76,7 +76,7 @@ export class SongRepository implements ISongRepository {
 
 	async create(input: CreateSongRequestDto, tx?: TxClient) {
 		const client = tx ?? this.prisma;
-		const { performances, creations, ...songData } = input;
+		const { performances, creations, lyrics, ...songData } = input;
 
 		return transformPrismaResult(
 			await client.song.create({
@@ -95,6 +95,9 @@ export class SongRepository implements ISongRepository {
 							artistId: c.artistId,
 							artistRoleId: c.roleId,
 						})),
+					},
+					lyrics: lyrics && {
+						create: lyrics,
 					},
 				},
 			})

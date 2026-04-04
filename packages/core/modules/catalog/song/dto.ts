@@ -16,15 +16,24 @@ const CreatePerformanceSchema = z.object({
 	svsEngineVersionId: z.int().positive().nullish(),
 });
 
+const CreateLyricsSchema = z.object({
+	language: z.string().optional(),
+	isTranslated: z.boolean().optional(),
+	plainText: z.string().optional(),
+	ttml: z.string().optional(),
+	lrc: z.string().optional(),
+});
+
 export const CreateSongRequestSchema = z.object({
 	type: SongTypeSchema.nullish(),
 	name: z.string().nullish(),
-	duration: z.number().nullish(),
+	duration: z.int().nullish(),
 	description: z.string().nullish(),
 	coverUrl: z.url().nullish(),
 	publishedAt: z.iso.datetime().nullish(),
 	performances: z.array(CreatePerformanceSchema).optional(),
 	creations: z.array(CreateCreationSchema).optional(),
+	lyrics: z.array(CreateLyricsSchema).optional(),
 });
 
 export const UpdateSongRequestSchema = z.object({
