@@ -97,7 +97,7 @@ describe("Song E2E Tests", () => {
 
 			// Verify lyrics were persisted to DB
 			const lyrics = await prisma.lyrics.findMany({
-				where: { songId: data!.id },
+				where: { songId: data?.id },
 			});
 			expect(lyrics).toHaveLength(1);
 			expect(lyrics[0]).toMatchObject({
