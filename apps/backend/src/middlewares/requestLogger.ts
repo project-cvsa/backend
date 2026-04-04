@@ -1,97 +1,53 @@
 import Elysia from "elysia";
 import type { Logger } from "pino";
-import { appLogger, pinoLogger } from "@cvsa/core";
+import { pinoLogger } from "@cvsa/core";
+
 import { ip } from "elysia-ip";
-
-interface RequestMeta {
-	startTime: number;
-}
-
-function getLogLevel(status: number): "error" | "warn" | "info" {
-	if (status >= 500) return "error";
-	if (status >= 400) return "warn";
-	return "info";
-}
-
-function getHeader(headers: Headers, name: string): string | undefined {
-	const value = headers.get(name);
-	return value ?? undefined;
-}
+import { formatGinLog, getLogLevel } from "@common/log";
 
 export interface RequestLoggerOptions {
 	excludePaths?: string[];
 }
 
-const requestMeta = new WeakMap<Request, RequestMeta>();
-
-export function createRequestLoggerMiddleware(
-	pinoLogger: Logger<never>,
-	options: RequestLoggerOptions = {}
-) {
-	const excludePaths = options.excludePaths ?? ["/health", "/metrics"];
-
+export function createRequestLoggerMiddleware(pinoLogger: Logger<never>) {
 	return new Elysia()
-		.onRequest(function setRequestMeta({ request }) {
-			requestMeta.set(request, {
-				startTime: Bun.nanoseconds() / 1_000_000,
-			});
-		})
 		.use(ip())
-		.onError({ as: "global" }, function errorLog({ request, set, error, code, ip }) {
-			const meta = requestMeta.get(request);
-			if (!meta) return;
-
+		.derive(function setRequestMeta() {
+			return {
+				startTime: Bun.nanoseconds() / 1_000_000,
+			};
+		})
+		.onAfterHandle({ as: "global" }, function afterResponseLog(context) {
+			const { request, ip, responseValue, startTime } = context;
 			const requestPath = new URL(request.url).pathname;
-			if (excludePaths.includes(requestPath)) {
-				requestMeta.delete(request);
-				return;
-			}
 
-			const status = typeof set.status === "number" ? set.status : 500;
-			const userAgent = getHeader(request.headers, "user-agent");
-			const data = {
+			const status = (() => {
+				const r = responseValue as { status?: number };
+				if (r.status) {
+					return r.status;
+				}
+				const r2 = responseValue as { code?: number };
+				if (r2.code) {
+					return r2.code;
+				}
+				return undefined;
+			})();
+
+			const userAgent = request.headers?.get("user-agent") ?? undefined;
+
+			const logData: Record<string, unknown> = {
 				type: "http_request",
 				method: request.method,
 				path: requestPath,
 				status,
-				latency: `${(Bun.nanoseconds() / 1_000_000 - meta.startTime).toFixed(3)}ms`,
-				userAgent,
-				ip,
-				error: error instanceof Error ? error.message : String(error),
-				code,
-			};
-
-			pinoLogger[getLogLevel(status)](data);
-
-			appLogger[getLogLevel(status)](data.error, data);
-
-			requestMeta.delete(request);
-		})
-		.onAfterResponse({ as: "global" }, function afterResponseLog({ request, set, ip }) {
-			const meta = requestMeta.get(request);
-			if (!meta) return;
-
-			const requestPath = new URL(request.url).pathname;
-			if (excludePaths.includes(requestPath)) {
-				requestMeta.delete(request);
-				return;
-			}
-
-			const status = typeof set.status === "number" ? set.status : 200;
-			const userAgent = getHeader(request.headers, "user-agent");
-
-			const logData: Record<string, unknown> = {
-				method: request.method,
-				path: requestPath,
-				status,
-				latency: `${(Bun.nanoseconds() / 1_000_000 - meta.startTime).toFixed(3)}ms`,
+				latency: startTime
+					? `${(Bun.nanoseconds() / 1_000_000 - startTime).toFixed(3)}ms`
+					: undefined,
 				userAgent,
 				ip,
 			};
 
-			pinoLogger[getLogLevel(status)](logData);
-
-			requestMeta.delete(request);
+			pinoLogger[getLogLevel(status ?? 200)](formatGinLog(logData));
 		});
 }
 

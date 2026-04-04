@@ -62,9 +62,9 @@ prisma.$on("query", (e) => {
 	traceTask(
 		"prisma rawQuery",
 		() => {
-			appLogger.debug(`Query: ${e.query}`);
-			appLogger.debug(`Params: ${e.params}`);
-			appLogger.debug(`Duration: ${e.duration}ms`);
+			appLogger.trace(`Query: ${e.query}`);
+			appLogger.trace(`Params: ${e.params}`);
+			appLogger.trace(`Duration: ${e.duration}ms`);
 		},
 		Date.now() - e.duration
 	);

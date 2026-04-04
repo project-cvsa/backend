@@ -1,4 +1,4 @@
-import { SpanStatusCode, trace } from "@opentelemetry/api";
+import { SpanStatusCode, trace, context } from "@opentelemetry/api";
 import pkg from "../../package.json";
 
 export const tracer = trace.getTracer(pkg.name, pkg.version);
@@ -16,3 +16,13 @@ export async function traceTask<T>(name: string, fn: () => T): Promise<T> {
 		}
 	});
 }
+
+export const getTraceId = () => {
+	const currentSpan = trace.getSpan(context.active());
+
+	if (currentSpan) {
+		const spanContext = currentSpan.spanContext();
+
+		return spanContext.traceId;
+	}
+};

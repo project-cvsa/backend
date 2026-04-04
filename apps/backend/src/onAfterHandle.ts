@@ -1,15 +1,5 @@
 import Elysia, { ElysiaFile } from "elysia";
-import { trace, context } from "@opentelemetry/api";
-
-export const getTraceId = () => {
-	const currentSpan = trace.getSpan(context.active());
-
-	if (currentSpan) {
-		const spanContext = currentSpan.spanContext();
-
-		return spanContext.traceId;
-	}
-};
+import { getTraceId } from "@/common/trace";
 
 const encoder = new TextEncoder();
 

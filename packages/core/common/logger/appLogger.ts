@@ -53,19 +53,22 @@ function createLogMethod(level: PinoLevel) {
 			...spanContextAttrs,
 		};
 
-		const pinoMethod = pinoLogger[level].bind(pinoLogger);
+		const pinoMethod = pinoLogger[level].bind(pinoLogger) as (
+			msg: string,
+			...args: unknown[]
+		) => void;
 		if (level === "error" || level === "fatal") {
 			const err = attrs && "error" in attrs ? (attrs.error as Error) : undefined;
 			if (err instanceof Error) {
-				(pinoMethod as (msg: string, ...args: unknown[]) => void)(msg, {
+				pinoMethod(msg, {
 					...mergedAttrs,
 					err,
 				});
 			} else {
-				(pinoMethod as (msg: string, ...args: unknown[]) => void)(msg, mergedAttrs);
+				pinoMethod(msg, mergedAttrs);
 			}
 		} else {
-			(pinoMethod as (msg: string, ...args: unknown[]) => void)(msg, mergedAttrs);
+			pinoMethod(msg, mergedAttrs);
 		}
 
 		if (otelLogger) {

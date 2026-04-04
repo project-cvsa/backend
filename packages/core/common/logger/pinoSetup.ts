@@ -9,7 +9,7 @@ export function createPinoLogger(env: {
 
 	const redact = ["authorization", "cookie", "password", "token"];
 
-	const timestamp = isProduction ? stdTimeFunctions.isoTime : stdTimeFunctions.unixTime;
+	const timestamp = stdTimeFunctions.isoTime;
 
 	const baseOptions = {
 		level: env.LOG_LEVEL || "info",
