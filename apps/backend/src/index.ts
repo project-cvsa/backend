@@ -9,6 +9,7 @@ import { requestLoggerMiddleware } from "@/middlewares";
 import { opentelemetry } from "@elysiajs/opentelemetry";
 import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-node";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
+import { devHandler } from "./handlers";
 
 const [host, port] = getBindingInfo();
 
@@ -31,6 +32,7 @@ export const app = new Elysia({
 	.use(openapi())
 	.use(authHandler)
 	.use(songHandler)
+	.use(devHandler)
 	.listen(16412);
 
 export const VERSION = pkg.version;
