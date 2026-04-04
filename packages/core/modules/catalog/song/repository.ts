@@ -6,10 +6,85 @@ import type {
 	SongDetailsResponseDto,
 } from "./dto";
 import type { ISongRepository } from "./repository.interface";
-import { transformPrismaResult, type TxClient } from "@cvsa/core/common";
+import { AppError, transformPrismaResult, type TxClient } from "@cvsa/core/common";
+
+type PerformanceInput = NonNullable<CreateSongRequestDto["performances"]>[number];
 
 export class SongRepository implements ISongRepository {
 	constructor(private readonly prisma: PrismaClient) {}
+
+	private async validatePerformances(
+		performances: PerformanceInput[],
+		db: TxClient
+	): Promise<void> {
+		for (const perf of performances) {
+			// Step 1: Verify singer exists
+			const singer = await db.singer.findUnique({
+				where: { id: perf.singerId },
+				select: { id: true },
+			});
+			if (!singer) {
+				throw new AppError("One or more referenced IDs do not exist", "INVALID_RELATION_ID", 422);
+			}
+
+			// Step 2: Verify optional referenced IDs
+			const voicebank =
+				perf.voicebankId != null
+					? await db.voicebank.findUnique({
+							where: { id: perf.voicebankId },
+							select: { singerId: true, svsEngineVersionId: true },
+						})
+					: null;
+			if (perf.voicebankId != null && !voicebank) {
+				throw new AppError("One or more referenced IDs do not exist", "INVALID_RELATION_ID", 422);
+			}
+
+			const engineVersion =
+				perf.svsEngineVersionId != null
+					? await db.svsEngineVersion.findUnique({
+							where: { id: perf.svsEngineVersionId },
+							select: { svsEngineId: true },
+						})
+					: null;
+			if (perf.svsEngineVersionId != null && !engineVersion) {
+				throw new AppError("One or more referenced IDs do not exist", "INVALID_RELATION_ID", 422);
+			}
+
+			const engine =
+				perf.svsEngineId != null
+					? await db.svsEngine.findUnique({
+							where: { id: perf.svsEngineId },
+							select: { id: true },
+						})
+					: null;
+			if (perf.svsEngineId != null && !engine) {
+				throw new AppError("One or more referenced IDs do not exist", "INVALID_RELATION_ID", 422);
+			}
+
+			// Step 3: Cross-entity consistency checks
+			if (voicebank && voicebank.singerId !== perf.singerId) {
+				throw new AppError(
+					"Voicebank does not belong to the specified singer",
+					"INCONSISTENT_SINGER_RELATION",
+					422
+				);
+			}
+			if (voicebank && engineVersion && voicebank.svsEngineVersionId !== perf.svsEngineVersionId) {
+				throw new AppError(
+					"Voicebank is not associated with the specified engine version",
+					"INCONSISTENT_SINGER_RELATION",
+					422
+				);
+			}
+			if (engineVersion && engine && engineVersion.svsEngineId !== perf.svsEngineId) {
+				throw new AppError(
+					"Engine version does not belong to the specified engine",
+					"INCONSISTENT_SINGER_RELATION",
+					422
+				);
+			}
+		}
+	}
 
 	async getById(id: SongId, tx?: TxClient) {
 		const client = tx ?? this.prisma;
@@ -76,29 +151,43 @@ export class SongRepository implements ISongRepository {
 
 	async create(input: CreateSongRequestDto, tx?: TxClient) {
 		const client = tx ?? this.prisma;
-		const { performances, creations, ...songData } = input;
+		const { performances, creations, lyrics, ...songData } = input;
 
-		return transformPrismaResult(
-			await client.song.create({
-				data: {
-					type: songData.type ?? null,
-					name: songData.name ?? null,
-					duration: songData.duration ?? null,
-					description: songData.description ?? null,
-					coverUrl: songData.coverUrl ?? null,
-					publishedAt: songData.publishedAt ?? null,
-					performances: performances && {
-						create: performances,
+		if (performances?.length) {
+			await this.validatePerformances(performances, client);
+		}
+
+		try {
+			return transformPrismaResult(
+				await client.song.create({
+					data: {
+						type: songData.type ?? null,
+						name: songData.name ?? null,
+						duration: songData.duration ?? null,
+						description: songData.description ?? null,
+						coverUrl: songData.coverUrl ?? null,
+						publishedAt: songData.publishedAt ?? null,
+						performances: performances && {
+							create: performances,
+						},
+						creations: creations && {
+							create: creations.map((c) => ({
+								artistId: c.artistId,
+								artistRoleId: c.roleId,
+							})),
+						},
+						lyrics: lyrics && {
+							create: lyrics,
+						},
 					},
-					creations: creations && {
-						create: creations.map((c) => ({
-							artistId: c.artistId,
-							artistRoleId: c.roleId,
-						})),
-					},
-				},
-			})
-		);
+				})
+			);
+		} catch (e) {
+			if (typeof e === "object" && e !== null && "code" in e && e.code === "P2003") {
+				throw new AppError("One or more referenced IDs do not exist", "INVALID_RELATION_ID", 422);
+			}
+			throw e;
+		}
 	}
 
 	async update(id: SongId, input: UpdateSongRequestDto, tx?: TxClient) {
