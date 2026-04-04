@@ -1,8 +1,12 @@
-import { APIError } from "better-auth";
-import type { ErrorHandler } from "elysia";
-import { AppError } from "@cvsa/core";
+import { Elysia, ElysiaCustomStatusResponse } from "elysia";
+import { AppError, BetterAuthAPIError } from "@cvsa/core";
+import { appLogger, pinoLogger } from "@cvsa/logger";
 import type { ErrorResponseDto } from "@cvsa/core";
 import { getErrorResponse } from "@/common/error";
+import { getTraceId } from "@/common/trace";
+import { i18nMiddleware } from "@/middlewares";
+import { ip } from "elysia-ip";
+import { formatGinLog, getLogLevelForRequest } from "@common/log";
 
 const AUTH_CONFLICT_CODES = [
 	"USERNAME_IS_ALREADY_TAKEN",
@@ -19,85 +23,125 @@ const AUTH_INVALID_CODES = [
 type AuthConflictCode = (typeof AUTH_CONFLICT_CODES)[number];
 type AuthInvalidCode = (typeof AUTH_INVALID_CODES)[number];
 
-type StatusDecorator = ReturnType<ErrorHandler<{ readonly AppError: AppError }>>["status"];
+interface ErrorStoreData {
+	status: number;
+	request: Request;
+	data: ErrorResponseDto;
+	locale?: string;
+	rawError?: unknown;
+	known: boolean;
+}
 
-const response = {
-	appError: (status: StatusDecorator, error: AppError) =>
-		getErrorResponse(status, error.statusCode, {
-			code: error.code as ErrorResponseDto["code"],
-			message: error.message,
-		}),
+type ErrorStore = Record<string, ErrorStoreData>;
 
-	notFound: (status: StatusDecorator) =>
-		getErrorResponse(status, 404, {
-			code: "NOT_FOUND",
-			message: "The requested resource was not found.",
-		}),
-
-	validation: (
-		status: StatusDecorator,
-		error: { message: string; detail: (msg: string) => unknown }
-	) => {
-		const detail = error.detail(error.message);
-		return getErrorResponse(status, 422, {
-			code: "VALIDATION_ERROR",
-			message: typeof detail === "string" ? detail : (detail as { summary: string }).summary,
-		});
-	},
-
-	betterAuthConflict: (status: StatusDecorator, error: APIError) =>
-		getErrorResponse(status, 409, {
-			code: (error.body?.code || "ENTITY_CONFLICT") as ErrorResponseDto["code"],
-			message: error.body?.message,
-		}),
-
-	betterAuthInvalidCred: (status: StatusDecorator) =>
-		getErrorResponse(status, 401, {
-			code: "INVALID_CREDENTIALS",
-			message: "Provided credentials are invalid.",
-		}),
-
-	betterAuthGeneral: (status: StatusDecorator, error: APIError) =>
-		getErrorResponse(status, error.statusCode, {
-			code: (error.body?.code || "AUTH_ERROR") as ErrorResponseDto["code"],
-			message: error.body?.message,
-		}),
-
-	internal: (status: StatusDecorator) =>
-		getErrorResponse(status, 500, {
-			code: "INTERNAL_SERVER_ERROR",
-			message: "Internal server error",
-		}),
-} as const;
-
-export const errorHandler: ErrorHandler<{
-	readonly AppError: AppError;
-}> = ({ code, status, error }) => {
-	if (AppError.isAppError(error)) {
-		return response.appError(status, error);
-	}
-
-	if (code === "NOT_FOUND") {
-		return response.notFound(status);
-	}
-
-	if (code === "VALIDATION") {
-		return response.validation(status, error);
-	}
-
-	if (error instanceof APIError) {
-		const bodyCode = error.body?.code || "";
-
-		if (AUTH_CONFLICT_CODES.includes(bodyCode as AuthConflictCode)) {
-			return response.betterAuthConflict(status, error);
+export const errorHandler = new Elysia()
+	.error({
+		AppError,
+	})
+	.state("error", {} as ErrorStore)
+	.state("startTime", {} as Record<string, number>)
+	.use(ip())
+	.onRequest(function setRequestMeta({ store }) {
+		store.startTime = {};
+		store.error = {};
+		const traceId = getTraceId() ?? "";
+		if (traceId) {
+			store.startTime[traceId] = Bun.nanoseconds() / 1_000_000;
+		}
+	})
+	.use(i18nMiddleware)
+	.onError({ as: "global" }, ({ code, error, set, store, request }) => {
+		const traceId = getTraceId() ?? "";
+		if (traceId) {
+			set.headers["X-Trace-ID"] = traceId;
 		}
 
-		if (AUTH_INVALID_CODES.includes(bodyCode as AuthInvalidCode)) {
-			return response.betterAuthInvalidCred(status);
+		const setErrorResponse = (status: number, data: ErrorResponseDto) => {
+			store.error[traceId] = {
+				data,
+				status,
+				locale: store.locale[traceId],
+				request,
+				rawError: error,
+				known: true,
+			};
+		};
+
+		if (AppError.isAppError(error)) {
+			setErrorResponse(error.statusCode, {
+				code: error.code as ErrorResponseDto["code"],
+				message: error.message,
+			});
+		} else if (code === "NOT_FOUND") {
+			setErrorResponse(404, {
+				code: "NOT_FOUND",
+				message: "error.not-found",
+			});
+		} else if (code === "VALIDATION") {
+			const detail = error.detail(error.message);
+			const message = typeof detail === "string" ? detail : detail.summary;
+			setErrorResponse(422, {
+				code: "VALIDATION_ERROR",
+				message,
+			});
+		} else if (error instanceof BetterAuthAPIError) {
+			const bodyCode = error.body?.code || "";
+
+			if (AUTH_CONFLICT_CODES.includes(bodyCode as AuthConflictCode)) {
+				setErrorResponse(409, {
+					code: (error.body?.code || "ENTITY_CONFLICT") as ErrorResponseDto["code"],
+					message: error.body?.message,
+				});
+			} else if (AUTH_INVALID_CODES.includes(bodyCode as AuthInvalidCode)) {
+				setErrorResponse(401, {
+					code: "INVALID_CREDENTIALS",
+					message: "error.invalid-cred",
+				});
+			} else if (error.statusCode < 500) {
+				setErrorResponse(error.statusCode, {
+					code: "UNAUTHORIZED",
+					message: error.body?.message,
+				});
+			}
+		} else if (error instanceof ElysiaCustomStatusResponse) {
+			if (error.code === 404) {
+				setErrorResponse(error.code, {
+					code: "NOT_FOUND",
+					message: "error.not-found",
+				});
+			}
+		} else {
+			setErrorResponse(500, {
+				code: "INTERNAL_SERVER_ERROR",
+				message: "error.internal",
+			});
+			store.error[traceId].known = false;
 		}
+	})
+	.onError({ as: "global" }, function logErrorResponse({ store, status: statusFunc, ip }) {
+		const traceId = getTraceId() ?? "";
+		const { request, locale, data, status, rawError, known } = store.error[traceId];
+		const startTime = store.startTime[traceId];
+		const requestPath = new URL(request.url).pathname;
 
-		return response.betterAuthGeneral(status, error);
-	}
+		const userAgent = request.headers?.get("user-agent") ?? undefined;
 
-	return response.internal(status);
-};
+		const logData = {
+			type: "http_request",
+			method: request.method,
+			path: requestPath,
+			status,
+			latency: startTime
+				? `${(Bun.nanoseconds() / 1_000_000 - startTime).toFixed(3)}ms`
+				: undefined,
+			userAgent,
+			ip,
+			error: Bun.inspect(rawError),
+			errorCode: data.code,
+		};
+		if (!known) {
+			appLogger[getLogLevelForRequest(status ?? 500)](logData.error, data);
+		}
+		pinoLogger[getLogLevelForRequest(status ?? 500)](formatGinLog(logData));
+		return getErrorResponse(statusFunc, status, locale, data);
+	});

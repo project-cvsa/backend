@@ -1,11 +1,7 @@
 import { describe, expect, mock, test } from "bun:test";
-import { SongService, AppError } from "@cvsa/core";
-import type {
-	SongDetailsResponseDto,
-	ISongRepository,
-	SongSearchService,
-	Serialized,
-} from "@cvsa/core";
+import { SongService, AppError } from "@cvsa/core/internal";
+import type { SongDetailsResponseDto, ISongRepository, SongSearchService } from "@cvsa/core";
+import type { Serialized } from "@cvsa/db";
 import type { Song } from "@cvsa/db";
 import { createMockRepository } from "../utils";
 
@@ -62,7 +58,7 @@ describe("SongService", () => {
 			mockRepository.getDetailsById.mockResolvedValue(null);
 
 			expect(songService.getDetails(999)).rejects.toThrow(AppError);
-			expect(songService.getDetails(999)).rejects.toThrow("Song not found");
+			expect(songService.getDetails(999)).rejects.toThrow("error.song.notfound");
 			expect(songService.getDetails(999)).rejects.toMatchObject({
 				code: "NOT_FOUND",
 				statusCode: 404,

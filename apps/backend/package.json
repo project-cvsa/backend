@@ -1,13 +1,13 @@
 {
 	"name": "@cvsa/backend",
 	"type": "module",
-	"version": "0.0.1",
+	"version": "2.1.0",
 	"scripts": {
 		"lint": "bunx --bun biome lint",
-		"dev": "bun --hot src/index.ts",
+		"dev": "NODE_ENV=development bun --watch src/index.ts",
 		"start": "bun src/index.ts",
-		"test": "bun test",
-		"test:coverage": "bun test --coverage",
+		"test": "NODE_ENV=test bun test",
+		"test:coverage": "NODE_ENV=test bun test --coverage",
 		"typecheck": "bunx --bun tsc --noEmit"
 	},
 	"devDependencies": {
@@ -19,8 +19,15 @@
 		"@better-auth/prisma-adapter": "^1.5.4",
 		"@cvsa/core": "workspace:*",
 		"@cvsa/db": "workspace:*",
-		"@elysiajs/eden": "^1.0.5",
+		"@cvsa/env": "workspace:*",
+		"@cvsa/logger": "workspace:*",
+		"@elysiajs/eden": "^1.4.9",
 		"@elysiajs/openapi": "^1.4.14",
+		"@elysiajs/opentelemetry": "^1.4.10",
+		"@fanee/runtime-node": "^0.2.1",
+		"@opentelemetry/api": "^1.9.1",
+		"@opentelemetry/exporter-trace-otlp-proto": "^0.214.0",
+		"@opentelemetry/sdk-trace-node": "^2.6.1",
 		"@prisma/adapter-pg": "^7.4.1",
 		"@t3-oss/env-core": "^0.13.10",
 		"argon2": "^0.44.0",
@@ -30,6 +37,7 @@
 		"elysia-ip": "^1.0.10",
 		"elysia-rate-limit": "^4.5.0",
 		"nanoid": "^5.1.6",
+		"pino": "^10.3.1",
 		"zod": "^4.3.6"
 	}
 }

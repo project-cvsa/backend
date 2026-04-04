@@ -1,4 +1,4 @@
-import { env } from "@cvsa/core";
+import { env } from "@cvsa/env";
 import chalk from "chalk";
 import os from "node:os";
 

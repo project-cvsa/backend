@@ -2,12 +2,17 @@ import { Elysia } from "elysia";
 import { onAfterHandler } from "./onAfterHandle";
 import { getBindingInfo, logStartup } from "./startMessage";
 import pkg from "../package.json";
-import { authHandler, songHandler } from "@modules/index";
-import { AppError } from "@cvsa/core";
+import { authHandler, songHandler } from "@handlers/index";
 import { errorHandler } from "./errorHandler";
 import { openapi } from "@elysiajs/openapi";
+import { requestLoggerMiddleware } from "@/middlewares";
+import { opentelemetry } from "@elysiajs/opentelemetry";
+import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-node";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
+import { devHandler } from "./handlers";
 
 const [host, port] = getBindingInfo();
+
 logStartup(host, port);
 
 export const app = new Elysia({
@@ -16,14 +21,18 @@ export const app = new Elysia({
 	},
 	prefix: "/v2",
 })
-	.error({
-		AppError,
-	})
-	.onError(errorHandler)
+	.use(
+		opentelemetry({
+			spanProcessors: [new BatchSpanProcessor(new OTLPTraceExporter())],
+		})
+	)
+	.use(onAfterHandler)
+	.use(requestLoggerMiddleware)
+	.use(errorHandler)
 	.use(openapi())
 	.use(authHandler)
 	.use(songHandler)
-	.use(onAfterHandler)
+	.use(devHandler)
 	.listen(16412);
 
 export const VERSION = pkg.version;

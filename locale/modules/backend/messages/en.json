@@ -1,0 +1,9 @@
+{
+	"error.unauthorized": "Unauthorized",
+	"error.song.notfound": "Song Not Found",
+	"error.signup.failed": "Failed to Sign Up",
+	"error.login.failed": "Failed to Log In",
+	"error.not-found": "Not Found",
+	"error.invalid-cred": "Invalid Credentials",
+	"error.internal": "Internal Error"
+}
