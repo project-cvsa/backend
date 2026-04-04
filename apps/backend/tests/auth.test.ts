@@ -1,7 +1,7 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
 import { treaty } from "@elysiajs/eden";
 import { app } from "@/index";
-import { prisma } from "@cvsa/core";
+import { prisma } from "@cvsa/db";
 
 const api = treaty(app);
 

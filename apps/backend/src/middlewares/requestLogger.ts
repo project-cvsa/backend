@@ -1,9 +1,8 @@
 import Elysia from "elysia";
 import type { Logger } from "pino";
-import { pinoLogger } from "@cvsa/core";
-
+import { pinoLogger } from "@cvsa/logger";
 import { ip } from "elysia-ip";
-import { formatGinLog, getLogLevel } from "@common/log";
+import { formatGinLog, getLogLevelForRequest } from "@common/log";
 
 export interface RequestLoggerOptions {
 	excludePaths?: string[];
@@ -22,6 +21,9 @@ export function createRequestLoggerMiddleware(pinoLogger: Logger<never>) {
 			const requestPath = new URL(request.url).pathname;
 
 			const status = (() => {
+				if (!responseValue) {
+					return undefined;
+				}
 				const r = responseValue as { status?: number };
 				if (r.status) {
 					return r.status;
@@ -47,7 +49,7 @@ export function createRequestLoggerMiddleware(pinoLogger: Logger<never>) {
 				ip,
 			};
 
-			pinoLogger[getLogLevel(status ?? 200)](formatGinLog(logData));
+			pinoLogger[getLogLevelForRequest(status ?? 200)](formatGinLog(logData));
 		});
 }
 

@@ -1,11 +1,12 @@
 import { Elysia, ElysiaCustomStatusResponse } from "elysia";
-import { AppError, appLogger, BetterAuthAPIError, pinoLogger } from "@cvsa/core";
+import { AppError, BetterAuthAPIError } from "@cvsa/core";
+import { appLogger, pinoLogger } from "@cvsa/logger";
 import type { ErrorResponseDto } from "@cvsa/core";
 import { getErrorResponse } from "@/common/error";
 import { getTraceId } from "@/common/trace";
 import { i18nMiddleware } from "@/middlewares";
 import { ip } from "elysia-ip";
-import { formatGinLog, getLogLevel } from "@common/log";
+import { formatGinLog, getLogLevelForRequest } from "@common/log";
 
 const AUTH_CONFLICT_CODES = [
 	"USERNAME_IS_ALREADY_TAKEN",
@@ -91,16 +92,12 @@ export const errorHandler = new Elysia()
 					code: (error.body?.code || "ENTITY_CONFLICT") as ErrorResponseDto["code"],
 					message: error.body?.message,
 				});
-			}
-
-			if (AUTH_INVALID_CODES.includes(bodyCode as AuthInvalidCode)) {
+			} else if (AUTH_INVALID_CODES.includes(bodyCode as AuthInvalidCode)) {
 				setErrorResponse(401, {
 					code: "INVALID_CREDENTIALS",
 					message: "error.invalid-cred",
 				});
-			}
-
-			if (error.statusCode < 500) {
+			} else if (error.statusCode < 500) {
 				setErrorResponse(error.statusCode, {
 					code: "UNAUTHORIZED",
 					message: error.body?.message,
@@ -143,8 +140,8 @@ export const errorHandler = new Elysia()
 			errorCode: data.code,
 		};
 		if (!known) {
-			appLogger[getLogLevel(status ?? 500)](logData.error, data);
+			appLogger[getLogLevelForRequest(status ?? 500)](logData.error, data);
 		}
-		pinoLogger[getLogLevel(status ?? 500)](formatGinLog(logData));
+		pinoLogger[getLogLevelForRequest(status ?? 500)](formatGinLog(logData));
 		return getErrorResponse(statusFunc, status, locale, data);
 	});

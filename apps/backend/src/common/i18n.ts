@@ -1,4 +1,4 @@
-import { env } from "@cvsa/core";
+import { env } from "@cvsa/env";
 import { FaneeRuntime } from "@fanee/runtime-node";
 import path from "node:path";
 

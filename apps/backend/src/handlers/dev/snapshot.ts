@@ -1,5 +1,5 @@
 import { Elysia } from "elysia";
-import { env } from "@cvsa/core";
+import { env } from "@cvsa/env";
 import v8 from "node:v8";
 
 export const getHeapSnapshotHandler = new Elysia().get("/heap-snapshot", async ({ status }) => {

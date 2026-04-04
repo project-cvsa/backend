@@ -19,6 +19,8 @@
 		"@better-auth/prisma-adapter": "^1.5.4",
 		"@cvsa/core": "workspace:*",
 		"@cvsa/db": "workspace:*",
+		"@cvsa/env": "workspace:*",
+		"@cvsa/logger": "workspace:*",
 		"@elysiajs/eden": "^1.4.9",
 		"@elysiajs/openapi": "^1.4.14",
 		"@elysiajs/opentelemetry": "^1.4.10",

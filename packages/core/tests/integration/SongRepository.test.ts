@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
 import { songRepository, type CreateSongRequestDto, type UpdateSongRequestDto } from "@cvsa/core";
-import { prisma } from "@cvsa/core/common";
+import { prisma } from "@cvsa/db";
 
 const repository = songRepository;
 

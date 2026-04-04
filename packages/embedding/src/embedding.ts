@@ -1,7 +1,8 @@
 import path from "node:path";
 import { AutoTokenizer, type PreTrainedTokenizer } from "@huggingface/transformers";
-import { downloadFile } from "@huggingface/hub";
+import { fileDownloadInfo } from "@huggingface/hub";
 import * as ort from "onnxruntime-node";
+import { appLogger } from "@cvsa/logger";
 
 const modelDir = path.join(import.meta.dir, "../../../model/");
 
@@ -21,7 +22,7 @@ export class EmbeddingManager {
 			await this.initSession();
 			return true;
 		} catch (e) {
-			console.error(e);
+			appLogger.error(Bun.inspect(e));
 			return false;
 		}
 	}
@@ -68,23 +69,58 @@ export class EmbeddingManager {
 		return result;
 	}
 
-	// TODO: progress indicator
 	private async downloadModel() {
 		const modelFile = Bun.file(modelPath);
 		if (await modelFile.exists()) {
 			return;
 		}
-		console.log("Downloading embedding model...");
-		const blob = await downloadFile({
+		appLogger.info("Downloading embedding model...");
+
+		const info = await fileDownloadInfo({
 			repo: modelName,
 			path: "onnx/model.onnx",
 		});
-		if (!blob) {
-			throw new Error("Cannot download model file.");
+
+		if (!info) {
+			appLogger.error("Cannot get download info for model file.");
+			return;
 		}
-		const buffer = await blob.arrayBuffer();
-		console.log("Embedding model downloaded.");
-		modelFile.write(buffer);
+
+		const { url, size } = info;
+		let downloaded = 0;
+
+		const response = await fetch(url);
+		if (!response.ok) {
+			appLogger.error(`Failed to download model: ${response.status} ${response.statusText}`);
+			return;
+		}
+
+		if (!response.body) {
+			appLogger.error("Response body is null");
+			return;
+		}
+
+		const reader = response.body.getReader();
+		const chunks: Uint8Array[] = [];
+
+		while (true) {
+			const { done, value } = await reader.read();
+			if (done) break;
+			downloaded += value.byteLength;
+			const percent = size > 0 ? Math.round((downloaded / size) * 100) : 0;
+			appLogger.info(`Embedding model download: ${percent}% (${downloaded}/${size} bytes)`);
+			chunks.push(value);
+		}
+
+		const buffer = new Uint8Array(size);
+		let offset = 0;
+		for (const chunk of chunks) {
+			buffer.set(chunk, offset);
+			offset += chunk.byteLength;
+		}
+
+		await Bun.write(modelFile, buffer);
+		appLogger.info("Embedding model downloaded.");
 	}
 
 	public async getEmbedding(texts: string[]): Promise<number[][]> {

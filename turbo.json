@@ -13,8 +13,17 @@
 			"cache": false,
 			"persistent": true
 		},
-		"lint": {},
-		"test": {},
+		"lint": {
+			"inputs": ["tests/**.ts", "src/**.ts", "biome.json", ".biome*"]
+		},
+		"test": {
+			"inputs": [
+				"src/**.ts",
+				"tests/**.ts",
+				"tsconfig.json",
+				"$TURBO_ROOT$/packages/typescript-config/base.json"
+			]
+		},
 		"test:coverage": {},
 		"setup": {
 			"cache": false,
@@ -32,6 +41,13 @@
 		},
 		"@cvsa/db#gen": {
 			"cache": false
+		},
+		"typecheck": {
+			"inputs": [
+				"src/**.ts",
+				"tsconfig.json",
+				"$TURBO_ROOT$/packages/typescript-config/base.json"
+			]
 		}
 	}
 }
