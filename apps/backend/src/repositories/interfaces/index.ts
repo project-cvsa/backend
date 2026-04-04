@@ -4,3 +4,10 @@ export type {
 	CreateSessionData,
 	SessionWithSecret,
 } from "./ISessionRepository";
+export type {
+	ISongRepository,
+	CreateSongData,
+	SingerInput,
+	ArtistInput,
+	LyricsInput,
+} from "./ISongRepository";

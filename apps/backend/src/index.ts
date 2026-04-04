@@ -3,6 +3,7 @@ import { onAfterHandler } from "./onAfterHandle";
 import { getBindingInfo, logStartup } from "./startMessage";
 import pkg from "../package.json";
 import { authHandler } from "@routes/auth";
+import { songHandler } from "@routes/song";
 import { AppError } from "@lib/error";
 import { ZodError } from "zod";
 
@@ -58,6 +59,7 @@ export const app = new Elysia({
 	})
 	.onError(errorHandler)
 	.use(authHandler)
+	.use(songHandler)
 	.use(onAfterHandler)
 	.listen(16412);
 
