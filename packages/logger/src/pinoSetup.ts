@@ -1,10 +1,7 @@
 import { env } from "@cvsa/env";
 import pino, { stdTimeFunctions } from "pino";
 
-function createPinoLogger(env: {
-	LOG_LEVEL: string;
-	NODE_ENV: string | undefined;
-}): pino.Logger {
+function createPinoLogger(env: { LOG_LEVEL: string; NODE_ENV: string | undefined }): pino.Logger {
 	const isProduction = env.NODE_ENV === "production";
 	const isTest = env.NODE_ENV === "test";
 

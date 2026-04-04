@@ -24,13 +24,14 @@
 	"dependencies": {
 		"@better-auth/prisma-adapter": "^1.5.6",
 		"@cvsa/db": "workspace:*",
-		"@cvsa/env": "workspace:*",
 		"@cvsa/embedding": "workspace:*",
+		"@cvsa/env": "workspace:*",
 		"@cvsa/logger": "workspace:*",
 		"@cvsa/observability": "workspace:*",
 		"@elysiajs/eden": "^1.4.9",
 		"better-auth": "^1.5.6",
 		"meilisearch": "^0.56.0",
+		"nanoid": "^5.1.7",
 		"remeda": "^2.33.7",
 		"zod": "^4.3.6"
 	}

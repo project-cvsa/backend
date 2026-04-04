@@ -18,6 +18,8 @@ const errorCodes = [
 export const ErrorResponseSchema = z.object({
 	code: z.enum(errorCodes),
 	message: z.string().optional(),
+	i18n: z.record(z.string(), z.string()).optional(),
+	traceId: z.string().optional(),
 });
 
 export type ErrorResponseDto = z.infer<typeof ErrorResponseSchema>;
