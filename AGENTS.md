@@ -25,15 +25,16 @@ When working on the backend, you MUST adhere to the Layered Architecture: `Handl
 ### File Organization Mapping
 If building a module named `[module]`, enforce this strict tree:
 ```text
-apps/backend/src/modules/[module]/
+apps/backend/src/handlers/[module]/
 ├── index.ts                  # Exports handlers
-└── [handler].ts              # Elysia routes
+└── [method].ts               # Elysia routes
 
-packages/core/modules/[module]/
+packages/core/src/modules/[module]/
 ├── index.ts                  # Public API exports
 ├── dto.ts                    # Zod schemas (Validation & Types)
 ├── service.ts                # Business logic
 ├── repository.ts             # Prisma DB operations
+├── container.ts              # DI container
 └── repository.interface.ts   # DB contract
 ```
 

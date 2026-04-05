@@ -1,7 +1,7 @@
 import type { SongType } from "@cvsa/db";
 import { ISearchService } from "../interface";
 import { unique, keys } from "remeda";
-import type { SongDetailsResponseDto } from "../../catalog";
+import type { SongDetailsResponseDto } from "../../modules";
 import { appLogger } from "@cvsa/logger";
 
 export interface SongSearchIndex {
