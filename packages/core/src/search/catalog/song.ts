@@ -68,7 +68,7 @@ Artists: ${getArtists().join(", ")}
 			description: getDesc() ?? undefined,
 			singers: getSingers(),
 			artists: getArtists(),
-			bilibiliAid: Number(song.bilibiliAid) ?? undefined,
+			bilibiliAid: song.bilibiliAid ?? undefined,
 			bilibiliBvid: song.bilibiliBvid ?? undefined,
 			type: song.type ?? undefined,
 			engine: song.singers
@@ -85,16 +85,17 @@ Artists: ${getArtists().join(", ")}
 	}
 
 	public async sync(id: number) {
-		if (!this.manager) {
+		if (!this.searchManager) {
 			appLogger.warn("Search service not available");
 			return;
 		}
 		const song = await this.repository.getDetailsById(id);
 
 		if (!song) {
-			const indexesToBeDeleted = await this.manager.getLocalizedIndexesOfEntity("song");
+			const indexesToBeDeleted = await this.searchManager.getLocalizedIndexesOfEntity("song");
 			for (const index of indexesToBeDeleted) {
-				await this.manager.getAdminIndex(index).deleteDocument(id);
+				const adminIndex = await this.searchManager.getAdminIndex(index);
+				await adminIndex.deleteDocument(id);
 			}
 			return;
 		}
@@ -106,7 +107,7 @@ Artists: ${getArtists().join(", ")}
 		]);
 		for (const language of languages) {
 			const indexUid = `song_${language}`;
-			const index = this.manager.getAdminIndex<SongSearchIndex>(indexUid);
+			const index = await this.searchManager.getAdminIndex<SongSearchIndex>(indexUid);
 			const document = await this.getDocument(song, language);
 			index.addDocuments([document], {
 				primaryKey: "id",
@@ -115,11 +116,11 @@ Artists: ${getArtists().join(", ")}
 	}
 
 	public async search(query: string, language: string = "zh") {
-		if (!this.manager) {
+		if (!this.searchManager) {
 			throw new Error("Search or embedding service not available");
 		}
 
-		const index = this.manager.getSearchIndex(`song_${language}`);
+		const index = await this.searchManager.getSearchIndex(`song_${language}`);
 		const embeddingResponse = await this.embeddingManager.embeddings.post({
 			texts: [query],
 		});

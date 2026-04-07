@@ -1,9 +1,12 @@
 {
 	"error.unauthorized": "Unauthorized",
-	"error.song.notfound": "Song Not Found",
-	"error.signup.failed": "Failed to Sign Up",
-	"error.login.failed": "Failed to Log In",
-	"error.not-found": "Not Found",
+	"error.song.notfound": "This song does not exist.",
+	"error.signup.failed": "Unable to sign up. Please try again in a moment.",
+	"error.login.failed": "Unable to log in. Please try again in a moment.",
+	"error.not-found": "The requested resource was not found.",
 	"error.invalid-cred": "Invalid Credentials",
-	"error.internal": "Internal Error"
+	"error.internal": "Internal Error",
+	"error.validation": "Invalid Input",
+	"error.username-taken": "This username is already taken.",
+	"error.email-taken": "This email is already registered."
 }

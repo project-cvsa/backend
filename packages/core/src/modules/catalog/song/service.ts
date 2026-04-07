@@ -9,6 +9,7 @@ import type {
 } from "./dto";
 import type { ISongRepository } from "./repository.interface";
 import { traceTask } from "@cvsa/observability";
+import { appLogger } from "@cvsa/logger";
 
 export class SongService implements IServiceWithGetDetails<SongDetailsResponseDto> {
 	constructor(
@@ -30,12 +31,11 @@ export class SongService implements IServiceWithGetDetails<SongDetailsResponseDt
 		const result = await traceTask("db create song", async () => {
 			return await this.repository.create(input);
 		});
-		try {
-			this.search.sync(result.id);
-		} catch (e) {
-			// TODO: replace log
-			console.error(e);
-		}
+		await traceTask("sync search index", async () => {
+			this.search.sync(result.id).catch((e) => {
+				appLogger.warn(Bun.inspect(e));
+			});
+		});
 		return result;
 	}
 
@@ -47,12 +47,12 @@ export class SongService implements IServiceWithGetDetails<SongDetailsResponseDt
 		const result = await traceTask("db update song", async () => {
 			return await this.repository.update(id, input);
 		});
-		try {
-			this.search.sync(id);
-		} catch (e) {
-			// TODO: Should we mark this as dirty and sync it later?
-			console.error(e);
-		}
+		await traceTask("sync search index", async () => {
+			this.search.sync(id).catch((e) => {
+				// TODO: Should we mark this as dirty and sync it later?
+				appLogger.warn(Bun.inspect(e));
+			});
+		});
 		return result;
 	}
 
@@ -64,10 +64,10 @@ export class SongService implements IServiceWithGetDetails<SongDetailsResponseDt
 		await traceTask("db delete song", async () => {
 			return await this.repository.softDelete(id);
 		});
-		try {
-			this.search.sync(id);
-		} catch (e) {
-			console.error(e);
-		}
+		await traceTask("sync search index", async () => {
+			this.search.sync(id).catch((e) => {
+				appLogger.warn(Bun.inspect(e));
+			});
+		});
 	}
 }

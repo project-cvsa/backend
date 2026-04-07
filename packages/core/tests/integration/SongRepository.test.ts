@@ -1,21 +1,30 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { songRepository, type CreateSongRequestDto, type UpdateSongRequestDto } from "@cvsa/core";
 import { prisma } from "@cvsa/db";
 
 const repository = songRepository;
 
 describe("SongRepository Integration Tests", () => {
-	beforeAll(async () => {
-		await prisma.$connect();
-	});
-
 	afterAll(async () => {
-		await prisma.song.deleteMany({ where: { deletedAt: null } });
+		await prisma.creation.deleteMany();
+		await prisma.artistRole.deleteMany();
+		await prisma.artist.deleteMany();
+		await prisma.performance.deleteMany();
+		await prisma.lyrics.deleteMany();
+		await prisma.singer.deleteMany();
+		await prisma.song.deleteMany();
 		await prisma.$disconnect();
 	});
 
-	beforeEach(async () => {
-		await prisma.song.deleteMany({ where: { deletedAt: null } });
+	beforeAll(async () => {
+			await prisma.$connect();
+		await prisma.creation.deleteMany();
+		await prisma.artistRole.deleteMany();
+		await prisma.artist.deleteMany();
+		await prisma.performance.deleteMany();
+		await prisma.lyrics.deleteMany();
+		await prisma.singer.deleteMany();
+		await prisma.song.deleteMany();
 	});
 
 	describe("create", () => {
@@ -68,6 +77,67 @@ describe("SongRepository Integration Tests", () => {
 
 		test("should return null when song does not exist", async () => {
 			const result = await repository.getById(999999);
+			expect(result).toBeNull();
+		});
+	});
+
+	describe("getDetailsById", () => {
+		test("should return song when exists", async () => {
+			const singer = await prisma.singer.create({
+				data: {
+					name: "赤羽",
+				},
+			});
+			const artist = await prisma.artist.create({
+				data: {
+					name: "月华P",
+				},
+			});
+			const artistRole = await prisma.artistRole.create({
+				data: {
+					name: "作曲",
+				},
+			});
+
+			const created = await repository.create({
+				name: "尘海绘仙缘",
+				lyrics: [
+					{
+						plainText: "捻笔指掌中 遥看日月变",
+					},
+				],
+				performances: [
+					{
+						singerId: singer.id,
+					},
+				],
+				creations: [
+					{
+						artistId: artist.id,
+						roleId: artistRole.id,
+					},
+				],
+			});
+			const result = await repository.getDetailsById(created.id);
+
+			expect(result).toBeDefined();
+			expect(result?.id).toBe(created.id);
+			expect(result?.name).toBe("尘海绘仙缘");
+			expect(result?.lyrics).toHaveLength(1);
+			expect(result?.lyrics[0]).toMatchObject({
+				plainText: "捻笔指掌中 遥看日月变",
+			});
+			expect(result?.artists).toHaveLength(1);
+			expect(result?.artists[0]).toMatchObject({
+				name: "月华P",
+				role: {
+					name: "作曲"
+				}
+			});
+		});
+
+		test("should return null when song does not exist", async () => {
+			const result = await repository.getDetailsById(999999);
 			expect(result).toBeNull();
 		});
 	});

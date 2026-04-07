@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, describe, expect, test } from "bun:test";
+import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
 import { treaty } from "@elysiajs/eden";
 import { app } from "@/index";
 import { prisma } from "@cvsa/db";
@@ -6,7 +6,8 @@ import { prisma } from "@cvsa/db";
 const api = treaty(app);
 
 describe("Registration E2E Tests - POST /v2/user", () => {
-	beforeEach(async () => {
+	beforeAll(async () => {
+		await prisma.$connect();
 		await prisma.session.deleteMany();
 		await prisma.user.deleteMany();
 	});
@@ -21,7 +22,7 @@ describe("Registration E2E Tests - POST /v2/user", () => {
 		const payload = {
 			username: "new_user",
 			password: "password123",
-			email: "first@example.com",
+			email: `${Math.random()}@example.com`,
 		};
 
 		const { data, status } = await api.v2.user.post(payload);
@@ -112,7 +113,8 @@ describe("Registration E2E Tests - POST /v2/user", () => {
 });
 
 describe("Profile E2E Tests - GET /v2/me", () => {
-	beforeEach(async () => {
+	beforeAll(async () => {
+		await prisma.$connect();
 		await prisma.session.deleteMany();
 		await prisma.user.deleteMany();
 	});
@@ -120,6 +122,7 @@ describe("Profile E2E Tests - GET /v2/me", () => {
 	afterAll(async () => {
 		await prisma.$disconnect();
 	});
+
 	test("should return user profile with valid token", async () => {
 		// 1. Register to get a token
 		const signup = await api.v2.user.post({
@@ -184,7 +187,8 @@ describe("Profile E2E Tests - GET /v2/me", () => {
 });
 
 describe("Login E2E Tests - POST /v2/session", () => {
-	beforeEach(async () => {
+	beforeAll(async () => {
+		await prisma.$connect();
 		await prisma.session.deleteMany();
 		await prisma.user.deleteMany();
 	});
@@ -273,7 +277,8 @@ describe("Login E2E Tests - POST /v2/session", () => {
 });
 
 describe("Logout E2E Tests - DELETE /v2/session", () => {
-	beforeEach(async () => {
+	beforeAll(async () => {
+		await prisma.$connect();
 		await prisma.session.deleteMany();
 		await prisma.user.deleteMany();
 	});

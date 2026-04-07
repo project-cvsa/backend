@@ -2,7 +2,7 @@ model Singer {
     id                    Int           @id @default(autoincrement())
     name                  String?
     avatarUrl             String?       @map("avatar_url")
-    language              String       @default("zh")
+    language              String        @default("zh")
     /// [LocalizedField]
     localizedNames        Json?         @map("localized_names")
     description           String?

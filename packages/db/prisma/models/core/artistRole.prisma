@@ -1,8 +1,8 @@
 model ArtistRole {
     id             Int        @id @default(autoincrement())
-    role           String
+    name           String
     /// [LocalizedField]
-    localizedRoles Json?      @map("localized_roles")
+    localizedNames Json?      @map("localized_names")
     creations      Creation[]
     createdAt      DateTime   @default(now()) @map("created_at")
     updatedAt      DateTime   @updatedAt @map("updated_at")

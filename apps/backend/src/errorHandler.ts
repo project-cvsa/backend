@@ -78,19 +78,25 @@ export const errorHandler = new Elysia()
 				message: "error.not-found",
 			});
 		} else if (code === "VALIDATION") {
-			const detail = error.detail(error.message);
-			const message = typeof detail === "string" ? detail : detail.summary;
+			// const detail = error.detail(error.message);
+			// const message = typeof detail === "string" ? detail : detail.summary;
 			setErrorResponse(422, {
 				code: "VALIDATION_ERROR",
-				message,
+				message: "error.validation",
 			});
 		} else if (error instanceof BetterAuthAPIError) {
 			const bodyCode = error.body?.code || "";
-
-			if (AUTH_CONFLICT_CODES.includes(bodyCode as AuthConflictCode)) {
+			
+			if (bodyCode === "USERNAME_IS_ALREADY_TAKEN") {
 				setErrorResponse(409, {
-					code: (error.body?.code || "ENTITY_CONFLICT") as ErrorResponseDto["code"],
-					message: error.body?.message,
+					code: bodyCode,
+					message: "error.username-taken",
+				});
+			}
+			else if (bodyCode === "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL") {
+				setErrorResponse(409, {
+					code: bodyCode,
+					message: "error.email-taken",
 				});
 			} else if (AUTH_INVALID_CODES.includes(bodyCode as AuthInvalidCode)) {
 				setErrorResponse(401, {
