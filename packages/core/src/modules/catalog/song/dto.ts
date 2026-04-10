@@ -31,10 +31,13 @@ const CreateLyricsSchema = z.object({
 });
 
 export const CreateSongRequestSchema = z.object({
-	type: SongTypeSchema.nullish(),
 	name: z.string().nullish(),
-	duration: z.int().nullish(),
+	type: SongTypeSchema.nullish(),
+	language: z.string().nullish(),
+	localizedNames: z.record(z.string(), z.string()).nullish(),
 	description: z.string().nullish(),
+	localizedDescriptions: z.record(z.string(), z.string()).nullish(),
+	duration: z.int().nullish(),
 	coverUrl: z.url().nullish(),
 	publishedAt: z.iso.datetime().nullish(),
 	performances: z.array(CreatePerformanceSchema).optional(),

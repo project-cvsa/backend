@@ -51,9 +51,13 @@ export class SongSearchService extends ISearchService<SongDetailsResponseDto> {
 		const getArtists = () => {
 			return getLocalizedName("artists");
 		};
+		const getName = () => {
+			if (language === song.language) return song.name;
+			return song.localizedNames?.[language];
+		}
 		const vectors = await this.embeddingManager.embeddings.post({
 			texts: [
-				`Name: ${song.name ?? ""}
+				`Name: ${getName() ?? ""}
 Lyrics: ${song.lyrics ?? ""}
 Description: ${getDesc() ?? ""}
 Singers: ${getSingers().join(", ")}
@@ -63,7 +67,7 @@ Artists: ${getArtists().join(", ")}
 		});
 		return {
 			id: song.id,
-			name: song.name ?? undefined,
+			name: getName() ?? undefined,
 			lyrics: getLyrics() ?? undefined,
 			description: getDesc() ?? undefined,
 			singers: getSingers(),
@@ -95,11 +99,12 @@ Artists: ${getArtists().join(", ")}
 			const indexesToBeDeleted = await this.searchManager.getLocalizedIndexesOfEntity("song");
 			for (const index of indexesToBeDeleted) {
 				const adminIndex = await this.searchManager.getAdminIndex(index);
-				await adminIndex.deleteDocument(id);
+				const task = await adminIndex.deleteDocument(id);
+				await this.searchManager.waitForTask(task.taskUid);
 			}
 			return;
 		}
-
+		
 		const languages = unique([
 			...keys(song.localizedNames ?? []),
 			...keys(song.localizedDescriptions ?? []),
@@ -109,9 +114,10 @@ Artists: ${getArtists().join(", ")}
 			const indexUid = `song_${language}`;
 			const index = await this.searchManager.getAdminIndex<SongSearchIndex>(indexUid);
 			const document = await this.getDocument(song, language);
-			index.addDocuments([document], {
+			const task = await index.addDocuments([document], {
 				primaryKey: "id",
 			});
+			await this.searchManager.waitForTask(task.taskUid);
 		}
 	}
 

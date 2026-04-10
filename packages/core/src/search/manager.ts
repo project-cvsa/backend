@@ -5,11 +5,10 @@ import { deepEqualUnordered } from "../utils";
 import { appLogger } from "@cvsa/logger";
 
 export class SearchManager {
-	private client: MeiliSearch | null = null;
-	private adminClient: MeiliSearch | null = null;
-	private initError: Error | null = null;
-
-	private constructor() {}
+	private constructor(
+		private client?: MeiliSearch,
+		private adminClient?: MeiliSearch
+	) {}
 
 	/**
 	 * Creates a new SearchManager instance with separate search and admin clients.
@@ -18,8 +17,12 @@ export class SearchManager {
 	 * Returns a SearchManager instance even if initialization fails - methods will retry initialization on each call.
 	 * @returns A promise that resolves to a new SearchManager instance
 	 */
-	public static async create() {
-		const manager = new SearchManager();
+	public static async create(customClient?: MeiliSearch, customAdminClient?: MeiliSearch) {
+		if (customClient && customAdminClient) {
+			return new SearchManager(customClient, customAdminClient);
+		}
+
+		const manager = new SearchManager(undefined, undefined);
 		await manager.initializeClients();
 		return manager;
 	}
@@ -29,7 +32,7 @@ export class SearchManager {
 	 * Safe to call multiple times - will retry if previous initialization failed.
 	 */
 	private async initializeClients(): Promise<void> {
-		if (this.client !== null && this.adminClient !== null) {
+		if (this.client !== undefined && this.adminClient !== undefined) {
 			return;
 		}
 
@@ -40,25 +43,24 @@ export class SearchManager {
 			});
 			const adminKey = await SearchManager.getAdminKey(masterClient);
 			const searchKey = await SearchManager.getSearchKey(masterClient);
-			this.client = new MeiliSearch({
+			(this as unknown as { client: MeiliSearch }).client = new MeiliSearch({
 				host: env.MEILI_API_URL,
 				apiKey: searchKey,
 			});
-			this.adminClient = new MeiliSearch({
+			(this as unknown as { adminClient: MeiliSearch }).adminClient = new MeiliSearch({
 				host: env.MEILI_API_URL,
 				apiKey: adminKey,
 			});
-			this.initError = null;
 			this.syncAllSettings();
 		} catch (e) {
-			this.initError = e instanceof Error ? e : new Error(String(e));
 			appLogger.warn("Cannot initialize SearchManager clients.");
 			appLogger.error(Bun.inspect(e));
+			throw e;
 		}
 	}
 
 	private ensureInitialized(): void {
-		if (this.initError !== null || this.client === null || this.adminClient === null) {
+		if (this.client === undefined || this.adminClient === undefined) {
 			throw new Error("SearchManager not initialized");
 		}
 	}
@@ -196,7 +198,7 @@ export class SearchManager {
 	 * Skips indexes without a corresponding entry in INDEX_SETTINGS.
 	 */
 	public async syncAllSettings() {
-		if (this.adminClient === null) {
+		if (this.adminClient === undefined) {
 			return;
 		}
 

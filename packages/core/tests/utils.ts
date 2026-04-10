@@ -11,3 +11,5 @@ export function createMockRepository<T extends object>(template: T) {
 
 	return mockRepo;
 }
+
+export const OriginalMeiliSearch = await import("meilisearch");
