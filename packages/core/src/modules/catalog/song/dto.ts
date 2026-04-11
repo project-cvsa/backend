@@ -55,7 +55,7 @@ export const UpdateSongRequestSchema = z.object({
 });
 
 export const SongDetailsResponseSchema = z.intersection(
-	SongSchema,
+	SongSchema.omit({ deletedAt: true }),
 	z.object({
 		singers: z
 			.intersection(
@@ -81,6 +81,9 @@ export const SongDetailsResponseSchema = z.intersection(
 	})
 );
 
+export const SongResponseSchema = SongSchema.omit({ deletedAt: true });
+
+export type SongResponseDto = Serialized<z.Infer<typeof SongResponseSchema>>;
 export type CreateSongRequestDto = Serialized<z.infer<typeof CreateSongRequestSchema>>;
 export type UpdateSongRequestDto = Serialized<z.infer<typeof UpdateSongRequestSchema>>;
 export type SongDetailsResponseDto = Serialized<z.infer<typeof SongDetailsResponseSchema>>;

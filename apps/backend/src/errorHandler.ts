@@ -8,11 +8,6 @@ import { i18nMiddleware } from "@/middlewares";
 import { ip } from "elysia-ip";
 import { formatGinLog, getLogLevelForRequest } from "@common/log";
 
-const AUTH_CONFLICT_CODES = [
-	"USERNAME_IS_ALREADY_TAKEN",
-	"USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL",
-] as const;
-
 const AUTH_INVALID_CODES = [
 	"INVALID_CREDENTIALS",
 	"INVALID_EMAIL_OR_PASSWORD",
@@ -20,7 +15,6 @@ const AUTH_INVALID_CODES = [
 	"EMAIL_NOT_VERIFIED",
 ] as const;
 
-type AuthConflictCode = (typeof AUTH_CONFLICT_CODES)[number];
 type AuthInvalidCode = (typeof AUTH_INVALID_CODES)[number];
 
 interface ErrorStoreData {

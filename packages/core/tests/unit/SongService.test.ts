@@ -12,7 +12,6 @@ const mockSongDetails: SongDetailsResponseDto = {
 	description: "A test song",
 	coverUrl: "https://example.com/cover.jpg",
 	publishedAt: new Date("2024-01-01").toISOString(),
-	deletedAt: null,
 	createdAt: new Date().toISOString(),
 	updatedAt: new Date().toISOString(),
 	originalSongId: null,

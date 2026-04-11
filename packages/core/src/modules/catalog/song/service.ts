@@ -1,11 +1,11 @@
 import type { SongSearchService } from "@cvsa/core/internal";
 import { AppError, type IServiceWithGetDetails } from "@cvsa/core/internal";
-import type { Song, Serialized } from "@cvsa/db";
 import type {
 	SongDetailsResponseDto,
 	SongId,
 	CreateSongRequestDto,
 	UpdateSongRequestDto,
+	SongResponseDto,
 } from "./dto";
 import type { ISongRepository } from "./repository.interface";
 import { traceTask } from "@cvsa/observability";
@@ -27,7 +27,7 @@ export class SongService implements IServiceWithGetDetails<SongDetailsResponseDt
 		});
 	}
 
-	async create(input: CreateSongRequestDto): Promise<Serialized<Song>> {
+	async create(input: CreateSongRequestDto): Promise<SongResponseDto> {
 		const result = await traceTask("db create song", async () => {
 			return await this.repository.create(input);
 		});
@@ -39,7 +39,7 @@ export class SongService implements IServiceWithGetDetails<SongDetailsResponseDt
 		return result;
 	}
 
-	async update(id: SongId, input: UpdateSongRequestDto): Promise<Serialized<Song>> {
+	async update(id: SongId, input: UpdateSongRequestDto): Promise<SongResponseDto> {
 		const existing = await this.repository.getById(id);
 		if (existing === null) {
 			throw new AppError("error.song.notfound", "NOT_FOUND", 404);

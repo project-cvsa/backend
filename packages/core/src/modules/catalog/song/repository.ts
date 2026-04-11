@@ -39,6 +39,9 @@ export class SongRepository implements ISongRepository {
 					},
 					lyrics: true,
 				},
+				omit: {
+					deletedAt: true,
+				},
 			})
 		);
 		if (!data) return null;
