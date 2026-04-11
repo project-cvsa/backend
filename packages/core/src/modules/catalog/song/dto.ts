@@ -6,6 +6,7 @@ import {
 	ArtistRoleSchema,
 	SongTypeSchema,
 	type Serialized,
+	LyricsSchema,
 } from "@cvsa/db";
 
 export type SongId = number;
@@ -17,12 +18,12 @@ const CreateCreationSchema = z.object({
 
 const CreatePerformanceSchema = z.object({
 	singerId: z.int().positive(),
-	voicebankId: z.int().positive().nullish(),
-	svsEngineId: z.int().positive().nullish(),
-	svsEngineVersionId: z.int().positive().nullish(),
+	voicebankId: z.int().positive().optional(),
+	svsEngineId: z.int().positive().optional(),
+	svsEngineVersionId: z.int().positive().optional(),
 });
 
-const CreateLyricsSchema = z.object({
+export const SongLyricsCreateRequestSchema = z.object({
 	language: z.string().optional(),
 	isTranslated: z.boolean().optional(),
 	plainText: z.string().optional(),
@@ -31,27 +32,27 @@ const CreateLyricsSchema = z.object({
 });
 
 export const CreateSongRequestSchema = z.object({
-	name: z.string().nullish(),
-	type: SongTypeSchema.nullish(),
-	language: z.string().nullish(),
-	localizedNames: z.record(z.string(), z.string()).nullish(),
-	description: z.string().nullish(),
-	localizedDescriptions: z.record(z.string(), z.string()).nullish(),
-	duration: z.int().nullish(),
-	coverUrl: z.url().nullish(),
-	publishedAt: z.iso.datetime().nullish(),
+	name: z.string().optional(),
+	type: SongTypeSchema.optional(),
+	language: z.string().optional(),
+	localizedNames: z.record(z.string(), z.string()).optional(),
+	description: z.string().optional(),
+	localizedDescriptions: z.record(z.string(), z.string()).optional(),
+	duration: z.int().optional(),
+	coverUrl: z.url().optional(),
+	publishedAt: z.iso.datetime().optional(),
 	performances: z.array(CreatePerformanceSchema).optional(),
 	creations: z.array(CreateCreationSchema).optional(),
-	lyrics: z.array(CreateLyricsSchema).optional(),
+	lyrics: z.array(SongLyricsCreateRequestSchema).optional(),
 });
 
 export const UpdateSongRequestSchema = z.object({
-	name: z.string().nullish(),
-	type: SongTypeSchema.nullish(),
-	duration: z.int().nullish(),
-	description: z.string().nullish(),
-	coverUrl: z.url().nullish(),
-	publishedAt: z.iso.datetime().nullish(),
+	name: z.string().optional(),
+	type: SongTypeSchema.optional(),
+	duration: z.int().optional(),
+	description: z.string().optional(),
+	coverUrl: z.url().optional(),
+	publishedAt: z.iso.datetime().optional(),
 });
 
 export const SongDetailsResponseSchema = z.intersection(
@@ -71,19 +72,24 @@ export const SongDetailsResponseSchema = z.intersection(
 				z.object({ role: ArtistRoleSchema })
 			)
 			.array(),
-		lyrics: z.array(
-			z.object({
-				plainText: z.string().nullable(),
-				isTranslated: z.boolean(),
-				language: z.string().nullable(),
-			})
-		),
+		lyrics: LyricsSchema.omit({ deletedAt: true }).array(),
 	})
 );
 
 export const SongResponseSchema = SongSchema.omit({ deletedAt: true });
 
+export const SongLyricsResponseSchema = LyricsSchema.omit({
+	songId: true,
+	deletedAt: true,
+});
+
+export const SongLyricsListResponseSchema = SongLyricsResponseSchema.array();
+
 export type SongResponseDto = Serialized<z.Infer<typeof SongResponseSchema>>;
 export type CreateSongRequestDto = Serialized<z.infer<typeof CreateSongRequestSchema>>;
 export type UpdateSongRequestDto = Serialized<z.infer<typeof UpdateSongRequestSchema>>;
 export type SongDetailsResponseDto = Serialized<z.infer<typeof SongDetailsResponseSchema>>;
+
+export type SongLyricsResponseDto = Serialized<z.infer<typeof SongLyricsResponseSchema>>;
+export type SongLyricsListResponseDto = Serialized<z.infer<typeof SongLyricsListResponseSchema>>;
+export type SongLyricsCreateRequestDto = Serialized<z.infer<typeof SongLyricsCreateRequestSchema>>;
