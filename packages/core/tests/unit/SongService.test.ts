@@ -44,6 +44,29 @@ describe("SongService", () => {
 		create: async () => mockSongDetails,
 		update: async () => mockSongDetails,
 		softDelete: async () => {},
+		createLyrics: async () => ({
+			id: 1,
+			language: "zh",
+			isTranslated: false,
+			plainText: "Test lyrics",
+			ttml: null,
+			lrc: null,
+			createdAt: new Date().toISOString(),
+			updatedAt: new Date().toISOString(),
+		}),
+		getLyricsBySongId: async () => [],
+		getLyricById: async () => null,
+		updateLyric: async () => ({
+			id: 1,
+			language: "zh",
+			isTranslated: false,
+			plainText: "Updated lyrics",
+			ttml: null,
+			lrc: null,
+			createdAt: new Date().toISOString(),
+			updatedAt: new Date().toISOString(),
+		}),
+		softDeleteLyric: async () => {},
 	});
 
 	const mockSearchService = {

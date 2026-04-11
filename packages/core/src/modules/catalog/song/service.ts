@@ -6,6 +6,10 @@ import type {
 	CreateSongRequestDto,
 	UpdateSongRequestDto,
 	SongResponseDto,
+	SongLyricsCreateRequestDto,
+	SongLyricsUpdateRequestDto,
+	SongLyricsResponseDto,
+	SongLyricsListResponseDto,
 } from "./dto";
 import type { ISongRepository } from "./repository.interface";
 import { traceTask } from "@cvsa/observability";
@@ -68,6 +72,75 @@ export class SongService implements IServiceWithGetDetails<SongDetailsResponseDt
 			this.search.sync(id).catch((e) => {
 				appLogger.warn(Bun.inspect(e));
 			});
+		});
+	}
+
+	async listLyrics(id: SongId): Promise<SongLyricsListResponseDto> {
+		const existing = await this.repository.getById(id);
+		if (existing === null) {
+			throw new AppError("error.song.notfound", "NOT_FOUND", 404);
+		}
+		return traceTask("db list lyrics", async () => {
+			return await this.repository.getLyricsBySongId(id);
+		});
+	}
+
+	async getLyric(id: SongId, lyricId: number): Promise<SongLyricsResponseDto> {
+		const existing = await this.repository.getById(id);
+		if (existing === null) {
+			throw new AppError("error.song.notfound", "NOT_FOUND", 404);
+		}
+		const lyric = await traceTask("db get lyric", async () => {
+			return await this.repository.getLyricById(lyricId);
+		});
+		if (lyric === null) {
+			throw new AppError("error.lyric.notfound", "NOT_FOUND", 404);
+		}
+		return lyric;
+	}
+
+	async createLyric(
+		id: SongId,
+		input: SongLyricsCreateRequestDto
+	): Promise<SongLyricsResponseDto> {
+		const existing = await this.repository.getById(id);
+		if (existing === null) {
+			throw new AppError("error.song.notfound", "NOT_FOUND", 404);
+		}
+		return traceTask("db create lyric", async () => {
+			return await this.repository.createLyrics(id, input);
+		});
+	}
+
+	async updateLyric(
+		id: SongId,
+		lyricId: number,
+		input: SongLyricsUpdateRequestDto
+	): Promise<SongLyricsResponseDto> {
+		const existing = await this.repository.getById(id);
+		if (existing === null) {
+			throw new AppError("error.song.notfound", "NOT_FOUND", 404);
+		}
+		const lyric = await this.repository.getLyricById(lyricId);
+		if (lyric === null) {
+			throw new AppError("error.lyric.notfound", "NOT_FOUND", 404);
+		}
+		return traceTask("db update lyric", async () => {
+			return await this.repository.updateLyric(lyricId, input);
+		});
+	}
+
+	async deleteLyric(id: SongId, lyricId: number): Promise<void> {
+		const existing = await this.repository.getById(id);
+		if (existing === null) {
+			throw new AppError("error.song.notfound", "NOT_FOUND", 404);
+		}
+		const lyric = await this.repository.getLyricById(lyricId);
+		if (lyric === null) {
+			throw new AppError("error.lyric.notfound", "NOT_FOUND", 404);
+		}
+		await traceTask("db delete lyric", async () => {
+			return await this.repository.softDeleteLyric(lyricId);
 		});
 	}
 }

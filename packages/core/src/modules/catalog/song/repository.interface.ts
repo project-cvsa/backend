@@ -6,6 +6,10 @@ import type {
 	UpdateSongRequestDto,
 	SongDetailsResponseDto,
 	SongResponseDto,
+	SongLyricsCreateRequestDto,
+	SongLyricsUpdateRequestDto,
+	SongLyricsResponseDto,
+	SongLyricsListResponseDto,
 } from "./dto";
 
 export abstract class ISongRepository implements IRepositoryWithGetDetails<SongDetailsResponseDto> {
@@ -18,4 +22,17 @@ export abstract class ISongRepository implements IRepositoryWithGetDetails<SongD
 		tx?: TxClient
 	): Promise<SongResponseDto>;
 	abstract softDelete(id: SongId, tx?: TxClient): Promise<void>;
+	abstract createLyrics(
+		id: SongId,
+		input: SongLyricsCreateRequestDto,
+		tx?: TxClient
+	): Promise<SongLyricsResponseDto>;
+	abstract getLyricsBySongId(id: SongId, tx?: TxClient): Promise<SongLyricsListResponseDto>;
+	abstract getLyricById(lyricId: number, tx?: TxClient): Promise<SongLyricsResponseDto | null>;
+	abstract updateLyric(
+		lyricId: number,
+		input: SongLyricsUpdateRequestDto,
+		tx?: TxClient
+	): Promise<SongLyricsResponseDto>;
+	abstract softDeleteLyric(lyricId: number, tx?: TxClient): Promise<void>;
 }

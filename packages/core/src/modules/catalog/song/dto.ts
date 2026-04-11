@@ -31,6 +31,14 @@ export const SongLyricsCreateRequestSchema = z.object({
 	lrc: z.string().optional(),
 });
 
+export const SongLyricsUpdateRequestSchema = z.object({
+	language: z.string().optional(),
+	isTranslated: z.boolean().optional(),
+	plainText: z.string().optional(),
+	ttml: z.string().optional(),
+	lrc: z.string().optional(),
+});
+
 export const CreateSongRequestSchema = z.object({
 	name: z.string().optional(),
 	type: SongTypeSchema.optional(),
@@ -93,3 +101,4 @@ export type SongDetailsResponseDto = Serialized<z.infer<typeof SongDetailsRespon
 export type SongLyricsResponseDto = Serialized<z.infer<typeof SongLyricsResponseSchema>>;
 export type SongLyricsListResponseDto = Serialized<z.infer<typeof SongLyricsListResponseSchema>>;
 export type SongLyricsCreateRequestDto = Serialized<z.infer<typeof SongLyricsCreateRequestSchema>>;
+export type SongLyricsUpdateRequestDto = Serialized<z.infer<typeof SongLyricsUpdateRequestSchema>>;
