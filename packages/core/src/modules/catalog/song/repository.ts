@@ -81,8 +81,11 @@ export class SongRepository implements ISongRepository {
 		return transformPrismaResult(
 			await client.song.create({
 				data: {
+					language: songData.language ?? undefined,
 					type: songData.type ?? null,
 					name: songData.name ?? null,
+					localizedNames: songData.localizedNames ?? undefined,
+					localizedDescriptions: songData.localizedDescriptions ?? undefined,
 					duration: songData.duration ?? null,
 					description: songData.description ?? null,
 					coverUrl: songData.coverUrl ?? null,

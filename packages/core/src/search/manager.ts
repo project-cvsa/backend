@@ -1,31 +1,41 @@
 import { MeiliSearch, type Settings, type RecordAny } from "meilisearch";
 import { env } from "@cvsa/env";
 import { INDEX_SETTINGS } from "./config";
-import { deepEqualUnordered } from "@cvsa/core/internal";
+import { deepEqualUnordered } from "../utils";
+import { appLogger } from "@cvsa/logger";
 
-interface SearchManagerConstructor {
-	client: MeiliSearch;
-	adminClient: MeiliSearch;
-}
-
-// TODO: Error handling & integration test
 export class SearchManager {
-	private readonly client: MeiliSearch;
-	private readonly adminClient: MeiliSearch;
-
-	private constructor({ client, adminClient }: SearchManagerConstructor) {
-		this.client = client;
-		this.adminClient = adminClient;
-		this.syncAllSettings();
-	}
+	private constructor(
+		private client?: MeiliSearch,
+		private adminClient?: MeiliSearch
+	) {}
 
 	/**
 	 * Creates a new SearchManager instance with separate search and admin clients.
 	 * Initializes MeiliSearch clients using API keys retrieved from the master client.
 	 * The search client has only search permissions, while the admin client has full permissions.
+	 * Returns a SearchManager instance even if initialization fails - methods will retry initialization on each call.
 	 * @returns A promise that resolves to a new SearchManager instance
 	 */
-	public static async create() {
+	public static async create(customClient?: MeiliSearch, customAdminClient?: MeiliSearch) {
+		if (customClient && customAdminClient) {
+			return new SearchManager(customClient, customAdminClient);
+		}
+
+		const manager = new SearchManager(undefined, undefined);
+		await manager.initializeClients();
+		return manager;
+	}
+
+	/**
+	 * Attempts to initialize the MeiliSearch clients.
+	 * Safe to call multiple times - will retry if previous initialization failed.
+	 */
+	private async initializeClients(): Promise<void> {
+		if (this.client !== undefined && this.adminClient !== undefined) {
+			return;
+		}
+
 		try {
 			const masterClient = new MeiliSearch({
 				host: env.MEILI_API_URL,
@@ -33,17 +43,25 @@ export class SearchManager {
 			});
 			const adminKey = await SearchManager.getAdminKey(masterClient);
 			const searchKey = await SearchManager.getSearchKey(masterClient);
-			const client = new MeiliSearch({
+			(this as unknown as { client: MeiliSearch }).client = new MeiliSearch({
 				host: env.MEILI_API_URL,
 				apiKey: searchKey,
 			});
-			const adminClient = new MeiliSearch({
+			(this as unknown as { adminClient: MeiliSearch }).adminClient = new MeiliSearch({
 				host: env.MEILI_API_URL,
 				apiKey: adminKey,
 			});
-			return new SearchManager({ client, adminClient });
-		} catch {
-			return;
+			this.syncAllSettings();
+		} catch (e) {
+			appLogger.warn("Cannot initialize SearchManager clients.");
+			appLogger.error(Bun.inspect(e));
+			throw e;
+		}
+	}
+
+	private ensureInitialized(): void {
+		if (this.client === undefined || this.adminClient === undefined) {
+			throw new Error("SearchManager not initialized");
 		}
 	}
 
@@ -93,7 +111,10 @@ export class SearchManager {
 	 * @returns A promise that resolves to the completed task
 	 */
 	public async waitForTask(taskUid: number) {
-		return await this.adminClient.tasks.waitForTask(taskUid, {
+		await this.initializeClients();
+		this.ensureInitialized();
+		const adminClient = this.adminClient as MeiliSearch;
+		return await adminClient.tasks.waitForTask(taskUid, {
 			timeout: 10000,
 			interval: 100,
 		});
@@ -105,7 +126,10 @@ export class SearchManager {
 	 * @returns A promise that resolves to the task details
 	 */
 	public async getTask(taskUid: number) {
-		return await this.adminClient.tasks.getTask(taskUid);
+		await this.initializeClients();
+		this.ensureInitialized();
+		const adminClient = this.adminClient as MeiliSearch;
+		return await adminClient.tasks.getTask(taskUid);
 	}
 
 	/**
@@ -114,8 +138,11 @@ export class SearchManager {
 	 * @param indexName - The name of the index
 	 * @returns The admin MeiliSearch index instance
 	 */
-	public getAdminIndex<T extends RecordAny = RecordAny>(indexName: string) {
-		return this.adminClient.index<T>(indexName);
+	public async getAdminIndex<T extends RecordAny = RecordAny>(indexName: string) {
+		await this.initializeClients();
+		this.ensureInitialized();
+		const adminClient = this.adminClient as MeiliSearch;
+		return adminClient.index<T>(indexName);
 	}
 
 	/**
@@ -124,8 +151,11 @@ export class SearchManager {
 	 * @param indexName - The name of the index
 	 * @returns The search-only MeiliSearch index instance
 	 */
-	public getSearchIndex<T extends RecordAny = RecordAny>(indexName: string) {
-		return this.client.index<T>(indexName);
+	public async getSearchIndex<T extends RecordAny = RecordAny>(indexName: string) {
+		await this.initializeClients();
+		this.ensureInitialized();
+		const client = this.client as MeiliSearch;
+		return client.index<T>(indexName);
 	}
 
 	/**
@@ -133,7 +163,10 @@ export class SearchManager {
 	 * @returns A promise that resolves to the list of all indexes
 	 */
 	public async listIndexes() {
-		return this.adminClient.getIndexes();
+		await this.initializeClients();
+		this.ensureInitialized();
+		const adminClient = this.adminClient as MeiliSearch;
+		return adminClient.getIndexes();
 	}
 
 	/**
@@ -144,7 +177,10 @@ export class SearchManager {
 	 * @returns A promise that resolves to an array of matching index UIDs
 	 */
 	public async getLocalizedIndexesOfEntity(name: string) {
-		const { results: indexes } = await this.adminClient.getIndexes({
+		await this.initializeClients();
+		this.ensureInitialized();
+		const adminClient = this.adminClient as MeiliSearch;
+		const { results: indexes } = await adminClient.getIndexes({
 			limit: 1000,
 		});
 		const results: string[] = [];
@@ -162,6 +198,10 @@ export class SearchManager {
 	 * Skips indexes without a corresponding entry in INDEX_SETTINGS.
 	 */
 	public async syncAllSettings() {
+		if (this.adminClient === undefined) {
+			return;
+		}
+
 		const { results: indexes } = await this.listIndexes();
 		for (const index of indexes) {
 			const uid = index.uid;
