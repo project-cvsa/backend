@@ -54,7 +54,7 @@ export class SongSearchService extends ISearchService<SongDetailsResponseDto> {
 		const getName = () => {
 			if (language === song.language) return song.name;
 			return song.localizedNames?.[language];
-		}
+		};
 		const vectors = await this.embeddingManager.embeddings.post({
 			texts: [
 				`Name: ${getName() ?? ""}
@@ -104,7 +104,7 @@ Artists: ${getArtists().join(", ")}
 			}
 			return;
 		}
-		
+
 		const languages = unique([
 			...keys(song.localizedNames ?? []),
 			...keys(song.localizedDescriptions ?? []),

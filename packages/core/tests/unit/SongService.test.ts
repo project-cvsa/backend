@@ -63,7 +63,7 @@ describe("SongService", () => {
 			expect(result).toEqual(mockSongDetails);
 			expect(mockRepository.getDetailsById).toHaveBeenCalledWith(1);
 		});
-		
+
 		test("throws NOT_FOUND error when song does not exist", async () => {
 			mockRepository.getDetailsById.mockResolvedValue(null);
 

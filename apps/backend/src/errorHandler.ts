@@ -86,14 +86,13 @@ export const errorHandler = new Elysia()
 			});
 		} else if (error instanceof BetterAuthAPIError) {
 			const bodyCode = error.body?.code || "";
-			
+
 			if (bodyCode === "USERNAME_IS_ALREADY_TAKEN") {
 				setErrorResponse(409, {
 					code: bodyCode,
 					message: "error.username-taken",
 				});
-			}
-			else if (bodyCode === "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL") {
+			} else if (bodyCode === "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL") {
 				setErrorResponse(409, {
 					code: bodyCode,
 					message: "error.email-taken",

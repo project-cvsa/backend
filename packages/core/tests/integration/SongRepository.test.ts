@@ -17,7 +17,7 @@ describe("SongRepository Integration Tests", () => {
 	});
 
 	beforeAll(async () => {
-			await prisma.$connect();
+		await prisma.$connect();
 		await prisma.creation.deleteMany();
 		await prisma.artistRole.deleteMany();
 		await prisma.artist.deleteMany();
@@ -131,8 +131,8 @@ describe("SongRepository Integration Tests", () => {
 			expect(result?.artists[0]).toMatchObject({
 				name: "月华P",
 				role: {
-					name: "作曲"
-				}
+					name: "作曲",
+				},
 			});
 		});
 
