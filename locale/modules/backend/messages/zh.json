@@ -1,6 +1,7 @@
 {
 	"error.unauthorized": "未登录",
 	"error.song.notfound": "此歌曲不存在",
+	"error.lyric.notfound": "此歌词不存在",
 	"error.signup.failed": "很抱歉，暂时无法注册",
 	"error.login.failed": "很抱歉，暂时无法登录",
 	"error.not-found": "请求的路径不存在",

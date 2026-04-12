@@ -12,7 +12,6 @@ const mockSongDetails: SongDetailsResponseDto = {
 	description: "A test song",
 	coverUrl: "https://example.com/cover.jpg",
 	publishedAt: new Date("2024-01-01").toISOString(),
-	deletedAt: null,
 	createdAt: new Date().toISOString(),
 	updatedAt: new Date().toISOString(),
 	originalSongId: null,
@@ -45,6 +44,29 @@ describe("SongService", () => {
 		create: async () => mockSongDetails,
 		update: async () => mockSongDetails,
 		softDelete: async () => {},
+		createLyrics: async () => ({
+			id: 1,
+			language: "zh",
+			isTranslated: false,
+			plainText: "Test lyrics",
+			ttml: null,
+			lrc: null,
+			createdAt: new Date().toISOString(),
+			updatedAt: new Date().toISOString(),
+		}),
+		getLyricsBySongId: async () => [],
+		getLyricById: async () => null,
+		updateLyric: async () => ({
+			id: 1,
+			language: "zh",
+			isTranslated: false,
+			plainText: "Updated lyrics",
+			ttml: null,
+			lrc: null,
+			createdAt: new Date().toISOString(),
+			updatedAt: new Date().toISOString(),
+		}),
+		softDeleteLyric: async () => {},
 	});
 
 	const mockSearchService = {
@@ -179,6 +201,170 @@ describe("SongService", () => {
 			await songService.delete(1);
 
 			expect(mockRepository.softDelete).toHaveBeenCalledWith(1);
+		});
+	});
+
+	describe("listLyrics", () => {
+		test("returns lyrics when song exists", async () => {
+			mockRepository.getLyricsBySongId.mockResolvedValueOnce([
+				{
+					id: 1,
+					language: "zh",
+					isTranslated: false,
+					plainText: "歌词",
+					ttml: null,
+					lrc: null,
+					createdAt: new Date().toISOString(),
+					updatedAt: new Date().toISOString(),
+				},
+			]);
+
+			const result = await songService.listLyrics(1);
+
+			expect(result).toHaveLength(1);
+			expect(result[0].language).toBe("zh");
+			expect(mockRepository.getLyricsBySongId).toHaveBeenCalledWith(1);
+		});
+
+		test("throws NOT_FOUND error when song does not exist", async () => {
+			mockRepository.getById.mockResolvedValueOnce(null);
+
+			expect(songService.listLyrics(999)).rejects.toThrow(AppError);
+			expect(songService.listLyrics(999)).rejects.toThrow("error.song.notfound");
+		});
+	});
+
+	describe("getLyric", () => {
+		test("returns lyric when song and lyric exist", async () => {
+			mockRepository.getLyricById.mockResolvedValueOnce({
+				id: 1,
+				language: "zh",
+				isTranslated: false,
+				plainText: "歌词",
+				ttml: null,
+				lrc: null,
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+			});
+
+			const result = await songService.getLyric(1, 1);
+
+			expect(result.id).toBe(1);
+			expect(result.plainText).toBe("歌词");
+		});
+
+		test("throws NOT_FOUND error when song does not exist", async () => {
+			mockRepository.getById.mockResolvedValueOnce(null);
+
+			expect(songService.getLyric(999, 1)).rejects.toThrow(AppError);
+			expect(songService.getLyric(999, 1)).rejects.toThrow("error.song.notfound");
+		});
+
+		test("throws NOT_FOUND error when lyric does not exist", async () => {
+			mockRepository.getLyricById.mockResolvedValueOnce(null);
+
+			expect(songService.getLyric(1, 999)).rejects.toThrow(AppError);
+			expect(songService.getLyric(1, 999)).rejects.toThrow("error.lyric.notfound");
+		});
+	});
+
+	describe("createLyric", () => {
+		const createInput = {
+			language: "ja" as const,
+			isTranslated: true,
+			plainText: "日本語の歌詞",
+		};
+
+		test("creates lyric when song exists", async () => {
+			const result = await songService.createLyric(1, createInput);
+
+			expect(result).toMatchObject({
+				language: "zh",
+				plainText: "Test lyrics",
+			});
+			expect(mockRepository.createLyrics).toHaveBeenCalledWith(1, createInput);
+		});
+
+		test("throws NOT_FOUND error when song does not exist", async () => {
+			mockRepository.getById.mockResolvedValueOnce(null);
+
+			expect(songService.createLyric(999, createInput)).rejects.toThrow(AppError);
+			expect(songService.createLyric(999, createInput)).rejects.toThrow(
+				"error.song.notfound"
+			);
+		});
+	});
+
+	describe("updateLyric", () => {
+		const updateInput = { plainText: "Updated lyrics" };
+
+		test("updates lyric when song and lyric exist", async () => {
+			mockRepository.getLyricById.mockResolvedValueOnce({
+				id: 1,
+				language: "zh",
+				isTranslated: false,
+				plainText: "原歌词",
+				ttml: null,
+				lrc: null,
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+			});
+
+			const result = await songService.updateLyric(1, 1, updateInput);
+
+			expect(result.plainText).toBe("Updated lyrics");
+			expect(mockRepository.updateLyric).toHaveBeenCalledWith(1, updateInput);
+		});
+
+		test("throws NOT_FOUND error when song does not exist", async () => {
+			mockRepository.getById.mockResolvedValueOnce(null);
+
+			expect(songService.updateLyric(999, 1, updateInput)).rejects.toThrow(AppError);
+			expect(songService.updateLyric(999, 1, updateInput)).rejects.toThrow(
+				"error.song.notfound"
+			);
+		});
+
+		test("throws NOT_FOUND error when lyric does not exist", async () => {
+			mockRepository.getLyricById.mockResolvedValueOnce(null);
+
+			expect(songService.updateLyric(1, 999, updateInput)).rejects.toThrow(AppError);
+			expect(songService.updateLyric(1, 999, updateInput)).rejects.toThrow(
+				"error.lyric.notfound"
+			);
+		});
+	});
+
+	describe("deleteLyric", () => {
+		test("soft deletes lyric when song and lyric exist", async () => {
+			mockRepository.getLyricById.mockResolvedValueOnce({
+				id: 1,
+				language: "zh",
+				isTranslated: false,
+				plainText: "歌词",
+				ttml: null,
+				lrc: null,
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+			});
+
+			await songService.deleteLyric(1, 1);
+
+			expect(mockRepository.softDeleteLyric).toHaveBeenCalledWith(1);
+		});
+
+		test("throws NOT_FOUND error when song does not exist", async () => {
+			mockRepository.getById.mockResolvedValueOnce(null);
+
+			expect(songService.deleteLyric(999, 1)).rejects.toThrow(AppError);
+			expect(songService.deleteLyric(999, 1)).rejects.toThrow("error.song.notfound");
+		});
+
+		test("throws NOT_FOUND error when lyric does not exist", async () => {
+			mockRepository.getLyricById.mockResolvedValueOnce(null);
+
+			expect(songService.deleteLyric(1, 999)).rejects.toThrow(AppError);
+			expect(songService.deleteLyric(1, 999)).rejects.toThrow("error.lyric.notfound");
 		});
 	});
 });

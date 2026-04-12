@@ -11,6 +11,10 @@
 - `apps/frontend`: Web interface (Not yet implemented)
 - `packages/db`: Prisma schema and generated database client
 - `packages/core`: Shared business logic, DTOs, and Zod schemas
+- `packages/embedding`: A standalone embedding REST service
+- `packages/logger`: The application logger setup
+- `packages/observability`: Observability configurations
+- `packages/env`: Package for managing environment variables
 
 ## 2. Core Mental Model & Architecture
 
@@ -68,17 +72,10 @@ These rules are absolute. Violation will cause pipeline or runtime failures.
 - **camelCase**: Functions (`getUserById`), Variables, and standard file names (`authHandler.ts`).
 - **UPPER_SNAKE_CASE**: Constants (`MAX_RATE_LIMIT`).
 
-### Import Hierarchy
-Order imports from farthest to closest. Prioritize path aliases
-1. External: Built-in and external NPM packages.
-2. Workspace: Internal packages (`@cvsa/core`, `@cvsa/db`).
-3. Aliases: `@/*`, `@modules/*`, `@common/*` pointing to `./src/`.
-4. **[PROHIBITED]**: relative paths (`../`, `./`, `../../../`, etc.)
-
 ### Module-Specific Information
 - **Backend**:
 	1. Our endpoints starts with `/v2` and this prefix is already configured in root handler. In all of the rest handlers, always use the complete path **without** the version prefix (e.g. `/song/:id/details`)
-	2. **[PROHIBITED]**: DO NOT use verbs in paths. Endpoints should strictly follows the RESTful style.
+	2. **[PROHIBITED]**: DO NOT use verbs in paths. Endpoints should strictly follows the RESTful pattern.
 
 ## 5. Execution Commands & Testing
 

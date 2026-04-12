@@ -6,8 +6,8 @@
 		"lint": "bunx --bun biome lint",
 		"dev": "NODE_ENV=development bun --watch src/index.ts",
 		"start": "bun src/index.ts",
-		"test": "NODE_ENV=test bun test",
-		"test:coverage": "NODE_ENV=test bun test --coverage",
+		"test": "bun test --concurrent",
+		"test:coverage": "bun test --coverage --concurrent",
 		"typecheck": "bunx --bun tsc --noEmit"
 	},
 	"devDependencies": {

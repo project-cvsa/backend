@@ -47,7 +47,8 @@ describe("SongRepository Integration Tests", () => {
 			expect(result.duration).toBe(180);
 			expect(result.description).toBe("A test song");
 			expect(result.coverUrl).toBe("https://example.com/cover.jpg");
-			expect(result.deletedAt).toBeNull();
+			//@ts-expect-error accessing nonexistent field for testing purpose
+			expect(result.deletedAt).not.toBeDefined();
 		});
 
 		test("should create a song with minimal fields", async () => {
@@ -73,6 +74,8 @@ describe("SongRepository Integration Tests", () => {
 			expect(result).toBeDefined();
 			expect(result?.id).toBe(created.id);
 			expect(result?.name).toBe("Find Me Song");
+			//@ts-expect-error accessing nonexistent field for testing purpose
+			expect(result?.deletedAt).not.toBeDefined();
 		});
 
 		test("should return null when song does not exist", async () => {
@@ -134,6 +137,8 @@ describe("SongRepository Integration Tests", () => {
 					name: "作曲",
 				},
 			});
+			//@ts-expect-error accessing nonexistent field for testing purpose
+			expect(result?.deletedAt).not.toBeDefined();
 		});
 
 		test("should return null when song does not exist", async () => {
@@ -157,6 +162,8 @@ describe("SongRepository Integration Tests", () => {
 			expect(result.name).toBe("New Name");
 			expect(result.type).toBe("COVER");
 			expect(result.duration).toBe(200);
+			//@ts-expect-error accessing nonexistent field for testing purpose
+			expect(result.deletedAt).not.toBeDefined();
 		});
 
 		test("should update only specified fields", async () => {
@@ -182,6 +189,191 @@ describe("SongRepository Integration Tests", () => {
 
 			const result = await repository.getById(created.id);
 			expect(result).toBeNull();
+		});
+	});
+
+	describe("createLyrics", () => {
+		test("should create lyrics for a song", async () => {
+			const song = await repository.create({ name: "Song with Lyrics" });
+
+			const lyric = await repository.createLyrics(song.id, {
+				language: "zh",
+				isTranslated: false,
+				plainText: "歌词内容",
+			});
+
+			expect(lyric).toBeDefined();
+			expect(lyric.id).toBeGreaterThan(0);
+			expect(lyric.language).toBe("zh");
+			expect(lyric.isTranslated).toBe(false);
+			expect(lyric.plainText).toBe("歌词内容");
+			expect(lyric.ttml).toBeNull();
+			expect(lyric.lrc).toBeNull();
+			//@ts-expect-error accessing nonexistent field for testing purpose
+			expect(lyric.deletedAt).not.toBeDefined();
+		});
+
+		test("should create lyrics with optional fields", async () => {
+			const song = await repository.create({ name: "Song with Full Lyrics" });
+
+			const lyric = await repository.createLyrics(song.id, {
+				language: "ja",
+				isTranslated: true,
+				plainText: "日本語の歌詞",
+				ttml: "<tt>test</tt>",
+				lrc: "[00:00.00]test",
+			});
+
+			expect(lyric.language).toBe("ja");
+			expect(lyric.isTranslated).toBe(true);
+			expect(lyric.plainText).toBe("日本語の歌詞");
+			expect(lyric.ttml).toBe("<tt>test</tt>");
+			expect(lyric.lrc).toBe("[00:00.00]test");
+		});
+	});
+
+	describe("getLyricsBySongId", () => {
+		test("should return all lyrics for a song", async () => {
+			const song = await repository.create({
+				name: "Song with Multiple Lyrics",
+			});
+
+			await repository.createLyrics(song.id, {
+				language: "zh",
+				isTranslated: false,
+				plainText: "中文歌词",
+			});
+			await repository.createLyrics(song.id, {
+				language: "en",
+				isTranslated: true,
+				plainText: "English lyrics",
+			});
+
+			const lyrics = await repository.getLyricsBySongId(song.id);
+
+			expect(lyrics).toHaveLength(2);
+			expect(lyrics.map((l) => l.language)).toContain("zh");
+			expect(lyrics.map((l) => l.language)).toContain("en");
+		});
+
+		test("should return empty array when song has no lyrics", async () => {
+			const song = await repository.create({ name: "Song without Lyrics" });
+
+			const lyrics = await repository.getLyricsBySongId(song.id);
+
+			expect(lyrics).toEqual([]);
+		});
+
+		test("should not return deleted lyrics", async () => {
+			const song = await repository.create({ name: "Song with Deleted Lyrics" });
+
+			const lyric = await repository.createLyrics(song.id, {
+				language: "zh",
+				isTranslated: false,
+				plainText: "将被删除的歌词",
+			});
+			await repository.softDeleteLyric(lyric.id);
+
+			const lyrics = await repository.getLyricsBySongId(song.id);
+
+			expect(lyrics).toHaveLength(0);
+		});
+	});
+
+	describe("getLyricById", () => {
+		test("should return lyric when exists", async () => {
+			const song = await repository.create({ name: "Song" });
+			const created = await repository.createLyrics(song.id, {
+				language: "zh",
+				isTranslated: false,
+				plainText: "歌词",
+			});
+
+			const lyric = await repository.getLyricById(created.id);
+
+			expect(lyric).toBeDefined();
+			expect(lyric?.id).toBe(created.id);
+			expect(lyric?.plainText).toBe("歌词");
+		});
+
+		test("should return null when lyric does not exist", async () => {
+			const lyric = await repository.getLyricById(999999);
+
+			expect(lyric).toBeNull();
+		});
+
+		test("should return null when lyric is deleted", async () => {
+			const song = await repository.create({ name: "Song" });
+			const created = await repository.createLyrics(song.id, {
+				language: "zh",
+				isTranslated: false,
+				plainText: "歌词",
+			});
+			await repository.softDeleteLyric(created.id);
+
+			const lyric = await repository.getLyricById(created.id);
+
+			expect(lyric).toBeNull();
+		});
+	});
+
+	describe("updateLyric", () => {
+		test("should update all fields", async () => {
+			const song = await repository.create({ name: "Song" });
+			const created = await repository.createLyrics(song.id, {
+				language: "zh",
+				isTranslated: false,
+				plainText: "原歌词",
+			});
+
+			const updated = await repository.updateLyric(created.id, {
+				language: "en",
+				isTranslated: true,
+				plainText: "Updated lyrics",
+				ttml: "<tt>updated</tt>",
+				lrc: "[00:00.00]updated",
+			});
+
+			expect(updated.language).toBe("en");
+			expect(updated.isTranslated).toBe(true);
+			expect(updated.plainText).toBe("Updated lyrics");
+			expect(updated.ttml).toBe("<tt>updated</tt>");
+			expect(updated.lrc).toBe("[00:00.00]updated");
+		});
+
+		test("should update only specified fields", async () => {
+			const song = await repository.create({ name: "Song" });
+			const created = await repository.createLyrics(song.id, {
+				language: "zh",
+				isTranslated: false,
+				plainText: "原歌词",
+				ttml: "<tt>original</tt>",
+			});
+
+			const updated = await repository.updateLyric(created.id, {
+				plainText: "新歌词",
+			});
+
+			expect(updated.plainText).toBe("新歌词");
+			expect(updated.language).toBe("zh");
+			expect(updated.isTranslated).toBe(false);
+			expect(updated.ttml).toBe("<tt>original</tt>");
+		});
+	});
+
+	describe("softDeleteLyric", () => {
+		test("should soft delete a lyric", async () => {
+			const song = await repository.create({ name: "Song" });
+			const created = await repository.createLyrics(song.id, {
+				language: "zh",
+				isTranslated: false,
+				plainText: "将被删除",
+			});
+
+			await repository.softDeleteLyric(created.id);
+
+			const lyric = await repository.getLyricById(created.id);
+			expect(lyric).toBeNull();
 		});
 	});
 });

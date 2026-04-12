@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { treaty } from "@elysiajs/eden";
 import { app } from "@/index";
 import { prisma } from "@cvsa/db";

@@ -4,6 +4,8 @@ import type {
 	SongId,
 	UpdateSongRequestDto,
 	SongDetailsResponseDto,
+	SongLyricsCreateRequestDto,
+	SongLyricsUpdateRequestDto,
 } from "./dto";
 import type { ISongRepository } from "./repository.interface";
 import { transformPrismaResult, type TxClient } from "@cvsa/db";
@@ -14,7 +16,10 @@ export class SongRepository implements ISongRepository {
 	async getById(id: SongId, tx?: TxClient) {
 		const client = tx ?? this.prisma;
 		return transformPrismaResult(
-			await client.song.findFirst({ where: { id, deletedAt: null } })
+			await client.song.findFirst({
+				where: { id, deletedAt: null },
+				omit: { deletedAt: true },
+			})
 		);
 	}
 
@@ -37,7 +42,14 @@ export class SongRepository implements ISongRepository {
 							artist: true,
 						},
 					},
-					lyrics: true,
+					lyrics: {
+						omit: {
+							deletedAt: true,
+						},
+					},
+				},
+				omit: {
+					deletedAt: true,
 				},
 			})
 		);
@@ -63,13 +75,7 @@ export class SongRepository implements ISongRepository {
 					role: item.role,
 				};
 			}),
-			lyrics: lyrics.map((item) => {
-				return {
-					plainText: item.plainText,
-					language: item.language,
-					isTranslated: item.isTranslated,
-				};
-			}),
+			lyrics: lyrics,
 			...song,
 		};
 	}
@@ -81,15 +87,7 @@ export class SongRepository implements ISongRepository {
 		return transformPrismaResult(
 			await client.song.create({
 				data: {
-					language: songData.language ?? undefined,
-					type: songData.type ?? null,
-					name: songData.name ?? null,
-					localizedNames: songData.localizedNames ?? undefined,
-					localizedDescriptions: songData.localizedDescriptions ?? undefined,
-					duration: songData.duration ?? null,
-					description: songData.description ?? null,
-					coverUrl: songData.coverUrl ?? null,
-					publishedAt: songData.publishedAt ?? null,
+					...songData,
 					performances: performances && {
 						create: performances,
 					},
@@ -103,6 +101,9 @@ export class SongRepository implements ISongRepository {
 						create: lyrics,
 					},
 				},
+				omit: {
+					deletedAt: true,
+				},
 			})
 		);
 	}
@@ -114,6 +115,9 @@ export class SongRepository implements ISongRepository {
 			await client.song.update({
 				where: { id },
 				data: input,
+				omit: {
+					deletedAt: true,
+				},
 			})
 		);
 	}
@@ -121,5 +125,64 @@ export class SongRepository implements ISongRepository {
 	async softDelete(id: SongId, tx?: TxClient) {
 		const client = tx ?? this.prisma;
 		await client.song.update({ where: { id }, data: { deletedAt: new Date() } });
+	}
+
+	async createLyrics(id: SongId, input: SongLyricsCreateRequestDto, tx?: TxClient) {
+		const client = tx ?? this.prisma;
+
+		return transformPrismaResult(
+			await client.lyrics.create({
+				data: {
+					songId: id,
+					...input,
+				},
+				omit: {
+					deletedAt: true,
+				},
+			})
+		);
+	}
+
+	async getLyricsBySongId(id: SongId, tx?: TxClient) {
+		const client = tx ?? this.prisma;
+
+		return transformPrismaResult(
+			await client.lyrics.findMany({
+				where: { songId: id, deletedAt: null },
+				omit: { deletedAt: true, songId: true },
+			})
+		);
+	}
+
+	async getLyricById(lyricId: number, tx?: TxClient) {
+		const client = tx ?? this.prisma;
+
+		return transformPrismaResult(
+			await client.lyrics.findFirst({
+				where: { id: lyricId, deletedAt: null },
+				omit: { deletedAt: true, songId: true },
+			})
+		);
+	}
+
+	async updateLyric(lyricId: number, input: SongLyricsUpdateRequestDto, tx?: TxClient) {
+		const client = tx ?? this.prisma;
+
+		return transformPrismaResult(
+			await client.lyrics.update({
+				where: { id: lyricId },
+				data: input,
+				omit: { deletedAt: true, songId: true },
+			})
+		);
+	}
+
+	async softDeleteLyric(lyricId: number, tx?: TxClient) {
+		const client = tx ?? this.prisma;
+
+		await client.lyrics.update({
+			where: { id: lyricId },
+			data: { deletedAt: new Date() },
+		});
 	}
 }
