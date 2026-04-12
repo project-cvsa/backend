@@ -13,7 +13,7 @@
 - `packages/core`: Shared business logic, DTOs, and Zod schemas
 - `packages/embedding`: A standalone embedding REST service
 - `packages/logger`: The application logger setup
-- `pakcages/observability`: Observability configurations
+- `packages/observability`: Observability configurations
 - `packages/env`: Package for managing environment variables
 
 ## 2. Core Mental Model & Architecture
