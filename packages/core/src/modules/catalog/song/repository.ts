@@ -16,7 +16,10 @@ export class SongRepository implements ISongRepository {
 	async getById(id: SongId, tx?: TxClient) {
 		const client = tx ?? this.prisma;
 		return transformPrismaResult(
-			await client.song.findFirst({ where: { id, deletedAt: null } })
+			await client.song.findFirst({
+				where: { id, deletedAt: null },
+				omit: { deletedAt: true },
+			})
 		);
 	}
 
@@ -98,6 +101,9 @@ export class SongRepository implements ISongRepository {
 						create: lyrics,
 					},
 				},
+				omit: {
+					deletedAt: true,
+				},
 			})
 		);
 	}
@@ -109,6 +115,9 @@ export class SongRepository implements ISongRepository {
 			await client.song.update({
 				where: { id },
 				data: input,
+				omit: {
+					deletedAt: true,
+				},
 			})
 		);
 	}
@@ -126,6 +135,9 @@ export class SongRepository implements ISongRepository {
 				data: {
 					songId: id,
 					...input,
+				},
+				omit: {
+					deletedAt: true,
 				},
 			})
 		);
