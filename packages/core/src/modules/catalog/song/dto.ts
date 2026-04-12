@@ -93,7 +93,7 @@ export const SongLyricsResponseSchema = LyricsSchema.omit({
 
 export const SongLyricsListResponseSchema = SongLyricsResponseSchema.array();
 
-export type SongResponseDto = Serialized<z.Infer<typeof SongResponseSchema>>;
+export type SongResponseDto = Serialized<z.infer<typeof SongResponseSchema>>;
 export type CreateSongRequestDto = Serialized<z.infer<typeof CreateSongRequestSchema>>;
 export type UpdateSongRequestDto = Serialized<z.infer<typeof UpdateSongRequestSchema>>;
 export type SongDetailsResponseDto = Serialized<z.infer<typeof SongDetailsResponseSchema>>;
