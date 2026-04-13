@@ -6,12 +6,6 @@ import type { EmbeddingAppApi } from "@cvsa/embedding";
 import { SearchManager } from "../../src/search/manager";
 import { env } from "@cvsa/env";
 import { MeiliSearch } from "meilisearch";
-// import { OriginalMeiliSearch } from "../utils";
-// import type { MeiliSearch as MeiliType } from "meilisearch";
-
-// const MeiliSearch = OriginalMeiliSearch.MeiliSearch;
-// console.debug("CCCCCCC", MeiliSearch);
-// type MeiliSearch = MeiliType;
 
 const MEILI_HOST = env.MEILI_API_URL ?? "http://127.0.0.1:7700";
 const MEILI_MASTER_KEY = env.MEILI_MASTER_KEY ?? "";

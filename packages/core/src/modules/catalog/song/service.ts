@@ -107,9 +107,15 @@ export class SongService implements IServiceWithGetDetails<SongDetailsResponseDt
 		if (existing === null) {
 			throw new AppError("error.song.notfound", "NOT_FOUND", 404);
 		}
-		return traceTask("db create lyric", async () => {
+		const result = await traceTask("db create lyric", async () => {
 			return await this.repository.createLyrics(id, input);
 		});
+		await traceTask("sync search index", async () => {
+			this.search.sync(id).catch((e) => {
+				appLogger.warn(Bun.inspect(e));
+			});
+		});
+		return result;
 	}
 
 	async updateLyric(
@@ -125,9 +131,15 @@ export class SongService implements IServiceWithGetDetails<SongDetailsResponseDt
 		if (lyric === null) {
 			throw new AppError("error.lyric.notfound", "NOT_FOUND", 404);
 		}
-		return traceTask("db update lyric", async () => {
+		const result = traceTask("db update lyric", async () => {
 			return await this.repository.updateLyric(lyricId, input);
 		});
+		await traceTask("sync search index", async () => {
+			this.search.sync(id).catch((e) => {
+				appLogger.warn(Bun.inspect(e));
+			});
+		});
+		return result;
 	}
 
 	async deleteLyric(id: SongId, lyricId: number): Promise<void> {
@@ -141,6 +153,11 @@ export class SongService implements IServiceWithGetDetails<SongDetailsResponseDt
 		}
 		await traceTask("db delete lyric", async () => {
 			return await this.repository.softDeleteLyric(lyricId);
+		});
+		await traceTask("sync search index", async () => {
+			this.search.sync(id).catch((e) => {
+				appLogger.warn(Bun.inspect(e));
+			});
 		});
 	}
 }
