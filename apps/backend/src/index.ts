@@ -2,7 +2,7 @@ import { Elysia } from "elysia";
 import { onAfterHandler } from "./onAfterHandle";
 import { getBindingInfo, logStartup } from "./startMessage";
 import pkg from "../package.json";
-import { authHandler, songHandler } from "@handlers/index";
+import { authHandler, songHandler, engineHandler } from "@handlers/index";
 import { errorHandler } from "./errorHandler";
 import { openapi } from "@elysiajs/openapi";
 import { requestLoggerMiddleware } from "@/middlewares";
@@ -32,6 +32,7 @@ export const app = new Elysia({
 	.use(openapi())
 	.use(authHandler)
 	.use(songHandler)
+	.use(engineHandler)
 	.use(devHandler)
 	.listen(16412);
 
