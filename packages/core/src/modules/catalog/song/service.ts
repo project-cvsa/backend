@@ -131,7 +131,7 @@ export class SongService implements IServiceWithGetDetails<SongDetailsResponseDt
 		if (lyric === null) {
 			throw new AppError("error.lyric.notfound", "NOT_FOUND", 404);
 		}
-		const result = traceTask("db update lyric", async () => {
+		const result = await traceTask("db update lyric", async () => {
 			return await this.repository.updateLyric(lyricId, input);
 		});
 		await traceTask("sync search index", async () => {
