@@ -14,10 +14,6 @@ const nanoid = customAlphabet(alphabet, 7);
 const PASSWORD_HASH_COST = 4;
 const SESSION_SECRET_HASH_ALGORITHM = "sha256";
 const DUMMY_SESSION_SECRET = "0".repeat(30);
-const DUMMY_PASSWORD_HASH = await Bun.password.hash(DUMMY_SESSION_SECRET, {
-	algorithm: "argon2id",
-	memoryCost: PASSWORD_HASH_COST,
-});
 
 function hashSessionSecret(secret: string): string {
 	const sha256Hasher = new Bun.CryptoHasher(SESSION_SECRET_HASH_ALGORITHM);
@@ -36,15 +32,12 @@ function fixedLengthEqual(left: string, right: string): boolean {
 	return crypto.timingSafeEqual(leftBuffer, rightBuffer);
 }
 
-interface AuthServiceOptions {
-	passwordVerify?: typeof Bun.password.verify;
-}
+interface AuthServiceOptions {}
 
 export class AuthService implements IAuthService {
 	private userRepository: IUserRepository;
 	private sessionRepository: ISessionRepository;
 	private prisma: PrismaClient;
-	private passwordVerify: typeof Bun.password.verify;
 
 	constructor(
 		userRepo: IUserRepository,
@@ -55,7 +48,6 @@ export class AuthService implements IAuthService {
 		this.userRepository = userRepo;
 		this.sessionRepository = sessionRepo;
 		this.prisma = prismaClient;
-		this.passwordVerify = options.passwordVerify ?? Bun.password.verify;
 	}
 
 	async register(
@@ -63,12 +55,12 @@ export class AuthService implements IAuthService {
 		ipAddress?: string,
 		userAgent?: string
 	): Promise<AuthResult> {
-		return await this.prisma.$transaction(async (tx) => {
-			const hashedPassword = await Bun.password.hash(data.password, {
-				algorithm: "argon2id",
-				memoryCost: PASSWORD_HASH_COST,
-			});
+		const hashedPassword = await Bun.password.hash(data.password, {
+			algorithm: "argon2id",
+			memoryCost: PASSWORD_HASH_COST,
+		});
 
+		return await this.prisma.$transaction(async (tx) => {
 			let attempts = 0;
 			let user: User | null = null;
 
@@ -87,10 +79,6 @@ export class AuthService implements IAuthService {
 					break;
 				} catch (e) {
 					if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
-						// Normalize duplicate failures to execute the same expensive work
-						// before surfacing whether the username/email already exists.
-						await this.passwordVerify(data.password, DUMMY_PASSWORD_HASH);
-
 						// TODO: Prisma driver adapter P2002 workaround
 						// remove after prisma/prisma#28281 is fixed
 						// meta.target missing -> using undocumented driverAdapterError shape
