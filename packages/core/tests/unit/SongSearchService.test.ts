@@ -240,7 +240,9 @@ describe("SongSearchService", () => {
 
 			expect(mockAdminIndex.addDocuments).toHaveBeenCalled();
 			const doc = mockAdminIndex.addDocuments.mock.calls[0][0][0];
-			expect(doc._vectors).toBeUndefined();
+			expect(doc._vectors).toEqual({
+				"potion-multilingual-128M": null,
+			});
 		});
 	});
 

@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
+import { beforeAll, beforeEach, describe, expect, test } from "bun:test";
 import { songRepository } from "@cvsa/core";
 import { prisma } from "@cvsa/db";
 import { SongSearchService } from "../../src/search/catalog/song";
@@ -68,17 +68,6 @@ describe("SongSearchService Integration Tests", () => {
 		} catch {
 			// Ignore
 		}
-	});
-
-	afterAll(async () => {
-		await prisma.creation.deleteMany();
-		await prisma.artistRole.deleteMany();
-		await prisma.artist.deleteMany();
-		await prisma.performance.deleteMany();
-		await prisma.lyrics.deleteMany();
-		await prisma.singer.deleteMany();
-		await prisma.song.deleteMany();
-		await prisma.$disconnect();
 	});
 
 	describe("sync", () => {

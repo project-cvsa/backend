@@ -48,6 +48,9 @@
 				"tsconfig.json",
 				"$TURBO_ROOT$/packages/typescript-config/base.json"
 			]
+		},
+		"@cvsa/db#test:reset": {
+			"cache": false
 		}
 	}
 }

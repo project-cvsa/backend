@@ -10,7 +10,6 @@ const modelDir = path.join(import.meta.dir, "../../../model/");
 const modelName = "alikia2x/potion-multilingual-128M-int8-strip";
 const modelPath = path.join(modelDir, "./potion-strip/model.onnx");
 
-// TODO: Unit test for this
 export class EmbeddingManager {
 	private tokenizer: PreTrainedTokenizer | null = null;
 	private session: ort.InferenceSession | null = null;

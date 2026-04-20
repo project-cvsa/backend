@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import { treaty } from "@elysiajs/eden";
 import { app } from "@/index";
 import { prisma } from "@cvsa/db";
@@ -6,22 +6,6 @@ import { prisma } from "@cvsa/db";
 const api = treaty(app);
 
 describe("Song Lyrics E2E Tests", () => {
-	beforeAll(async () => {
-		await prisma.$connect();
-		await prisma.session.deleteMany();
-		await prisma.user.deleteMany();
-		await prisma.lyrics.deleteMany();
-		await prisma.song.deleteMany();
-	});
-
-	afterAll(async () => {
-		await prisma.session.deleteMany();
-		await prisma.user.deleteMany();
-		await prisma.lyrics.deleteMany();
-		await prisma.song.deleteMany();
-		await prisma.$disconnect();
-	});
-
 	async function getAuthToken() {
 		const signup = await api.v2.user.post({
 			username: `${Math.random()}`,
