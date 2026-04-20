@@ -22,8 +22,7 @@ export const artistCreateHandler = new Elysia({ name: "artistCreateHandler" })
 			body: CreateArtistRequestSchema,
 			detail: {
 				summary: "Create Artist",
-				description:
-					"Create a new artist entry in the catalog. Requires authentication.",
+				description: "Create a new artist entry in the catalog. Requires authentication.",
 			},
 			response: {
 				201: ArtistResponseSchema,

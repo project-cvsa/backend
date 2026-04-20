@@ -157,11 +157,14 @@ describe("Artist E2E Tests", () => {
 		test("should create an artist with minimal fields", async () => {
 			const token = await getAuthToken();
 
-			const { data, status } = await api.v2.artist.post({}, {
-				headers: {
-					authorization: `Bearer ${token}`,
-				},
-			});
+			const { data, status } = await api.v2.artist.post(
+				{},
+				{
+					headers: {
+						authorization: `Bearer ${token}`,
+					},
+				}
+			);
 
 			expect(status).toBe(201);
 			expect(data).toMatchObject({
