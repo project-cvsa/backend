@@ -9,5 +9,6 @@
 	"error.internal": "服务器内部错误",
 	"error.validation": "输入信息有误",
 	"error.username-taken": "此用户名已被注册",
-	"error.email-taken": "此邮箱已被注册"
+	"error.email-taken": "此邮箱已被注册",
+	"error.artist.notfound": "该创作者不存在"
 }
