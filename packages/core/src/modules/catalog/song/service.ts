@@ -1,4 +1,4 @@
-import type { SongSearchService } from "@cvsa/core/internal";
+import type { OutboxService } from "@cvsa/core/internal";
 import { AppError, type IServiceWithGetDetails } from "@cvsa/core/internal";
 import type {
 	SongDetailsResponseDto,
@@ -13,12 +13,12 @@ import type {
 } from "./dto";
 import type { ISongRepository } from "./repository.interface";
 import { traceTask } from "@cvsa/observability";
-import { appLogger } from "@cvsa/logger";
+import { prisma } from "@cvsa/db";
 
 export class SongService implements IServiceWithGetDetails<SongDetailsResponseDto> {
 	constructor(
 		private readonly repository: ISongRepository,
-		private readonly search: SongSearchService
+		private readonly outbox: OutboxService
 	) {}
 
 	async getDetails(id: SongId) {
@@ -32,15 +32,20 @@ export class SongService implements IServiceWithGetDetails<SongDetailsResponseDt
 	}
 
 	async create(input: CreateSongRequestDto): Promise<SongResponseDto> {
-		const result = await traceTask("db create song", async () => {
-			return await this.repository.create(input);
-		});
-		await traceTask("sync search index", async () => {
-			this.search.sync(result.id).catch((e) => {
-				appLogger.warn(Bun.inspect(e));
+		return traceTask("db create song", async () => {
+			return await prisma.$transaction(async (tx) => {
+				const result = await this.repository.create(input, tx);
+				await this.outbox.createEntry(
+					{
+						aggregateType: "song",
+						aggregateId: result.id,
+						eventType: "song.created",
+					},
+					tx
+				);
+				return result;
 			});
 		});
-		return result;
 	}
 
 	async update(id: SongId, input: UpdateSongRequestDto): Promise<SongResponseDto> {
@@ -48,16 +53,20 @@ export class SongService implements IServiceWithGetDetails<SongDetailsResponseDt
 		if (existing === null) {
 			throw new AppError("error.song.notfound", "NOT_FOUND", 404);
 		}
-		const result = await traceTask("db update song", async () => {
-			return await this.repository.update(id, input);
-		});
-		await traceTask("sync search index", async () => {
-			this.search.sync(id).catch((e) => {
-				// TODO: Should we mark this as dirty and sync it later?
-				appLogger.warn(Bun.inspect(e));
+		return traceTask("db update song", async () => {
+			return await prisma.$transaction(async (tx) => {
+				const result = await this.repository.update(id, input, tx);
+				await this.outbox.createEntry(
+					{
+						aggregateType: "song",
+						aggregateId: id,
+						eventType: "song.updated",
+					},
+					tx
+				);
+				return result;
 			});
 		});
-		return result;
 	}
 
 	async delete(id: SongId): Promise<void> {
@@ -65,12 +74,17 @@ export class SongService implements IServiceWithGetDetails<SongDetailsResponseDt
 		if (existing === null) {
 			throw new AppError("error.song.notfound", "NOT_FOUND", 404);
 		}
-		await traceTask("db delete song", async () => {
-			return await this.repository.softDelete(id);
-		});
-		await traceTask("sync search index", async () => {
-			this.search.sync(id).catch((e) => {
-				appLogger.warn(Bun.inspect(e));
+		return traceTask("db delete song", async () => {
+			await prisma.$transaction(async (tx) => {
+				await this.repository.softDelete(id, tx);
+				await this.outbox.createEntry(
+					{
+						aggregateType: "song",
+						aggregateId: id,
+						eventType: "song.deleted",
+					},
+					tx
+				);
 			});
 		});
 	}
@@ -107,15 +121,20 @@ export class SongService implements IServiceWithGetDetails<SongDetailsResponseDt
 		if (existing === null) {
 			throw new AppError("error.song.notfound", "NOT_FOUND", 404);
 		}
-		const result = await traceTask("db create lyric", async () => {
-			return await this.repository.createLyrics(id, input);
-		});
-		await traceTask("sync search index", async () => {
-			this.search.sync(id).catch((e) => {
-				appLogger.warn(Bun.inspect(e));
+		return traceTask("db create lyric", async () => {
+			return await prisma.$transaction(async (tx) => {
+				const result = await this.repository.createLyrics(id, input, tx);
+				await this.outbox.createEntry(
+					{
+						aggregateType: "song",
+						aggregateId: id,
+						eventType: "song.lyric_created",
+					},
+					tx
+				);
+				return result;
 			});
 		});
-		return result;
 	}
 
 	async updateLyric(
@@ -131,15 +150,20 @@ export class SongService implements IServiceWithGetDetails<SongDetailsResponseDt
 		if (lyric === null) {
 			throw new AppError("error.lyric.notfound", "NOT_FOUND", 404);
 		}
-		const result = await traceTask("db update lyric", async () => {
-			return await this.repository.updateLyric(lyricId, input);
-		});
-		await traceTask("sync search index", async () => {
-			this.search.sync(id).catch((e) => {
-				appLogger.warn(Bun.inspect(e));
+		return traceTask("db update lyric", async () => {
+			return await prisma.$transaction(async (tx) => {
+				const result = await this.repository.updateLyric(lyricId, input, tx);
+				await this.outbox.createEntry(
+					{
+						aggregateType: "song",
+						aggregateId: id,
+						eventType: "song.lyric_updated",
+					},
+					tx
+				);
+				return result;
 			});
 		});
-		return result;
 	}
 
 	async deleteLyric(id: SongId, lyricId: number): Promise<void> {
@@ -151,12 +175,17 @@ export class SongService implements IServiceWithGetDetails<SongDetailsResponseDt
 		if (lyric === null) {
 			throw new AppError("error.lyric.notfound", "NOT_FOUND", 404);
 		}
-		await traceTask("db delete lyric", async () => {
-			return await this.repository.softDeleteLyric(lyricId);
-		});
-		await traceTask("sync search index", async () => {
-			this.search.sync(id).catch((e) => {
-				appLogger.warn(Bun.inspect(e));
+		return traceTask("db delete lyric", async () => {
+			await prisma.$transaction(async (tx) => {
+				await this.repository.softDeleteLyric(lyricId, tx);
+				await this.outbox.createEntry(
+					{
+						aggregateType: "song",
+						aggregateId: id,
+						eventType: "song.lyric_deleted",
+					},
+					tx
+				);
 			});
 		});
 	}

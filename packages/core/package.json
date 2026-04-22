@@ -30,6 +30,8 @@
 		"@cvsa/observability": "workspace:*",
 		"@elysiajs/eden": "^1.4.9",
 		"better-auth": "^1.5.6",
+		"bullmq": "^5",
+		"ioredis": "^5",
 		"meilisearch": "^0.56.0",
 		"nanoid": "^5.1.7",
 		"remeda": "^2.33.7",

@@ -4,6 +4,7 @@ import { ArtistService } from "./service";
 import { ArtistSearchService, searchManager } from "../../../search";
 import { treaty } from "@elysiajs/eden";
 import type { EmbeddingApp } from "@cvsa/embedding";
+import { outboxService } from "../../outbox/container";
 
 const embeddingManager = treaty<EmbeddingApp>("localhost:14900");
 
@@ -13,4 +14,4 @@ export const artistSearchService = new ArtistSearchService(
 	searchManager,
 	embeddingManager
 );
-export const artistService = new ArtistService(artistRepository, artistSearchService);
+export const artistService = new ArtistService(artistRepository, outboxService);

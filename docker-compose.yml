@@ -24,6 +24,16 @@ services:
     volumes:
       - meili:/meili_data
 
+  redis:
+    image: redis:7-alpine
+    container_name: cvsa-redis
+    restart: always
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis:/data
+
 volumes:
   data:
   meili:
+  redis:

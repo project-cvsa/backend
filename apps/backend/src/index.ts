@@ -10,10 +10,34 @@ import { opentelemetry } from "@elysiajs/opentelemetry";
 import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-node";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
 import { devHandler } from "./handlers";
+import { createOutboxWorker, closeOutboxInfrastructure } from "@cvsa/core/internal";
+import { processOutboxEntry } from "@cvsa/core/internal";
+import { outboxService } from "@cvsa/core/internal";
+import { appLogger } from "@cvsa/logger";
 
 const [host, port] = getBindingInfo();
 
 logStartup(host, port);
+
+const outboxWorker = createOutboxWorker(processOutboxEntry);
+
+outboxService.recoverStaleEntries().catch((e) => {
+	appLogger.warn(`Failed to recover stale outbox entries: ${e.message}`);
+});
+
+process.on("SIGTERM", async () => {
+	appLogger.info("Received SIGTERM, shutting down gracefully...");
+	await outboxWorker.close();
+	await closeOutboxInfrastructure();
+	process.exit(0);
+});
+
+process.on("SIGINT", async () => {
+	appLogger.info("Received SIGINT, shutting down gracefully...");
+	await outboxWorker.close();
+	await closeOutboxInfrastructure();
+	process.exit(0);
+});
 
 export const app = new Elysia({
 	serve: {
