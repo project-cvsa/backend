@@ -3,20 +3,29 @@ import type { CreateOutboxEntryDto, OutboxEntryDto, PendingOutboxQueryDto } from
 import { Prisma, type TxClient } from "@cvsa/db";
 import { outboxQueue } from "../../outbox/queue";
 import { appLogger } from "@cvsa/logger";
+import { traceTask } from "@cvsa/observability";
 
 const MAX_RETRIES = 5;
 
 export class OutboxService {
 	constructor(private readonly repository: IOutboxRepository) {}
 
-	async createEntry(input: CreateOutboxEntryDto, tx?: TxClient): Promise<OutboxEntryDto> {
-		const entry = await this.repository.create(input, tx);
-		await outboxQueue.add(`outbox-${entry.aggregateType}-${entry.aggregateId}`, entry, {
-			jobId: `outbox-${entry.id}`,
-			attempts: MAX_RETRIES,
-			backoff: { type: "exponential", delay: 1000 },
+	async createEntry(input: CreateOutboxEntryDto, tx: TxClient): Promise<OutboxEntryDto> {
+		return traceTask("outbox.createEntry", () => this.repository.create(input, tx));
+	}
+
+	async enqueue(entry: OutboxEntryDto): Promise<void> {
+		await traceTask("outbox.enqueue", async () => {
+			await outboxQueue.add(
+				`outbox-${entry.aggregateType}-${entry.aggregateId}`,
+				entry,
+				{
+					jobId: `outbox-${entry.id}`,
+					attempts: MAX_RETRIES,
+					backoff: { type: "exponential", delay: 1000 },
+				}
+			);
 		});
-		return entry;
 	}
 
 	async processEntry(

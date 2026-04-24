@@ -1,4 +1,6 @@
 import type { PrismaClient } from "@cvsa/db";
+import type { TxClient } from "@cvsa/db";
+import { BaseRepository } from "@cvsa/core/internal";
 import type {
 	CreateSongRequestDto,
 	SongId,
@@ -8,15 +10,16 @@ import type {
 	SongLyricsUpdateRequestDto,
 } from "./dto";
 import type { ISongRepository } from "./repository.interface";
-import { transformPrismaResult, type TxClient } from "@cvsa/db";
 
-export class SongRepository implements ISongRepository {
-	constructor(private readonly prisma: PrismaClient) {}
+export class SongRepository extends BaseRepository implements ISongRepository {
+	constructor(private readonly prisma: PrismaClient) {
+		super();
+	}
 
 	async getById(id: SongId, tx?: TxClient) {
 		const client = tx ?? this.prisma;
-		return transformPrismaResult(
-			await client.song.findFirst({
+		return this.query("db.song.getById", () =>
+			client.song.findFirst({
 				where: { id, deletedAt: null },
 				omit: { deletedAt: true },
 			})
@@ -25,8 +28,8 @@ export class SongRepository implements ISongRepository {
 
 	async getDetailsById(id: SongId, tx?: TxClient): Promise<SongDetailsResponseDto | null> {
 		const client = tx ?? this.prisma;
-		const data = transformPrismaResult(
-			await client.song.findFirst({
+		const data = await this.query("db.song.getDetailsById", () =>
+			client.song.findFirst({
 				where: { id, deletedAt: null },
 				include: {
 					performances: {
@@ -84,8 +87,8 @@ export class SongRepository implements ISongRepository {
 		const client = tx ?? this.prisma;
 		const { performances, creations, lyrics, ...songData } = input;
 
-		return transformPrismaResult(
-			await client.song.create({
+		return this.query("db.song.create", () =>
+			client.song.create({
 				data: {
 					...songData,
 					performances: performances && {
@@ -111,8 +114,8 @@ export class SongRepository implements ISongRepository {
 	async update(id: SongId, input: UpdateSongRequestDto, tx?: TxClient) {
 		const client = tx ?? this.prisma;
 
-		return transformPrismaResult(
-			await client.song.update({
+		return this.query("db.song.update", () =>
+			client.song.update({
 				where: { id },
 				data: input,
 				omit: {
@@ -124,14 +127,19 @@ export class SongRepository implements ISongRepository {
 
 	async softDelete(id: SongId, tx?: TxClient) {
 		const client = tx ?? this.prisma;
-		await client.song.update({ where: { id }, data: { deletedAt: new Date() } });
+		await this.query("db.song.softDelete", () =>
+			client.song.update({
+				where: { id },
+				data: { deletedAt: new Date() },
+			})
+		);
 	}
 
 	async createLyrics(id: SongId, input: SongLyricsCreateRequestDto, tx?: TxClient) {
 		const client = tx ?? this.prisma;
 
-		return transformPrismaResult(
-			await client.lyrics.create({
+		return this.query("db.song.createLyrics", () =>
+			client.lyrics.create({
 				data: {
 					songId: id,
 					...input,
@@ -146,8 +154,8 @@ export class SongRepository implements ISongRepository {
 	async getLyricsBySongId(id: SongId, tx?: TxClient) {
 		const client = tx ?? this.prisma;
 
-		return transformPrismaResult(
-			await client.lyrics.findMany({
+		return this.query("db.song.getLyricsBySongId", () =>
+			client.lyrics.findMany({
 				where: { songId: id, deletedAt: null },
 				omit: { deletedAt: true, songId: true },
 			})
@@ -157,8 +165,8 @@ export class SongRepository implements ISongRepository {
 	async getLyricById(lyricId: number, tx?: TxClient) {
 		const client = tx ?? this.prisma;
 
-		return transformPrismaResult(
-			await client.lyrics.findFirst({
+		return this.query("db.song.getLyricById", () =>
+			client.lyrics.findFirst({
 				where: { id: lyricId, deletedAt: null },
 				omit: { deletedAt: true, songId: true },
 			})
@@ -168,8 +176,8 @@ export class SongRepository implements ISongRepository {
 	async updateLyric(lyricId: number, input: SongLyricsUpdateRequestDto, tx?: TxClient) {
 		const client = tx ?? this.prisma;
 
-		return transformPrismaResult(
-			await client.lyrics.update({
+		return this.query("db.song.updateLyric", () =>
+			client.lyrics.update({
 				where: { id: lyricId },
 				data: input,
 				omit: { deletedAt: true, songId: true },
@@ -180,9 +188,11 @@ export class SongRepository implements ISongRepository {
 	async softDeleteLyric(lyricId: number, tx?: TxClient) {
 		const client = tx ?? this.prisma;
 
-		await client.lyrics.update({
-			where: { id: lyricId },
-			data: { deletedAt: new Date() },
-		});
+		await this.query("db.song.softDeleteLyric", () =>
+			client.lyrics.update({
+				where: { id: lyricId },
+				data: { deletedAt: new Date() },
+			})
+		);
 	}
 }

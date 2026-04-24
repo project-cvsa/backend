@@ -1,5 +1,6 @@
 import type { OutboxService } from "@cvsa/core/internal";
 import { AppError, type IServiceWithGetDetails } from "@cvsa/core/internal";
+import { prisma } from "@cvsa/db";
 import type {
 	ArtistDetailsResponseDto,
 	ArtistId,
@@ -8,8 +9,6 @@ import type {
 	ArtistResponseDto,
 } from "./dto";
 import type { IArtistRepository } from "./repository.interface";
-import { traceTask } from "@cvsa/observability";
-import { prisma } from "@cvsa/db";
 
 export class ArtistService implements IServiceWithGetDetails<ArtistDetailsResponseDto> {
 	constructor(
@@ -18,30 +17,29 @@ export class ArtistService implements IServiceWithGetDetails<ArtistDetailsRespon
 	) { }
 
 	async getDetails(id: ArtistId) {
-		return traceTask("db findOne artist", async () => {
-			const result = await this.repository.getDetailsById(id);
-			if (result === null) {
-				throw new AppError("error.artist.notfound", "NOT_FOUND", 404);
-			}
-			return result;
-		});
+		const result = await this.repository.getDetailsById(id);
+		if (result === null) {
+			throw new AppError("error.artist.notfound", "NOT_FOUND", 404);
+		}
+		return result;
 	}
 
 	async create(input: CreateArtistRequestDto): Promise<ArtistResponseDto> {
-		return traceTask("db create artist", async () => {
-			return await prisma.$transaction(async (tx) => {
-				const result = await this.repository.create(input, tx);
-				await this.outbox.createEntry(
-					{
-						aggregateType: "artist",
-						aggregateId: result.id,
-						eventType: "artist.created",
-					},
-					tx
-				);
-				return result;
-			});
+		const { artist, entry } = await prisma.$transaction(async (tx) => {
+			const artist = await this.repository.create(input, tx);
+			const entry = await this.outbox.createEntry(
+				{
+					aggregateType: "artist",
+					aggregateId: artist.id,
+					eventType: "artist.created",
+				},
+				tx
+			);
+			return { artist, entry };
 		});
+
+		await this.outbox.enqueue(entry);
+		return artist;
 	}
 
 	async update(id: ArtistId, input: UpdateArtistRequestDto): Promise<ArtistResponseDto> {
@@ -49,20 +47,22 @@ export class ArtistService implements IServiceWithGetDetails<ArtistDetailsRespon
 		if (existing === null) {
 			throw new AppError("error.artist.notfound", "NOT_FOUND", 404);
 		}
-		return traceTask("db update artist", async () => {
-			return await prisma.$transaction(async (tx) => {
-				const result = await this.repository.update(id, input, tx);
-				await this.outbox.createEntry(
-					{
-						aggregateType: "artist",
-						aggregateId: id,
-						eventType: "artist.updated",
-					},
-					tx
-				);
-				return result;
-			});
+
+		const { artist, entry } = await prisma.$transaction(async (tx) => {
+			const artist = await this.repository.update(id, input, tx);
+			const entry = await this.outbox.createEntry(
+				{
+					aggregateType: "artist",
+					aggregateId: id,
+					eventType: "artist.updated",
+				},
+				tx
+			);
+			return { artist, entry };
 		});
+
+		await this.outbox.enqueue(entry);
+		return artist;
 	}
 
 	async delete(id: ArtistId): Promise<void> {
@@ -70,18 +70,19 @@ export class ArtistService implements IServiceWithGetDetails<ArtistDetailsRespon
 		if (existing === null) {
 			throw new AppError("error.artist.notfound", "NOT_FOUND", 404);
 		}
-		return traceTask("db delete artist", async () => {
-			await prisma.$transaction(async (tx) => {
-				await this.repository.softDelete(id, tx);
-				await this.outbox.createEntry(
-					{
-						aggregateType: "artist",
-						aggregateId: id,
-						eventType: "artist.deleted",
-					},
-					tx
-				);
-			});
+
+		const entry = await prisma.$transaction(async (tx) => {
+			await this.repository.softDelete(id, tx);
+			return await this.outbox.createEntry(
+				{
+					aggregateType: "artist",
+					aggregateId: id,
+					eventType: "artist.deleted",
+				},
+				tx
+			);
 		});
+
+		await this.outbox.enqueue(entry);
 	}
 }

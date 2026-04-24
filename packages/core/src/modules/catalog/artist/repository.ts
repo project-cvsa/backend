@@ -1,4 +1,6 @@
 import type { PrismaClient } from "@cvsa/db";
+import type { TxClient } from "@cvsa/db";
+import { BaseRepository } from "@cvsa/core/internal";
 import type {
 	CreateArtistRequestDto,
 	ArtistId,
@@ -6,15 +8,16 @@ import type {
 	ArtistDetailsResponseDto,
 } from "./dto";
 import type { IArtistRepository } from "./repository.interface";
-import { transformPrismaResult, type TxClient } from "@cvsa/db";
 
-export class ArtistRepository implements IArtistRepository {
-	constructor(private readonly prisma: PrismaClient) {}
+export class ArtistRepository extends BaseRepository implements IArtistRepository {
+	constructor(private readonly prisma: PrismaClient) {
+		super();
+	}
 
 	async getById(id: ArtistId, tx?: TxClient) {
 		const client = tx ?? this.prisma;
-		return transformPrismaResult(
-			await client.artist.findFirst({
+		return this.query("db.artist.getById", () =>
+			client.artist.findFirst({
 				where: { id, deletedAt: null },
 				omit: { deletedAt: true },
 			})
@@ -23,8 +26,8 @@ export class ArtistRepository implements IArtistRepository {
 
 	async getDetailsById(id: ArtistId, tx?: TxClient): Promise<ArtistDetailsResponseDto | null> {
 		const client = tx ?? this.prisma;
-		return transformPrismaResult(
-			await client.artist.findFirst({
+		return this.query("db.artist.getDetailsById", () =>
+			client.artist.findFirst({
 				where: { id, deletedAt: null },
 				omit: { deletedAt: true },
 			})
@@ -33,9 +36,8 @@ export class ArtistRepository implements IArtistRepository {
 
 	async create(input: CreateArtistRequestDto, tx?: TxClient) {
 		const client = tx ?? this.prisma;
-
-		return transformPrismaResult(
-			await client.artist.create({
+		return this.query("db.artist.create", () =>
+			client.artist.create({
 				data: input,
 				omit: { deletedAt: true },
 			})
@@ -44,9 +46,8 @@ export class ArtistRepository implements IArtistRepository {
 
 	async update(id: ArtistId, input: UpdateArtistRequestDto, tx?: TxClient) {
 		const client = tx ?? this.prisma;
-
-		return transformPrismaResult(
-			await client.artist.update({
+		return this.query("db.artist.update", () =>
+			client.artist.update({
 				where: { id },
 				data: input,
 				omit: { deletedAt: true },
@@ -56,9 +57,11 @@ export class ArtistRepository implements IArtistRepository {
 
 	async softDelete(id: ArtistId, tx?: TxClient) {
 		const client = tx ?? this.prisma;
-		await client.artist.update({
-			where: { id },
-			data: { deletedAt: new Date() },
-		});
+		await this.query("db.artist.softDelete", () =>
+			client.artist.update({
+				where: { id },
+				data: { deletedAt: new Date() },
+			})
+		);
 	}
 }

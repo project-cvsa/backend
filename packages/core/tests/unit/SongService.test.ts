@@ -83,6 +83,7 @@ describe("SongService", () => {
 			createdAt: new Date().toISOString(),
 			processedAt: null,
 		})),
+		enqueue: mock(async () => {}),
 		processEntry: mock(async () => {}),
 		recoverStaleEntries: mock(async () => {}),
 	};
