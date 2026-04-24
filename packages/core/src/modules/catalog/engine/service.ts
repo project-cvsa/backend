@@ -1,4 +1,5 @@
-import { AppError, type IServiceWithGetDetails } from "@cvsa/core/internal";
+import { AppError } from "../../../error/AppError";
+import type { IServiceWithGetDetails } from "../../../types/service";
 import type {
 	EngineDetailsResponseDto,
 	EngineId,

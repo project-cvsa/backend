@@ -1,6 +1,6 @@
 import type { PrismaClient } from "@cvsa/db";
 import type { TxClient } from "@cvsa/db";
-import { BaseRepository } from "@cvsa/core/internal";
+import { BaseRepository } from "../../../utils/BaseRepository";
 import type {
 	CreateArtistRequestDto,
 	ArtistId,

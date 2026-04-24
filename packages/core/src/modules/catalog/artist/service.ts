@@ -1,5 +1,6 @@
-import type { OutboxService } from "@cvsa/core/internal";
-import { AppError, type IServiceWithGetDetails } from "@cvsa/core/internal";
+import type { OutboxService } from "../../outbox/service";
+import { AppError } from "../../../error/AppError";
+import type { IServiceWithGetDetails } from "../../../types/service";
 import { prisma } from "@cvsa/db";
 import type {
 	ArtistDetailsResponseDto,

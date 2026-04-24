@@ -301,10 +301,7 @@ describe("SongSearchService", () => {
 
 			expect(mockSearchIndex.search).toHaveBeenCalledWith("test", {
 				vector: undefined,
-				hybrid: {
-					embedder: "potion-multilingual-128M",
-					semanticRatio: 0.25,
-				},
+				hybrid: undefined,
 				showRankingScore: true,
 			});
 		});

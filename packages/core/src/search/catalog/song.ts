@@ -130,12 +130,15 @@ Artists: ${getArtists().join(", ")}
 		const embeddingResponse = await this.embeddingManager.embeddings.post({
 			texts: [query],
 		});
+		const embeddingAvailable = (embeddingResponse?.data?.embeddings[0]?.length ?? 0) > 0;
 		return index.search(query, {
 			vector: embeddingResponse?.data?.embeddings[0],
-			hybrid: {
-				embedder: "potion-multilingual-128M",
-				semanticRatio: 0.25,
-			},
+			hybrid: embeddingAvailable
+				? {
+						embedder: "potion-multilingual-128M",
+						semanticRatio: 0.25,
+					}
+				: undefined,
 			showRankingScore: true,
 		});
 	}

@@ -19,8 +19,12 @@ const mockGetIndexes = mock();
 const mockWaitForTask = mock();
 const mockGetTask = mock();
 const mockIndexGetSettings = mock();
-const mockIndexResetSettings = mock();
-const mockIndexUpdateSettings = mock();
+const mockIndexResetSettings = mock(() => {
+	return { taskUid: 1 };
+});
+const mockIndexUpdateSettings = mock(() => {
+	return { taskUid: 1 };
+});
 
 const mockIndexInstance = {
 	getSettings: mockIndexGetSettings,
