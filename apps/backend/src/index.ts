@@ -10,9 +10,9 @@ import { opentelemetry } from "@elysiajs/opentelemetry";
 import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-node";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
 import { devHandler } from "./handlers";
-import { createOutboxWorker, closeOutboxInfrastructure } from "@cvsa/core/internal";
-import { processOutboxEntry } from "@cvsa/core/internal";
-import { outboxService } from "@cvsa/core/internal";
+import { createOutboxWorker, closeOutboxInfrastructure } from "@cvsa/core";
+import { processOutboxEntry } from "@cvsa/core";
+import { outboxService } from "@cvsa/core";
 import { appLogger } from "@cvsa/logger";
 
 const [host, port] = getBindingInfo();

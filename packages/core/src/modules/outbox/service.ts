@@ -1,3 +1,4 @@
+import type { Queue } from "bullmq";
 import type { IOutboxRepository } from "./repository.interface";
 import type { CreateOutboxEntryDto, OutboxEntryDto, PendingOutboxQueryDto } from "./dto";
 import { Prisma, type TxClient } from "@cvsa/db";
@@ -8,7 +9,14 @@ import { traceTask } from "@cvsa/observability";
 const MAX_RETRIES = 5;
 
 export class OutboxService {
-	constructor(private readonly repository: IOutboxRepository) {}
+	private readonly queue: Queue<OutboxEntryDto>;
+
+	constructor(
+		private readonly repository: IOutboxRepository,
+		queue?: Queue<OutboxEntryDto>,
+	) {
+		this.queue = queue ?? outboxQueue;
+	}
 
 	async createEntry(input: CreateOutboxEntryDto, tx: TxClient): Promise<OutboxEntryDto> {
 		return traceTask("outbox.createEntry", () => this.repository.create(input, tx));
@@ -16,7 +24,7 @@ export class OutboxService {
 
 	async enqueue(entry: OutboxEntryDto): Promise<void> {
 		await traceTask("outbox.enqueue", async () => {
-			await outboxQueue.add(
+			await this.queue.add(
 				`outbox-${entry.aggregateType}-${entry.aggregateId}`,
 				entry,
 				{
@@ -64,7 +72,7 @@ export class OutboxService {
 		const query: PendingOutboxQueryDto = { limit };
 		const entries = await this.repository.findPending(query);
 		for (const entry of entries) {
-			await outboxQueue.add(`outbox-recover-${entry.id}`, entry, {
+			await this.queue.add(`outbox-recover-${entry.id}`, entry, {
 				jobId: `outbox-recover-${entry.id}`,
 				attempts: MAX_RETRIES,
 				backoff: { type: "exponential", delay: 1000 },

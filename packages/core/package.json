@@ -8,7 +8,7 @@
 		"lint": "bunx --bun biome lint",
 		"test": "bun test --concurrent",
 		"test:reset": "NODE_ENV=test bun scripts/cleanUpSearchIndex.ts",
-		"test:safe": "bun clear-search-index && bun run test",
+		"test:safe": "bun run test:reset && bun run test",
 		"test:coverage": "bun test --coverage",
 		"test:unit": "bun test tests/unit --concurrent",
 		"test:integration": "bun test tests/integration --concurrent",

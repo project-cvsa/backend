@@ -1,4 +1,4 @@
-import { MeiliSearch, type Settings, type RecordAny, IndexOptions } from "meilisearch";
+import { MeiliSearch, type Settings, type RecordAny, type IndexOptions } from "meilisearch";
 import { env } from "@cvsa/env";
 import { INDEX_SETTINGS } from "./config";
 import { deepEqualUnordered } from "../utils";
@@ -223,6 +223,11 @@ export class SearchManager {
 		}
 	}
 
+	/**
+	 * Deletes all search indexes in the MeiliSearch instance.
+	 * This is a destructive operation that removes all indexes and their data.
+	 * Safely no-ops if the admin client is not initialized.
+	 */
 	public async clearAllIndex() {
 		if (this.adminClient === undefined) {
 			return;
@@ -235,6 +240,13 @@ export class SearchManager {
 		}
 	}
 
+	/**
+	 * Creates a new search index with the given UID and optional configuration.
+	 * Safely no-ops if the admin client is not initialized.
+	 * @param uid - The unique identifier for the index
+	 * @param options - Optional index configuration (primary key, etc.)
+	 * @returns A promise that resolves to the created index task, or undefined if not initialized
+	 */
 	public async createIndex(uid: string, options?: IndexOptions) {
 		if (this.adminClient === undefined) {
 			return;
