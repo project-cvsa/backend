@@ -33,15 +33,14 @@ describe("OutboxService", () => {
 		markProcessed: mock(async (id: number) =>
 			mockOutboxEntry({ id, status: "PROCESSED", processedAt: new Date().toISOString() })
 		),
-		markFailed: mock(
-			async (id: number, lastError: string, nextRetryAt: Date) =>
-				mockOutboxEntry({
-					id,
-					status: "FAILED",
-					lastError,
-					nextRetryAt: nextRetryAt.toISOString(),
-					retryCount: 1,
-				})
+		markFailed: mock(async (id: number, lastError: string, nextRetryAt: Date) =>
+			mockOutboxEntry({
+				id,
+				status: "FAILED",
+				lastError,
+				nextRetryAt: nextRetryAt.toISOString(),
+				retryCount: 1,
+			})
 		),
 	};
 
@@ -49,7 +48,10 @@ describe("OutboxService", () => {
 		add: mock(async () => {}),
 	};
 
-	const service = new OutboxService(mockRepository as unknown as never, mockQueue as unknown as never);
+	const service = new OutboxService(
+		mockRepository as unknown as never,
+		mockQueue as unknown as never
+	);
 
 	beforeEach(() => {
 		mockRepository.create.mockClear();
@@ -207,9 +209,21 @@ describe("OutboxService", () => {
 
 			expect(mockRepository.findPending).toHaveBeenCalledWith({ limit: 50 });
 			expect(mockQueue.add).toHaveBeenCalledTimes(3);
-			const firstCall = mockQueue.add.mock.calls[0] as unknown as [string, OutboxEntryDto, unknown];
-			const secondCall = mockQueue.add.mock.calls[1] as unknown as [string, OutboxEntryDto, unknown];
-			const thirdCall = mockQueue.add.mock.calls[2] as unknown as [string, OutboxEntryDto, unknown];
+			const firstCall = mockQueue.add.mock.calls[0] as unknown as [
+				string,
+				OutboxEntryDto,
+				unknown,
+			];
+			const secondCall = mockQueue.add.mock.calls[1] as unknown as [
+				string,
+				OutboxEntryDto,
+				unknown,
+			];
+			const thirdCall = mockQueue.add.mock.calls[2] as unknown as [
+				string,
+				OutboxEntryDto,
+				unknown,
+			];
 			expect(firstCall[0]).toBe("outbox-recover-1");
 			expect(secondCall[0]).toBe("outbox-recover-2");
 			expect(thirdCall[0]).toBe("outbox-recover-3");

@@ -7,9 +7,11 @@ import type { IArtistRepository } from "../../src/modules/catalog/artist/reposit
 import type { OutboxService } from "../../src/modules/outbox/service";
 import { createMockRepository } from "../utils";
 
-(prisma as unknown as { $transaction: (fn: (tx: unknown) => Promise<unknown>) => Promise<unknown> }).$transaction = mock(
-	async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma)
-);
+(
+	prisma as unknown as {
+		$transaction: (fn: (tx: unknown) => Promise<unknown>) => Promise<unknown>;
+	}
+).$transaction = mock(async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma));
 
 const mockArtistDetails: ArtistDetailsResponseDto = {
 	id: 1,
@@ -102,10 +104,7 @@ describe("ArtistService", () => {
 				name: "Test Artist",
 				language: "zh",
 			});
-			expect(mockRepository.create).toHaveBeenCalledWith(
-				createInput,
-				expect.anything()
-			);
+			expect(mockRepository.create).toHaveBeenCalledWith(createInput, expect.anything());
 			expect(mockOutboxService.createEntry).toHaveBeenCalledWith(
 				{
 					aggregateType: "artist",
@@ -129,11 +128,7 @@ describe("ArtistService", () => {
 				language: "zh",
 			});
 			expect(mockRepository.getById).toHaveBeenCalledWith(1);
-			expect(mockRepository.update).toHaveBeenCalledWith(
-				1,
-				updateInput,
-				expect.anything()
-			);
+			expect(mockRepository.update).toHaveBeenCalledWith(1, updateInput, expect.anything());
 			expect(mockOutboxService.createEntry).toHaveBeenCalledWith(
 				{
 					aggregateType: "artist",
@@ -149,9 +144,7 @@ describe("ArtistService", () => {
 			mockRepository.getById.mockResolvedValueOnce(null);
 
 			expect(artistService.update(999, updateInput)).rejects.toThrow(AppError);
-			expect(artistService.update(999, updateInput)).rejects.toThrow(
-				"error.artist.notfound"
-			);
+			expect(artistService.update(999, updateInput)).rejects.toThrow("error.artist.notfound");
 			expect(artistService.update(999, updateInput)).rejects.toMatchObject({
 				code: "NOT_FOUND",
 				statusCode: 404,
@@ -164,10 +157,7 @@ describe("ArtistService", () => {
 			await artistService.delete(1);
 
 			expect(mockRepository.getById).toHaveBeenCalledWith(1);
-			expect(mockRepository.softDelete).toHaveBeenCalledWith(
-				1,
-				expect.anything()
-			);
+			expect(mockRepository.softDelete).toHaveBeenCalledWith(1, expect.anything());
 			expect(mockOutboxService.createEntry).toHaveBeenCalledWith(
 				{
 					aggregateType: "artist",

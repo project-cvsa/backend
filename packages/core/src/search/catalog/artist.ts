@@ -26,7 +26,7 @@ export class ArtistSearchService extends ISearchService<ArtistDetailsResponseDto
 			if (language === artist.language) return artist.name;
 			return artist.localizedNames?.[language];
 		};
-		
+
 		const vectors = await this.embeddingManager.embeddings.post({
 			texts: [
 				`Name: ${getName() ?? ""}
@@ -58,7 +58,8 @@ Name Aliases: ${artist.aliases.join(", ")}
 		const artist = await this.repository.getDetailsById(id);
 
 		if (!artist) {
-			const indexesToBeDeleted = await this.searchManager.getLocalizedIndexesOfEntity("artist");
+			const indexesToBeDeleted =
+				await this.searchManager.getLocalizedIndexesOfEntity("artist");
 			for (const index of indexesToBeDeleted) {
 				const adminIndex = await this.searchManager.getAdminIndex(index);
 				const task = await adminIndex.deleteDocument(id);

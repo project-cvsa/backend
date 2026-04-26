@@ -6,7 +6,6 @@ import { prisma } from "@cvsa/db";
 const api = treaty(app);
 
 describe("Artist E2E Tests", () => {
-
 	async function getAuthToken() {
 		const signup = await api.v2.user.post({
 			username: `${Math.random()}`,

@@ -15,7 +15,7 @@ export class ArtistService implements IServiceWithGetDetails<ArtistDetailsRespon
 	constructor(
 		private readonly repository: IArtistRepository,
 		private readonly outbox: OutboxService
-	) { }
+	) {}
 
 	async getDetails(id: ArtistId) {
 		const result = await this.repository.getDetailsById(id);

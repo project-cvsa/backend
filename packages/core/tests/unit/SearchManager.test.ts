@@ -404,10 +404,7 @@ describe("SearchManager", () => {
 				],
 			});
 			mockGetIndexes.mockResolvedValue({
-				results: [
-					createMockIndex("song_zh-CN"),
-					createMockIndex("artist_en"),
-				],
+				results: [createMockIndex("song_zh-CN"), createMockIndex("artist_en")],
 			});
 
 			const manager = await SearchManager.create(

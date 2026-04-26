@@ -48,17 +48,13 @@ export const INDEX_SETTINGS: Record<string, Settings> = {
 		},
 	},
 	artist: {
-		searchableAttributes: [
-			"name",
-			"description",
-			"aliases",
-		],
+		searchableAttributes: ["name", "description", "aliases"],
 		rankingRules: ["attribute", "words", "proximity", "exactness", "typo", "sort"],
 		embedders: {
 			"potion-multilingual-128M": {
 				source: "userProvided",
 				dimensions: 256,
 			},
-		}
+		},
 	},
 };

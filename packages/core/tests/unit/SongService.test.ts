@@ -257,7 +257,11 @@ describe("SongService", () => {
 				language: "zh",
 				plainText: "Test lyrics",
 			});
-			expect(mockRepository.createLyrics).toHaveBeenCalledWith(1, createInput, expect.anything());
+			expect(mockRepository.createLyrics).toHaveBeenCalledWith(
+				1,
+				createInput,
+				expect.anything()
+			);
 		});
 
 		test("throws NOT_FOUND error when song does not exist", async () => {
@@ -288,7 +292,11 @@ describe("SongService", () => {
 			const result = await songService.updateLyric(1, 1, updateInput);
 
 			expect(result.plainText).toBe("Updated lyrics");
-			expect(mockRepository.updateLyric).toHaveBeenCalledWith(1, updateInput, expect.anything());
+			expect(mockRepository.updateLyric).toHaveBeenCalledWith(
+				1,
+				updateInput,
+				expect.anything()
+			);
 		});
 
 		test("throws NOT_FOUND error when song does not exist", async () => {

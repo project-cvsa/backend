@@ -10,4 +10,4 @@ export const artistHandler = new Elysia({ name: "artistHandler" })
 	.use(artistCreateHandler)
 	.use(artistUpdateHandler)
 	.use(artistDeleteHandler)
-	.use(artistSearchHandler)
+	.use(artistSearchHandler);

@@ -13,7 +13,7 @@ export class OutboxService {
 
 	constructor(
 		private readonly repository: IOutboxRepository,
-		queue?: Queue<OutboxEntryDto>,
+		queue?: Queue<OutboxEntryDto>
 	) {
 		this.queue = queue ?? outboxQueue;
 	}
@@ -24,15 +24,11 @@ export class OutboxService {
 
 	async enqueue(entry: OutboxEntryDto): Promise<void> {
 		await traceTask("outbox.enqueue", async () => {
-			await this.queue.add(
-				`outbox-${entry.aggregateType}-${entry.aggregateId}`,
-				entry,
-				{
-					jobId: `outbox-${entry.id}`,
-					attempts: MAX_RETRIES,
-					backoff: { type: "exponential", delay: 1000 },
-				}
-			);
+			await this.queue.add(`outbox-${entry.aggregateType}-${entry.aggregateId}`, entry, {
+				jobId: `outbox-${entry.id}`,
+				attempts: MAX_RETRIES,
+				backoff: { type: "exponential", delay: 1000 },
+			});
 		});
 	}
 

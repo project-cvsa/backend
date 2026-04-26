@@ -10,7 +10,7 @@ export interface OutboxProcessorDeps {
 }
 
 export function createOutboxProcessor(
-	deps: OutboxProcessorDeps,
+	deps: OutboxProcessorDeps
 ): (job: Job<OutboxEntryDto>) => Promise<void> {
 	return async function processOutboxEntry(job: Job<OutboxEntryDto>): Promise<void> {
 		const entry = job.data;
@@ -24,7 +24,7 @@ export function createOutboxProcessor(
 						aggregateId,
 						aggregateType,
 						eventType,
-					},
+					}
 				);
 
 				const searchService = deps.searchServices[aggregateType];
@@ -34,7 +34,7 @@ export function createOutboxProcessor(
 				}
 
 				await searchService.sync(aggregateId);
-			},
+			}
 		);
 	};
 }

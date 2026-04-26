@@ -74,7 +74,7 @@ describe("ArtistSearchService", () => {
 		service = new ArtistSearchService(
 			mockRepository,
 			mockSearchManager as never,
-			mockEmbeddingManager as never,
+			mockEmbeddingManager as never
 		);
 	});
 
@@ -86,7 +86,7 @@ describe("ArtistSearchService", () => {
 	describe("sync", () => {
 		test("syncs artist to all language indexes", async () => {
 			(mockRepository.getDetailsById as ReturnType<typeof mock>).mockResolvedValue(
-				mockArtistDetails,
+				mockArtistDetails
 			);
 
 			await service.sync(1);
@@ -113,11 +113,11 @@ describe("ArtistSearchService", () => {
 			const serviceWithoutManager = new ArtistSearchService(
 				mockRepository,
 				undefined as never,
-				mockEmbeddingManager as never,
+				mockEmbeddingManager as never
 			);
 
 			(mockRepository.getDetailsById as ReturnType<typeof mock>).mockResolvedValue(
-				mockArtistDetails,
+				mockArtistDetails
 			);
 
 			await serviceWithoutManager.sync(1);
@@ -127,7 +127,7 @@ describe("ArtistSearchService", () => {
 
 		test("builds document with localized content", async () => {
 			(mockRepository.getDetailsById as ReturnType<typeof mock>).mockResolvedValue(
-				mockArtistDetails,
+				mockArtistDetails
 			);
 
 			await service.sync(1);
@@ -148,7 +148,7 @@ describe("ArtistSearchService", () => {
 				localizedDescriptions: {},
 			};
 			(mockRepository.getDetailsById as ReturnType<typeof mock>).mockResolvedValue(
-				artistWithoutLocalization,
+				artistWithoutLocalization
 			);
 
 			await service.sync(1);
@@ -158,7 +158,7 @@ describe("ArtistSearchService", () => {
 
 		test("handles embedding generation failure", async () => {
 			(mockRepository.getDetailsById as ReturnType<typeof mock>).mockResolvedValue(
-				mockArtistDetails,
+				mockArtistDetails
 			);
 			mockEmbeddingsPost.mockResolvedValue({
 				data: null,
@@ -167,7 +167,11 @@ describe("ArtistSearchService", () => {
 			await service.sync(1);
 
 			expect(mockAdminIndex.addDocuments).toHaveBeenCalled();
-			const doc = ((mockAdminIndex.addDocuments.mock.calls[0] as unknown[])[0] as { _vectors: { "potion-multilingual-128M": unknown } }[])[0];
+			const doc = (
+				(mockAdminIndex.addDocuments.mock.calls[0] as unknown[])[0] as {
+					_vectors: { "potion-multilingual-128M": unknown };
+				}[]
+			)[0];
 			expect(doc._vectors).toEqual({
 				"potion-multilingual-128M": null,
 			});
@@ -213,11 +217,11 @@ describe("ArtistSearchService", () => {
 			const serviceWithoutManager = new ArtistSearchService(
 				mockRepository,
 				undefined as never,
-				mockEmbeddingManager as never,
+				mockEmbeddingManager as never
 			);
 
 			expect(serviceWithoutManager.search("test")).rejects.toThrow(
-				"Search or embedding service not available",
+				"Search or embedding service not available"
 			);
 		});
 

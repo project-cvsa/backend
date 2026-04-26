@@ -33,9 +33,7 @@ describe("EngineService", () => {
 		softDelete: async () => {},
 	});
 
-	const engineService = new EngineService(
-		mockRepository as unknown as IEngineRepository
-	);
+	const engineService = new EngineService(mockRepository as unknown as IEngineRepository);
 
 	describe("getDetails", () => {
 		test("returns engine details when engine exists", async () => {
@@ -92,9 +90,7 @@ describe("EngineService", () => {
 			mockRepository.getById.mockResolvedValueOnce(null);
 
 			expect(engineService.update(999, updateInput)).rejects.toThrow(AppError);
-			expect(engineService.update(999, updateInput)).rejects.toThrow(
-				"error.engine.notfound"
-			);
+			expect(engineService.update(999, updateInput)).rejects.toThrow("error.engine.notfound");
 			expect(engineService.update(999, updateInput)).rejects.toMatchObject({
 				code: "NOT_FOUND",
 				statusCode: 404,

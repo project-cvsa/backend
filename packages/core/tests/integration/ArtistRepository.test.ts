@@ -1,5 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { artistRepository, type CreateArtistRequestDto, type UpdateArtistRequestDto } from "@cvsa/core";
+import {
+	artistRepository,
+	type CreateArtistRequestDto,
+	type UpdateArtistRequestDto,
+} from "@cvsa/core";
 
 const repository = artistRepository;
 
@@ -26,7 +30,9 @@ describe("ArtistRepository Integration Tests", () => {
 			expect(result.localizedNames).toEqual({ ja: "月華P", en: "Gekka P" });
 			expect(result.language).toBe("zh");
 			expect(result.aliases).toEqual(["月光P", "Moonlight"]);
-			expect(result.description).toBe("A famous composer in the Chinese vocal synth community");
+			expect(result.description).toBe(
+				"A famous composer in the Chinese vocal synth community"
+			);
 			expect(result.localizedDescriptions).toEqual({
 				en: "A famous composer",
 				ja: "有名な作曲家",

@@ -171,11 +171,7 @@ describe("OutboxRepository Integration Tests", () => {
 				aggregateId: 21,
 				eventType: "SongCreated",
 			});
-			await repository.markFailed(
-				created.id,
-				"Previous error",
-				new Date(Date.now() - 1000)
-			);
+			await repository.markFailed(created.id, "Previous error", new Date(Date.now() - 1000));
 
 			const result = await repository.markProcessing(created.id);
 
@@ -268,11 +264,7 @@ describe("OutboxRepository Integration Tests", () => {
 				eventType: "SongCreated",
 			});
 
-			await repository.markFailed(
-				created.id,
-				"First error",
-				new Date(Date.now() + 60000)
-			);
+			await repository.markFailed(created.id, "First error", new Date(Date.now() + 60000));
 			const result = await repository.markFailed(
 				created.id,
 				"Second error",
