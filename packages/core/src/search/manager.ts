@@ -1,4 +1,4 @@
-import { MeiliSearch, type Settings, type RecordAny } from "meilisearch";
+import { MeiliSearch, type Settings, type RecordAny, type IndexOptions } from "meilisearch";
 import { env } from "@cvsa/env";
 import { INDEX_SETTINGS } from "./config";
 import { deepEqualUnordered } from "../utils";
@@ -43,15 +43,15 @@ export class SearchManager {
 			});
 			const adminKey = await SearchManager.getAdminKey(masterClient);
 			const searchKey = await SearchManager.getSearchKey(masterClient);
-			(this as unknown as { client: MeiliSearch }).client = new MeiliSearch({
+			this.client = new MeiliSearch({
 				host: env.MEILI_API_URL,
 				apiKey: searchKey,
 			});
-			(this as unknown as { adminClient: MeiliSearch }).adminClient = new MeiliSearch({
+			this.adminClient = new MeiliSearch({
 				host: env.MEILI_API_URL,
 				apiKey: adminKey,
 			});
-			this.syncAllSettings();
+			await this.syncAllSettings();
 		} catch (e) {
 			appLogger.warn("Cannot initialize SearchManager clients.");
 			appLogger.error(Bun.inspect(e));
@@ -214,10 +214,43 @@ export class SearchManager {
 				if (deepEqualUnordered(value, currentSettings[key as keyof Settings])) continue;
 				// These settings do not trigger a full reindex
 				if (["displayedAttributes", "rankingRules"].includes(key)) continue;
-				await index.resetSettings();
-				await index.updateSettings(settings);
+				const resetTask = await index.resetSettings();
+				await this.waitForTask(resetTask.taskUid);
+				const updateTask = await index.updateSettings(settings);
+				await this.waitForTask(updateTask.taskUid);
 				break;
 			}
 		}
+	}
+
+	/**
+	 * Deletes all search indexes in the MeiliSearch instance.
+	 * This is a destructive operation that removes all indexes and their data.
+	 * Safely no-ops if the admin client is not initialized.
+	 */
+	public async clearAllIndex() {
+		if (this.adminClient === undefined) {
+			return;
+		}
+
+		const { results: indexes } = await this.listIndexes();
+		for (const index of indexes) {
+			await this.adminClient.deleteIndexIfExists(index.uid);
+			appLogger.info(`Deleted search index ${index.uid}`);
+		}
+	}
+
+	/**
+	 * Creates a new search index with the given UID and optional configuration.
+	 * Safely no-ops if the admin client is not initialized.
+	 * @param uid - The unique identifier for the index
+	 * @param options - Optional index configuration (primary key, etc.)
+	 * @returns A promise that resolves to the created index task, or undefined if not initialized
+	 */
+	public async createIndex(uid: string, options?: IndexOptions) {
+		if (this.adminClient === undefined) {
+			return;
+		}
+		return this.adminClient.createIndex(uid, options);
 	}
 }

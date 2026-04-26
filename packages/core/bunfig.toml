@@ -8,6 +8,8 @@ coveragePathIgnorePatterns = [
   "src/error/**",
   "**/**.interface.ts",
   "src/utils/randomId.ts",
+  "src/utils/BaseRepository.ts",
   "src/types/**",
+  "src/outbox/queue.ts",
   "**/observability/src/**",
 ]

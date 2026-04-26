@@ -1,32 +1,10 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import { songRepository, type CreateSongRequestDto, type UpdateSongRequestDto } from "@cvsa/core";
 import { prisma } from "@cvsa/db";
 
 const repository = songRepository;
 
 describe("SongRepository Integration Tests", () => {
-	afterAll(async () => {
-		await prisma.creation.deleteMany();
-		await prisma.artistRole.deleteMany();
-		await prisma.artist.deleteMany();
-		await prisma.performance.deleteMany();
-		await prisma.lyrics.deleteMany();
-		await prisma.singer.deleteMany();
-		await prisma.song.deleteMany();
-		await prisma.$disconnect();
-	});
-
-	beforeAll(async () => {
-		await prisma.$connect();
-		await prisma.creation.deleteMany();
-		await prisma.artistRole.deleteMany();
-		await prisma.artist.deleteMany();
-		await prisma.performance.deleteMany();
-		await prisma.lyrics.deleteMany();
-		await prisma.singer.deleteMany();
-		await prisma.song.deleteMany();
-	});
-
 	describe("create", () => {
 		test("should create a song with all fields", async () => {
 			const input: CreateSongRequestDto = {

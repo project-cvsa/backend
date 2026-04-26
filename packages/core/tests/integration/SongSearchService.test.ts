@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import { songRepository } from "@cvsa/core";
 import { prisma } from "@cvsa/db";
 import { SongSearchService } from "../../src/search/catalog/song";
@@ -10,77 +10,22 @@ import { MeiliSearch } from "meilisearch";
 const MEILI_HOST = env.MEILI_API_URL ?? "http://127.0.0.1:7700";
 const MEILI_MASTER_KEY = env.MEILI_MASTER_KEY ?? "";
 
-const waitForTask = async (client: MeiliSearch, taskUid: number) => {
-	return client.tasks.waitForTask(taskUid, { timeout: 10000, interval: 100 });
-};
-
-const cleanupIndex = async (client: MeiliSearch, indexName: string) => {
-	try {
-		const task = await client.deleteIndex(indexName);
-		await waitForTask(client, task.taskUid);
-	} catch {
-		// Index may not exist
-	}
-};
-
-const createIndexIfNotExists = async (client: MeiliSearch, indexName: string) => {
-	try {
-		await client.getIndex(indexName);
-	} catch {
-		const task = await client.createIndex(indexName, { primaryKey: "id" });
-		await waitForTask(client, task.taskUid);
-	}
-};
+const client = new MeiliSearch({ host: MEILI_HOST, apiKey: MEILI_MASTER_KEY });
+const searchManager = await SearchManager.create();
+const mockEmbeddingManager: EmbeddingAppApi = {
+	embeddings: {
+		post: async ({ texts }: { texts: string[] }) => {
+			const dimensions = 256;
+			const embeddings = texts.map(() =>
+				Array.from({ length: dimensions }, () => Math.random())
+			);
+			return { data: { embeddings } } as never;
+		},
+	},
+} as never;
+const service = new SongSearchService(songRepository, searchManager, mockEmbeddingManager);
 
 describe("SongSearchService Integration Tests", () => {
-	const client = new MeiliSearch({ host: MEILI_HOST, apiKey: MEILI_MASTER_KEY });
-	let searchManager: SearchManager;
-	let mockEmbeddingManager: EmbeddingAppApi;
-
-	beforeAll(async () => {
-		await prisma.$connect();
-		await cleanupIndex(client, "song_zh");
-		await cleanupIndex(client, "song_en");
-		await createIndexIfNotExists(client, "song_zh");
-		await createIndexIfNotExists(client, "song_en");
-
-		searchManager = await SearchManager.create();
-
-		mockEmbeddingManager = {
-			embeddings: {
-				post: async ({ texts }: { texts: string[] }) => {
-					const dimensions = 256;
-					const embeddings = texts.map(() =>
-						Array.from({ length: dimensions }, () => Math.random())
-					);
-					return { data: { embeddings } } as never;
-				},
-			},
-		} as never;
-	});
-
-	beforeEach(async () => {
-		const indexZh = client.index("song_zh");
-		const indexEn = client.index("song_en");
-		try {
-			await indexZh.deleteAllDocuments();
-			await indexEn.deleteAllDocuments();
-		} catch {
-			// Ignore
-		}
-	});
-
-	afterAll(async () => {
-		await prisma.creation.deleteMany();
-		await prisma.artistRole.deleteMany();
-		await prisma.artist.deleteMany();
-		await prisma.performance.deleteMany();
-		await prisma.lyrics.deleteMany();
-		await prisma.singer.deleteMany();
-		await prisma.song.deleteMany();
-		await prisma.$disconnect();
-	});
-
 	describe("sync", () => {
 		test("syncs song to search index", async () => {
 			const singer = await prisma.singer.create({
@@ -102,11 +47,6 @@ describe("SongSearchService Integration Tests", () => {
 				creations: [{ artistId: artist.id, roleId: artistRole.id }],
 			});
 
-			const service = new SongSearchService(
-				songRepository,
-				searchManager,
-				mockEmbeddingManager
-			);
 			await service.sync(song.id);
 
 			const index = client.index("song_zh");
@@ -121,11 +61,6 @@ describe("SongSearchService Integration Tests", () => {
 		test("deletes song from search index when song is removed", async () => {
 			const song = await songRepository.create({ name: "待删除歌曲" });
 
-			const service = new SongSearchService(
-				songRepository,
-				searchManager,
-				mockEmbeddingManager
-			);
 			await service.sync(song.id);
 
 			const index = client.index("song_zh");
@@ -150,11 +85,6 @@ describe("SongSearchService Integration Tests", () => {
 				localizedDescriptions: { en: "English description" },
 			});
 
-			const service = new SongSearchService(
-				songRepository,
-				searchManager,
-				mockEmbeddingManager
-			);
 			await service.sync(song.id);
 
 			const zhIndex = client.index("song_zh");
@@ -181,11 +111,6 @@ describe("SongSearchService Integration Tests", () => {
 				description: "用于测试混合搜索功能",
 			});
 
-			const service = new SongSearchService(
-				songRepository,
-				searchManager,
-				mockEmbeddingManager
-			);
 			await service.sync(song.id);
 
 			const result = await service.search("混合搜索", "zh");

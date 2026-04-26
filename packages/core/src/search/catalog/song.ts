@@ -19,11 +19,10 @@ export interface SongSearchIndex {
 	publishedAt?: number;
 	bilibiliViews?: number;
 	_vectors?: {
-		"potion-multilingual-128M": number[];
+		"potion-multilingual-128M": number[] | null;
 	};
 }
 
-// TODO: Integration test
 export class SongSearchService extends ISearchService<SongDetailsResponseDto> {
 	private async getDocument(
 		song: SongDetailsResponseDto,
@@ -79,12 +78,13 @@ Artists: ${getArtists().join(", ")}
 				.map((item) => item.engine ?? undefined)
 				.filter(Boolean) as string[],
 			publishedAt: song.publishedAt ? new Date(song.publishedAt).getTime() : undefined,
-			// TODO: Error handling.
 			_vectors: vectors.data?.embeddings[0]
 				? {
 						"potion-multilingual-128M": vectors.data?.embeddings[0],
 					}
-				: undefined,
+				: {
+						"potion-multilingual-128M": null,
+					},
 		};
 	}
 
@@ -130,12 +130,15 @@ Artists: ${getArtists().join(", ")}
 		const embeddingResponse = await this.embeddingManager.embeddings.post({
 			texts: [query],
 		});
+		const embeddingAvailable = (embeddingResponse?.data?.embeddings[0]?.length ?? 0) > 0;
 		return index.search(query, {
 			vector: embeddingResponse?.data?.embeddings[0],
-			hybrid: {
-				embedder: "potion-multilingual-128M",
-				semanticRatio: 0.25,
-			},
+			hybrid: embeddingAvailable
+				? {
+						embedder: "potion-multilingual-128M",
+						semanticRatio: 0.25,
+					}
+				: undefined,
 			showRankingScore: true,
 		});
 	}

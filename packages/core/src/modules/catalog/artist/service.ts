@@ -1,4 +1,7 @@
-import { AppError, type IServiceWithGetDetails } from "@cvsa/core/internal";
+import type { OutboxService } from "../../outbox/service";
+import { AppError } from "../../../error/AppError";
+import type { IServiceWithGetDetails } from "../../../types/service";
+import { prisma } from "@cvsa/db";
 import type {
 	ArtistDetailsResponseDto,
 	ArtistId,
@@ -7,25 +10,37 @@ import type {
 	ArtistResponseDto,
 } from "./dto";
 import type { IArtistRepository } from "./repository.interface";
-import { traceTask } from "@cvsa/observability";
 
 export class ArtistService implements IServiceWithGetDetails<ArtistDetailsResponseDto> {
-	constructor(private readonly repository: IArtistRepository) {}
+	constructor(
+		private readonly repository: IArtistRepository,
+		private readonly outbox: OutboxService
+	) {}
 
 	async getDetails(id: ArtistId) {
-		return traceTask("db findOne artist", async () => {
-			const result = await this.repository.getDetailsById(id);
-			if (result === null) {
-				throw new AppError("error.artist.notfound", "NOT_FOUND", 404);
-			}
-			return result;
-		});
+		const result = await this.repository.getDetailsById(id);
+		if (result === null) {
+			throw new AppError("error.artist.notfound", "NOT_FOUND", 404);
+		}
+		return result;
 	}
 
 	async create(input: CreateArtistRequestDto): Promise<ArtistResponseDto> {
-		return traceTask("db create artist", async () => {
-			return await this.repository.create(input);
+		const { artist, entry } = await prisma.$transaction(async (tx) => {
+			const artist = await this.repository.create(input, tx);
+			const entry = await this.outbox.createEntry(
+				{
+					aggregateType: "artist",
+					aggregateId: artist.id,
+					eventType: "artist.created",
+				},
+				tx
+			);
+			return { artist, entry };
 		});
+
+		await this.outbox.enqueue(entry);
+		return artist;
 	}
 
 	async update(id: ArtistId, input: UpdateArtistRequestDto): Promise<ArtistResponseDto> {
@@ -33,9 +48,22 @@ export class ArtistService implements IServiceWithGetDetails<ArtistDetailsRespon
 		if (existing === null) {
 			throw new AppError("error.artist.notfound", "NOT_FOUND", 404);
 		}
-		return traceTask("db update artist", async () => {
-			return await this.repository.update(id, input);
+
+		const { artist, entry } = await prisma.$transaction(async (tx) => {
+			const artist = await this.repository.update(id, input, tx);
+			const entry = await this.outbox.createEntry(
+				{
+					aggregateType: "artist",
+					aggregateId: id,
+					eventType: "artist.updated",
+				},
+				tx
+			);
+			return { artist, entry };
 		});
+
+		await this.outbox.enqueue(entry);
+		return artist;
 	}
 
 	async delete(id: ArtistId): Promise<void> {
@@ -43,8 +71,19 @@ export class ArtistService implements IServiceWithGetDetails<ArtistDetailsRespon
 		if (existing === null) {
 			throw new AppError("error.artist.notfound", "NOT_FOUND", 404);
 		}
-		await traceTask("db delete artist", async () => {
-			return await this.repository.softDelete(id);
+
+		const entry = await prisma.$transaction(async (tx) => {
+			await this.repository.softDelete(id, tx);
+			return await this.outbox.createEntry(
+				{
+					aggregateType: "artist",
+					aggregateId: id,
+					eventType: "artist.deleted",
+				},
+				tx
+			);
 		});
+
+		await this.outbox.enqueue(entry);
 	}
 }

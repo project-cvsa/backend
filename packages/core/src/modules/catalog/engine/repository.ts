@@ -1,4 +1,6 @@
 import type { PrismaClient } from "@cvsa/db";
+import type { TxClient } from "@cvsa/db";
+import { BaseRepository } from "../../../utils/BaseRepository";
 import type {
 	CreateEngineRequestDto,
 	EngineId,
@@ -6,15 +8,16 @@ import type {
 	EngineDetailsResponseDto,
 } from "./dto";
 import type { IEngineRepository } from "./repository.interface";
-import { transformPrismaResult, type TxClient } from "@cvsa/db";
 
-export class EngineRepository implements IEngineRepository {
-	constructor(private readonly prisma: PrismaClient) {}
+export class EngineRepository extends BaseRepository implements IEngineRepository {
+	constructor(private readonly prisma: PrismaClient) {
+		super();
+	}
 
 	async getById(id: EngineId, tx?: TxClient) {
 		const client = tx ?? this.prisma;
-		return transformPrismaResult(
-			await client.svsEngine.findFirst({
+		return this.query("db.engine.getById", () =>
+			client.svsEngine.findFirst({
 				where: { id, deletedAt: null },
 				omit: { deletedAt: true },
 			})
@@ -23,8 +26,8 @@ export class EngineRepository implements IEngineRepository {
 
 	async getDetailsById(id: EngineId, tx?: TxClient): Promise<EngineDetailsResponseDto | null> {
 		const client = tx ?? this.prisma;
-		return transformPrismaResult(
-			await client.svsEngine.findFirst({
+		return this.query("db.engine.getDetailsById", () =>
+			client.svsEngine.findFirst({
 				where: { id, deletedAt: null },
 				omit: { deletedAt: true },
 			})
@@ -33,9 +36,8 @@ export class EngineRepository implements IEngineRepository {
 
 	async create(input: CreateEngineRequestDto, tx?: TxClient) {
 		const client = tx ?? this.prisma;
-
-		return transformPrismaResult(
-			await client.svsEngine.create({
+		return this.query("db.engine.create", () =>
+			client.svsEngine.create({
 				data: input,
 				omit: { deletedAt: true },
 			})
@@ -44,9 +46,8 @@ export class EngineRepository implements IEngineRepository {
 
 	async update(id: EngineId, input: UpdateEngineRequestDto, tx?: TxClient) {
 		const client = tx ?? this.prisma;
-
-		return transformPrismaResult(
-			await client.svsEngine.update({
+		return this.query("db.engine.update", () =>
+			client.svsEngine.update({
 				where: { id },
 				data: input,
 				omit: { deletedAt: true },
@@ -56,9 +57,11 @@ export class EngineRepository implements IEngineRepository {
 
 	async softDelete(id: EngineId, tx?: TxClient) {
 		const client = tx ?? this.prisma;
-		await client.svsEngine.update({
-			where: { id },
-			data: { deletedAt: new Date() },
-		});
+		await this.query("db.engine.softDelete", () =>
+			client.svsEngine.update({
+				where: { id },
+				data: { deletedAt: new Date() },
+			})
+		);
 	}
 }

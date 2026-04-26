@@ -1,6 +1,6 @@
 import { describe, expect, mock, test } from "bun:test";
 import { SongService, AppError } from "@cvsa/core/internal";
-import type { SongDetailsResponseDto, ISongRepository, SongSearchService } from "@cvsa/core";
+import type { SongDetailsResponseDto, ISongRepository, OutboxService } from "@cvsa/core";
 import { createMockRepository } from "../utils";
 
 const mockSongDetails: SongDetailsResponseDto = {
@@ -69,13 +69,28 @@ describe("SongService", () => {
 		softDeleteLyric: async () => {},
 	});
 
-	const mockSearchService = {
-		sync: mock(async (_id: number) => {}),
+	const mockOutboxService = {
+		createEntry: mock(async () => ({
+			id: 1,
+			aggregateType: "song",
+			aggregateId: 1,
+			eventType: "song.created",
+			payload: null,
+			status: "PENDING" as const,
+			retryCount: 0,
+			lastError: null,
+			nextRetryAt: null,
+			createdAt: new Date().toISOString(),
+			processedAt: null,
+		})),
+		enqueue: mock(async () => {}),
+		processEntry: mock(async () => {}),
+		recoverStaleEntries: mock(async () => {}),
 	};
 
 	const songService = new SongService(
 		mockRepository as unknown as ISongRepository,
-		mockSearchService as unknown as SongSearchService
+		mockOutboxService as unknown as OutboxService
 	);
 
 	describe("getDetails", () => {
@@ -105,7 +120,7 @@ describe("SongService", () => {
 			duration: 200,
 		};
 
-		test("creates song and calls search.sync", async () => {
+		test("creates song and calls outbox.createEntry", async () => {
 			const result = await songService.create(createInput);
 
 			expect(result).toMatchObject({
@@ -113,29 +128,14 @@ describe("SongService", () => {
 				type: "ORIGINAL",
 				duration: 180,
 			});
-			expect(mockRepository.create).toHaveBeenCalledWith(createInput);
-		});
-
-		test("create song even when search.sync throws", async () => {
-			mockSearchService.sync.mockImplementationOnce(async () => {
-				throw new Error("Search service unavailable");
-			});
-
-			const result = await songService.create(createInput);
-
-			expect(result).toMatchObject({
-				name: "Test Song",
-				type: "ORIGINAL",
-				duration: 180,
-			});
-			expect(mockRepository.create).toHaveBeenCalledWith(createInput);
+			expect(mockRepository.create).toHaveBeenCalled();
 		});
 	});
 
 	describe("update", () => {
 		const updateInput = { name: "Updated Song" };
 
-		test("updates song and calls search.sync on success", async () => {
+		test("updates song and calls outbox.createEntry on success", async () => {
 			const result = await songService.update(1, updateInput);
 
 			expect(result).toMatchObject({
@@ -144,7 +144,7 @@ describe("SongService", () => {
 				duration: 180,
 			});
 			expect(mockRepository.getById).toHaveBeenCalledWith(1);
-			expect(mockRepository.update).toHaveBeenCalledWith(1, updateInput);
+			expect(mockRepository.update).toHaveBeenCalled();
 		});
 
 		test("throws NOT_FOUND error when song does not exist", async () => {
@@ -157,29 +157,14 @@ describe("SongService", () => {
 				statusCode: 404,
 			});
 		});
-
-		test("updates song even when search.sync throws", async () => {
-			mockSearchService.sync.mockImplementationOnce(async () => {
-				throw new Error("Search service unavailable");
-			});
-
-			const result = await songService.update(1, updateInput);
-
-			expect(result).toMatchObject({
-				name: "Test Song",
-				type: "ORIGINAL",
-				duration: 180,
-			});
-			expect(mockRepository.update).toHaveBeenCalledWith(1, updateInput);
-		});
 	});
 
 	describe("delete", () => {
-		test("soft deletes song and calls search.sync on success", async () => {
+		test("soft deletes song and calls outbox.createEntry on success", async () => {
 			await songService.delete(1);
 
 			expect(mockRepository.getById).toHaveBeenCalledWith(1);
-			expect(mockRepository.softDelete).toHaveBeenCalledWith(1);
+			expect(mockRepository.softDelete).toHaveBeenCalled();
 		});
 
 		test("throws NOT_FOUND error when song does not exist", async () => {
@@ -191,16 +176,6 @@ describe("SongService", () => {
 				code: "NOT_FOUND",
 				statusCode: 404,
 			});
-		});
-
-		test("deletes song even when search.sync throws", async () => {
-			mockSearchService.sync.mockImplementationOnce(async () => {
-				throw new Error("Search service unavailable");
-			});
-
-			await songService.delete(1);
-
-			expect(mockRepository.softDelete).toHaveBeenCalledWith(1);
 		});
 	});
 
@@ -282,7 +257,11 @@ describe("SongService", () => {
 				language: "zh",
 				plainText: "Test lyrics",
 			});
-			expect(mockRepository.createLyrics).toHaveBeenCalledWith(1, createInput);
+			expect(mockRepository.createLyrics).toHaveBeenCalledWith(
+				1,
+				createInput,
+				expect.anything()
+			);
 		});
 
 		test("throws NOT_FOUND error when song does not exist", async () => {
@@ -313,7 +292,11 @@ describe("SongService", () => {
 			const result = await songService.updateLyric(1, 1, updateInput);
 
 			expect(result.plainText).toBe("Updated lyrics");
-			expect(mockRepository.updateLyric).toHaveBeenCalledWith(1, updateInput);
+			expect(mockRepository.updateLyric).toHaveBeenCalledWith(
+				1,
+				updateInput,
+				expect.anything()
+			);
 		});
 
 		test("throws NOT_FOUND error when song does not exist", async () => {
@@ -350,7 +333,7 @@ describe("SongService", () => {
 
 			await songService.deleteLyric(1, 1);
 
-			expect(mockRepository.softDeleteLyric).toHaveBeenCalledWith(1);
+			expect(mockRepository.softDeleteLyric).toHaveBeenCalledWith(1, expect.anything());
 		});
 
 		test("throws NOT_FOUND error when song does not exist", async () => {

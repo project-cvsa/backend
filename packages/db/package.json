@@ -10,6 +10,7 @@
 		"push": "bunx --bun prisma db push",
 		"db:deploy": "bunx --bun prisma migrate deploy",
 		"test:setup": "NODE_ENV=test bunx --bun prisma db push --accept-data-loss",
+		"test:reset": "NODE_ENV=test bunx --bun prisma db push --force-reset",
 		"studio": "bunx --bun prisma studio",
 		"reset": "bunx --bun prisma migrate reset"
 	},

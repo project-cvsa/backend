@@ -1,23 +1,10 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import { treaty } from "@elysiajs/eden";
 import { app } from "@/index";
-import { prisma } from "@cvsa/db";
 
 const api = treaty(app);
 
 describe("Registration E2E Tests - POST /v2/user", () => {
-	beforeAll(async () => {
-		await prisma.$connect();
-		await prisma.session.deleteMany();
-		await prisma.user.deleteMany();
-	});
-
-	afterAll(async () => {
-		await prisma.session.deleteMany();
-		await prisma.user.deleteMany();
-		await prisma.$disconnect();
-	});
-
 	test("should register a new user", async () => {
 		const payload = {
 			username: "new_user",
@@ -55,7 +42,7 @@ describe("Registration E2E Tests - POST /v2/user", () => {
 		const payload = {
 			username: "duplicate_user",
 			password: "password123",
-			email: "first@example.com",
+			email: "01_first@example.com",
 		};
 
 		// Create the first user
@@ -64,7 +51,7 @@ describe("Registration E2E Tests - POST /v2/user", () => {
 		// Attempt to register with the same username
 		const { error, status } = await api.v2.user.post({
 			...payload,
-			email: "second@example.com",
+			email: "01_second@example.com",
 		});
 
 		// Should return 409 Conflict
@@ -113,16 +100,6 @@ describe("Registration E2E Tests - POST /v2/user", () => {
 });
 
 describe("Profile E2E Tests - GET /v2/me", () => {
-	beforeAll(async () => {
-		await prisma.$connect();
-		await prisma.session.deleteMany();
-		await prisma.user.deleteMany();
-	});
-
-	afterAll(async () => {
-		await prisma.$disconnect();
-	});
-
 	test("should return user profile with valid token", async () => {
 		// 1. Register to get a token
 		const signup = await api.v2.user.post({
@@ -187,18 +164,6 @@ describe("Profile E2E Tests - GET /v2/me", () => {
 });
 
 describe("Login E2E Tests - POST /v2/session", () => {
-	beforeAll(async () => {
-		await prisma.$connect();
-		await prisma.session.deleteMany();
-		await prisma.user.deleteMany();
-	});
-
-	afterAll(async () => {
-		await prisma.session.deleteMany();
-		await prisma.user.deleteMany();
-		await prisma.$disconnect();
-	});
-
 	test("should login with valid credentials", async () => {
 		const signupPayload = {
 			username: "login_user",
@@ -277,18 +242,6 @@ describe("Login E2E Tests - POST /v2/session", () => {
 });
 
 describe("Logout E2E Tests - DELETE /v2/session", () => {
-	beforeAll(async () => {
-		await prisma.$connect();
-		await prisma.session.deleteMany();
-		await prisma.user.deleteMany();
-	});
-
-	afterAll(async () => {
-		await prisma.session.deleteMany();
-		await prisma.user.deleteMany();
-		await prisma.$disconnect();
-	});
-
 	test("should logout with valid token", async () => {
 		const signupPayload = {
 			username: "logout_user",

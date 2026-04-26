@@ -19,8 +19,14 @@ const mockGetIndexes = mock();
 const mockWaitForTask = mock();
 const mockGetTask = mock();
 const mockIndexGetSettings = mock();
-const mockIndexResetSettings = mock();
-const mockIndexUpdateSettings = mock();
+const mockIndexResetSettings = mock(() => {
+	return { taskUid: 1 };
+});
+const mockIndexUpdateSettings = mock(() => {
+	return { taskUid: 1 };
+});
+const mockAdminDeleteIndexIfExists = mock();
+const mockAdminCreateIndex = mock();
 
 const mockIndexInstance = {
 	getSettings: mockIndexGetSettings,
@@ -62,6 +68,8 @@ const createMockClient = (): { client: MockClient; adminClient: MockClient } => 
 		getIndexes: mockGetIndexes,
 		getKeys: mockGetKeys,
 		createKey: mockCreateKey,
+		deleteIndexIfExists: mockAdminDeleteIndexIfExists,
+		createIndex: mockAdminCreateIndex,
 		tasks: {
 			waitForTask: mockWaitForTask,
 			getTask: mockGetTask,
@@ -80,6 +88,8 @@ describe("SearchManager", () => {
 		mockIndexUpdateSettings.mockClear();
 		mockWaitForTask.mockClear();
 		mockGetTask.mockClear();
+		mockAdminDeleteIndexIfExists.mockClear();
+		mockAdminCreateIndex.mockClear();
 	});
 
 	describe("create with custom clients", () => {
@@ -380,6 +390,93 @@ describe("SearchManager", () => {
 			const task = await manager.getTask(123);
 
 			expect(task).toEqual(mockTask);
+		});
+	});
+
+	describe("clearAllIndex", () => {
+		test("deletes all existing indexes", async () => {
+			const { client, adminClient } = createMockClient();
+
+			mockGetKeys.mockResolvedValue({
+				results: [
+					{ key: "admin-key", actions: ["*"], indexes: ["*"] },
+					{ key: "search-key", actions: ["search"], indexes: ["*"] },
+				],
+			});
+			mockGetIndexes.mockResolvedValue({
+				results: [createMockIndex("song_zh-CN"), createMockIndex("artist_en")],
+			});
+
+			const manager = await SearchManager.create(
+				client as unknown as MeiliSearchType,
+				adminClient as unknown as MeiliSearchType
+			);
+			await manager.clearAllIndex();
+
+			expect(mockAdminDeleteIndexIfExists).toHaveBeenCalledTimes(2);
+			expect(mockAdminDeleteIndexIfExists).toHaveBeenCalledWith("song_zh-CN");
+			expect(mockAdminDeleteIndexIfExists).toHaveBeenCalledWith("artist_en");
+		});
+
+		test("handles empty index list gracefully", async () => {
+			const { client, adminClient } = createMockClient();
+
+			mockGetKeys.mockResolvedValue({
+				results: [
+					{ key: "admin-key", actions: ["*"], indexes: ["*"] },
+					{ key: "search-key", actions: ["search"], indexes: ["*"] },
+				],
+			});
+			mockGetIndexes.mockResolvedValue({ results: [] });
+
+			const manager = await SearchManager.create(
+				client as unknown as MeiliSearchType,
+				adminClient as unknown as MeiliSearchType
+			);
+			await manager.clearAllIndex();
+
+			expect(mockAdminDeleteIndexIfExists).not.toHaveBeenCalled();
+		});
+	});
+
+	describe("createIndex", () => {
+		test("creates a new index via admin client", async () => {
+			const { client, adminClient } = createMockClient();
+
+			mockGetKeys.mockResolvedValue({
+				results: [
+					{ key: "admin-key", actions: ["*"], indexes: ["*"] },
+					{ key: "search-key", actions: ["search"], indexes: ["*"] },
+				],
+			});
+
+			const manager = await SearchManager.create(
+				client as unknown as MeiliSearchType,
+				adminClient as unknown as MeiliSearchType
+			);
+			await manager.createIndex("album_zh");
+
+			expect(mockAdminCreateIndex).toHaveBeenCalledWith("album_zh", undefined);
+		});
+
+		test("passes options to createIndex when provided", async () => {
+			const { client, adminClient } = createMockClient();
+
+			mockGetKeys.mockResolvedValue({
+				results: [
+					{ key: "admin-key", actions: ["*"], indexes: ["*"] },
+					{ key: "search-key", actions: ["search"], indexes: ["*"] },
+				],
+			});
+
+			const manager = await SearchManager.create(
+				client as unknown as MeiliSearchType,
+				adminClient as unknown as MeiliSearchType
+			);
+			const options = { primaryKey: "id" };
+			await manager.createIndex("album_zh", options);
+
+			expect(mockAdminCreateIndex).toHaveBeenCalledWith("album_zh", options);
 		});
 	});
 });

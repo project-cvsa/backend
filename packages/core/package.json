@@ -7,6 +7,8 @@
 	"scripts": {
 		"lint": "bunx --bun biome lint",
 		"test": "bun test --concurrent",
+		"test:reset": "NODE_ENV=test bun scripts/cleanUpSearchIndex.ts",
+		"test:safe": "bun run test:reset && bun run test",
 		"test:coverage": "bun test --coverage",
 		"test:unit": "bun test tests/unit --concurrent",
 		"test:integration": "bun test tests/integration --concurrent",
@@ -30,6 +32,8 @@
 		"@cvsa/observability": "workspace:*",
 		"@elysiajs/eden": "^1.4.9",
 		"better-auth": "^1.5.6",
+		"bullmq": "^5",
+		"ioredis": "^5",
 		"meilisearch": "^0.56.0",
 		"nanoid": "^5.1.7",
 		"remeda": "^2.33.7",
