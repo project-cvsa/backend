@@ -57,4 +57,14 @@ export const INDEX_SETTINGS: Record<string, Settings> = {
 			},
 		},
 	},
+	singer: {
+		searchableAttributes: ["name", "description", "language"],
+		rankingRules: ["attribute", "words", "proximity", "exactness", "typo", "sort"],
+		embedders: {
+			"potion-multilingual-128M": {
+				source: "userProvided",
+				dimensions: 256,
+			},
+		},
+	},
 };
