@@ -1,5 +1,5 @@
 import { getSql } from "./db";
-import type { Stock } from "./stock-data";
+import type { MarketIndex, Stock } from "./stock-data";
 
 interface EtaRow {
 	aid: number;
@@ -25,7 +25,10 @@ interface NewCacheEntry {
 const WINDOW_COUNT = 28;
 const STEP_HOURS = 6;
 const WINDOW_HOURS = 24;
-const SNAPSHOT_LOOKBACK_DAYS = 35;
+const INDEX_FACTOR = 1000;
+
+/** Total span: from now to the start of the oldest window, plus one extra day margin for findNearest. */
+const TOTAL_LOOKBACK_HOURS = WINDOW_COUNT * STEP_HOURS + WINDOW_HOURS + 24;
 
 function findNearest(snapshots: SnapshotRow[], target: Date): SnapshotRow | null {
 	if (snapshots.length === 0) return null;
@@ -50,7 +53,10 @@ function snapToGrid(ts: number): Date {
 	return new Date(Math.floor(ts / SIX_HOURS_MS) * SIX_HOURS_MS);
 }
 
-export async function getTopStocks(): Promise<Stock[]> {
+export async function getTopStocks(): Promise<{
+	stocks: Stock[];
+	marketIndex: MarketIndex;
+}> {
 	console.time("getTopStocks: total");
 
 	const sql = getSql();
@@ -64,7 +70,7 @@ export async function getTopStocks(): Promise<Stock[]> {
 		WHERE e.updated_at > NOW() - INTERVAL '3 days'
 		  AND vb.aid IS NULL
 		ORDER BY e.speed DESC
-		LIMIT 100
+		LIMIT 500
 	`;
 	console.timeEnd("getTopStocks: eta query");
 
@@ -78,21 +84,24 @@ export async function getTopStocks(): Promise<Stock[]> {
 
 	console.log(`getTopStocks: eta returned ${etaEntries.length} rows`);
 
+	const emptyMarket: MarketIndex = {
+		name: "中V指数",
+		value: 0,
+		change: 0,
+		changePercent: 0,
+		history: [],
+		baseTime: now.toISOString(),
+	};
+
 	if (etaEntries.length === 0) {
 		console.timeEnd("getTopStocks: total");
-		return [];
+		return { stocks: [], marketIndex: emptyMarket };
 	}
 
 	const aids = etaEntries.map((e) => e.aid);
 
-	const snapshotLookback = new Date(now.getTime() - SNAPSHOT_LOOKBACK_DAYS * 24 * 3600 * 1000);
-
-	const earliestWindowEnd = new Date(
-		now.getTime() - (WINDOW_COUNT - 1) * STEP_HOURS * 3600 * 1000
-	);
-	const earliestWindowStart = new Date(earliestWindowEnd.getTime() - WINDOW_HOURS * 3600 * 1000);
-	const cacheLookback = new Date(
-		Math.min(snapshotLookback.getTime(), earliestWindowStart.getTime())
+	const lookback = new Date(
+		now.getTime() - TOTAL_LOOKBACK_HOURS * 3600 * 1000,
 	);
 
 	console.time("getTopStocks: cache query");
@@ -100,7 +109,7 @@ export async function getTopStocks(): Promise<Stock[]> {
 		SELECT aid::bigint, end_time, views_increment::integer
 		FROM internal.increment_cache_day
 		WHERE aid = ANY(${aids})
-		  AND end_time >= ${cacheLookback}
+		  AND end_time >= ${lookback}
 	`;
 	console.timeEnd("getTopStocks: cache query");
 
@@ -115,20 +124,12 @@ export async function getTopStocks(): Promise<Stock[]> {
 	}
 
 	function isFullyCached(aid: number): boolean {
-		const missing: string[] = [];
 		for (let i = 0; i < WINDOW_COUNT; i++) {
 			const endTime = new Date(now.getTime() - i * STEP_HOURS * 3600 * 1000);
 			const key = `${aid}_${endTime.toISOString()}`;
-			if (!cacheMap.has(key)) {
-				missing.push(endTime.toISOString());
-			}
+			if (!cacheMap.has(key)) return false;
 		}
-		if (missing.length > 0 && missing.length < WINDOW_COUNT) {
-			// console.log(
-			// 	`  isFullyCached: aid=${aid} missing ${missing.length}/${WINDOW_COUNT} windows, first missing: ${missing[0]}, cacheMap has ${cacheMap.size} entries total`,
-			// );
-		}
-		return missing.length === 0;
+		return true;
 	}
 
 	const cachedAids: number[] = [];
@@ -144,9 +145,10 @@ export async function getTopStocks(): Promise<Stock[]> {
 
 	console.time("getTopStocks: title query");
 	const titleRaw = await sql`
-		SELECT aid::bigint, title, bvid
-		FROM public.bilibili_metadata
-		WHERE aid = ANY(${aids})
+		SELECT bm.aid::bigint, COALESCE(s.name, bm.title) AS title, bm.bvid
+		FROM public.bilibili_metadata bm
+		LEFT JOIN public.songs s ON bm.aid = s.aid
+		WHERE bm.aid = ANY(${aids})
 	`;
 	console.timeEnd("getTopStocks: title query");
 
@@ -167,7 +169,7 @@ export async function getTopStocks(): Promise<Stock[]> {
 			SELECT id::integer, created_at, views::integer, aid::bigint
 			FROM public.video_snapshot
 			WHERE aid = ANY(${uncachedAids})
-			  AND created_at >= ${snapshotLookback}
+			  AND created_at >= ${lookback}
 			ORDER BY aid, created_at
 		`;
 		console.timeEnd("getTopStocks: snapshot query");
@@ -201,8 +203,6 @@ export async function getTopStocks(): Promise<Stock[]> {
 		const symbol = meta?.bvid ?? `AV${aid}`;
 
 		const snapshots = snapshotsByAid.get(aid) ?? [];
-		let loopHits = 0;
-		let loopMisses = 0;
 
 		const increments: number[] = [];
 
@@ -215,10 +215,8 @@ export async function getTopStocks(): Promise<Stock[]> {
 
 			if (cached !== undefined) {
 				if (cached >= 0) increments.push(cached);
-				loopHits++;
 				continue;
 			}
-			loopMisses++;
 
 			let computed = false;
 			const snapStart = findNearest(snapshots, startTime);
@@ -251,12 +249,6 @@ export async function getTopStocks(): Promise<Stock[]> {
 					views_increment: -1,
 				});
 			}
-		}
-
-		if (uncachedAids.includes(aid) && loopMisses === 0) {
-			console.log(
-				`  UNEXPECTED: aid=${aid} was flagged uncached but loop had 0 misses (${loopHits} hits). isFullyCached disagree?`,
-			);
 		}
 
 		if (increments.length === 0) continue;
@@ -294,7 +286,7 @@ export async function getTopStocks(): Promise<Stock[]> {
 			(e) => `(${e.aid}, '${e.end_time.toISOString()}', ${e.views_increment})`
 		);
 
-		const chunkSize = 50;
+		const chunkSize = 1000;
 		for (let i = 0; i < values.length; i += chunkSize) {
 			const chunk = values.slice(i, i + chunkSize);
 			const query = `
@@ -307,8 +299,37 @@ export async function getTopStocks(): Promise<Stock[]> {
 		console.timeEnd("getTopStocks: cache insert");
 	}
 
-	stocks.sort((a, b) => b.changePercent - a.changePercent);
+	stocks.sort((a, b) => b.change - a.change);
+
+	const INDEX_SIZE = 100;
+	const marketHistory = new Array<number>(WINDOW_COUNT).fill(0);
+
+	for (let w = 0; w < WINDOW_COUNT; w++) {
+		const top = stocks
+			.map((s) => s.sparkline[w] ?? 0)
+			.filter((v) => v > 0)
+			.sort((a, b) => b - a)
+			.slice(0, INDEX_SIZE);
+
+		marketHistory[w] =
+			top.reduce((sum, v) => sum + v, 0) / INDEX_FACTOR;
+	}
+
+	const lastValue = marketHistory[marketHistory.length - 1] ?? 0;
+	const firstValue = marketHistory[0] ?? 0;
+	const marketChange = lastValue - firstValue;
+	const marketChangePercent =
+		firstValue !== 0 ? Number(((marketChange / firstValue) * 100).toFixed(2)) : 0;
+
+	const marketIndex: MarketIndex = {
+		name: "中V指数",
+		value: lastValue,
+		change: marketChange,
+		changePercent: marketChangePercent,
+		history: marketHistory,
+		baseTime: now.toISOString(),
+	};
 
 	console.timeEnd("getTopStocks: total");
-	return stocks;
+	return { stocks, marketIndex };
 }

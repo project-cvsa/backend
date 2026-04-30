@@ -6,8 +6,8 @@ export const revalidate = 60;
 
 export async function GET() {
 	try {
-		const stocks = await getTopStocks();
-		return NextResponse.json({ stocks });
+		const { stocks, marketIndex } = await getTopStocks();
+		return NextResponse.json({ stocks, marketIndex });
 	} catch (error) {
 		console.error("Failed to fetch stocks:", error);
 		return NextResponse.json(

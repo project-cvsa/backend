@@ -28,8 +28,7 @@ export function MarketIndexChart({ data }: MarketIndexChartProps) {
 	}, []);
 
 	useEffect(() => {
-		if (!svgRef.current || dimensions.width === 0 || dimensions.height === 0)
-			return;
+		if (!svgRef.current || dimensions.width === 0 || dimensions.height === 0) return;
 
 		const svg = d3.select(svgRef.current);
 		svg.selectAll("*").remove();
@@ -44,9 +43,7 @@ export function MarketIndexChart({ data }: MarketIndexChartProps) {
 		const width = dimensions.width - margin.left - margin.right;
 		const height = dimensions.height - margin.top - margin.bottom;
 
-		const g = svg
-			.append("g")
-			.attr("transform", `translate(${margin.left},${margin.top})`);
+		const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
 		const xScale = d3
 			.scaleLinear()
@@ -62,36 +59,30 @@ export function MarketIndexChart({ data }: MarketIndexChartProps) {
 			.domain([yMin - yPadding, yMax + yPadding])
 			.range([height, 0]);
 
+		const totalPoints = data.history.length;
+		const baseTime = new Date(data.baseTime);
+
+		function formatDateLabel(index: number, showHour = false): string {
+			const hoursAgo = (totalPoints - 1 - index) * 6;
+			const d = new Date(baseTime.getTime() - hoursAgo * 3600 * 1000);
+			const month = d.getMonth() + 1;
+			const day = d.getDate();
+			const hour = d.getHours();
+			const hourText = showHour ? `${hour}时` : "";
+			return `${month}月${day}日${hourText}`;
+		}
+
 		const xAxis = d3
 			.axisBottom(xScale)
 			.ticks(isMobile ? 3 : 5)
 			.tickSize(4)
-			.tickFormat((d) => {
-				const index = d as number;
-				const totalPoints = data.history.length;
-				const ratio = index / (totalPoints - 1);
-				if (ratio <= 0.4) {
-					const minutes = ratio * 2.5 * 60;
-					const hours = Math.floor(9 + minutes / 60);
-					const mins = Math.floor(minutes % 60);
-					return `${hours}:${mins.toString().padStart(2, "0")}`;
-				}
-				const afternoonRatio = (ratio - 0.4) / 0.6;
-				const minutes = afternoonRatio * 2 * 60;
-				const hours = Math.floor(13 + minutes / 60);
-				const mins = Math.floor(minutes % 60);
-				return `${hours}:${mins.toString().padStart(2, "0")}`;
-			});
+			.tickFormat((d) => formatDateLabel(Math.round(d as number)));
 
 		g.append("g")
 			.attr("transform", `translate(0,${height})`)
 			.call(xAxis)
 			.call((g) => g.select(".domain").remove())
-			.call((g) =>
-				g
-					.selectAll(".tick line")
-					.attr("stroke", "rgba(255,255,255,0.1)")
-			)
+			.call((g) => g.selectAll(".tick line").attr("stroke", "rgba(255,255,255,0.1)"))
 			.call((g) =>
 				g
 					.selectAll(".tick text")
@@ -107,23 +98,20 @@ export function MarketIndexChart({ data }: MarketIndexChartProps) {
 			.tickSizeOuter(0)
 			.tickFormat((d) => {
 				const value = d as number;
-				return value.toFixed(0);
+				return Math.round(value).toLocaleString("en-US");
 			});
 
 		g.append("g")
 			.call(yAxis)
 			.call((g) => g.select(".domain").remove())
-			.call((g) =>
-				g
-					.selectAll(".tick line")
-					.attr("stroke", "rgba(255,255,255,0.1)")
-			)
+			.call((g) => g.selectAll(".tick line").attr("stroke", "rgba(255,255,255,0.1)"))
 			.call((g) =>
 				g
 					.selectAll(".tick text")
 					.attr("fill", "#71717a")
 					.attr("font-size", isMobile ? "10px" : "11px")
-					.attr("font-family", "sans-serif")
+					.attr("font-family", "Inter")
+					.attr("font-variant-numeric", "tabular-nums")
 			);
 
 		const line = d3
@@ -162,10 +150,7 @@ export function MarketIndexChart({ data }: MarketIndexChartProps) {
 			.attr("stop-color", data.change >= 0 ? "#22c55e" : "#ef4444")
 			.attr("stop-opacity", 0);
 
-		g.append("path")
-			.datum(data.history)
-			.attr("fill", `url(#${gradientId})`)
-			.attr("d", area);
+		g.append("path").datum(data.history).attr("fill", `url(#${gradientId})`).attr("d", area);
 
 		const path = g
 			.append("path")
@@ -176,18 +161,14 @@ export function MarketIndexChart({ data }: MarketIndexChartProps) {
 			.attr("d", line);
 
 		const pathLength = path.node()?.getTotalLength() ?? 0;
-		path
-			.attr("stroke-dasharray", pathLength)
+		path.attr("stroke-dasharray", pathLength)
 			.attr("stroke-dashoffset", pathLength)
 			.transition()
 			.duration(1500)
 			.ease(d3.easeCubicOut)
 			.attr("stroke-dashoffset", 0);
 
-		const crosshairGroup = g
-			.append("g")
-			.attr("class", "crosshair")
-			.style("opacity", 0);
+		const crosshairGroup = g.append("g").attr("class", "crosshair").style("opacity", 0);
 
 		const crosshairLine = crosshairGroup
 			.append("line")
@@ -203,10 +184,7 @@ export function MarketIndexChart({ data }: MarketIndexChartProps) {
 			.attr("stroke", "white")
 			.attr("stroke-width", 2);
 
-		const tooltipGroup = g
-			.append("g")
-			.attr("class", "tooltip")
-			.style("opacity", 0);
+		const tooltipGroup = g.append("g").attr("class", "tooltip").style("opacity", 0);
 
 		const tooltipRect = tooltipGroup
 			.append("rect")
@@ -219,7 +197,16 @@ export function MarketIndexChart({ data }: MarketIndexChartProps) {
 			.append("text")
 			.attr("fill", "white")
 			.attr("font-size", "12px")
-			.attr("font-family", "monospace")
+			.attr("font-family", "Inter")
+			.attr("font-variant-numeric", "tabular-nums")
+			.attr("text-anchor", "middle")
+			.attr("dominant-baseline", "middle");
+
+		const tooltipTime = tooltipGroup
+			.append("text")
+			.attr("fill", "#71717a")
+			.attr("font-size", "10px")
+			.attr("font-family", "sans-serif")
 			.attr("text-anchor", "middle")
 			.attr("dominant-baseline", "middle");
 
@@ -257,18 +244,21 @@ export function MarketIndexChart({ data }: MarketIndexChartProps) {
 				maximumFractionDigits: 2,
 			});
 			tooltipText.text(formattedValue);
+			tooltipTime.text(formatDateLabel(clampedIndex, true));
 
-			const textBBox = tooltipText.node()?.getBBox() ?? {
+			const textBox = tooltipText.node()?.getBBox() ?? {
 				width: 60,
-				height: 20,
+				height: 16,
+			};
+			const timeBox = tooltipTime.node()?.getBBox() ?? {
+				width: 60,
+				height: 16,
 			};
 			const padding = 8;
-			const rectWidth = textBBox.width + padding * 2;
-			const rectHeight = textBBox.height + padding * 2;
+			const rectWidth = Math.max(textBox.width, timeBox.width) + padding * 2;
+			const rectHeight = textBox.height + timeBox.height + padding * 2;
 
-			tooltipRect
-				.attr("width", rectWidth)
-				.attr("height", rectHeight);
+			tooltipRect.attr("width", rectWidth).attr("height", rectHeight);
 
 			let tooltipX: number;
 			let tooltipY: number;
@@ -288,14 +278,11 @@ export function MarketIndexChart({ data }: MarketIndexChartProps) {
 			tooltipX = Math.max(0, Math.min(width - rectWidth, tooltipX));
 			tooltipY = Math.max(0, Math.min(height - rectHeight, tooltipY));
 
-			tooltipGroup.attr(
-				"transform",
-				`translate(${tooltipX},${tooltipY})`
-			);
+			tooltipGroup.attr("transform", `translate(${tooltipX},${tooltipY})`);
 
-			tooltipText
-				.attr("x", rectWidth / 2)
-				.attr("y", rectHeight / 2);
+			tooltipText.attr("x", rectWidth / 2).attr("y", rectHeight / 2 - 6);
+
+			tooltipTime.attr("x", rectWidth / 2).attr("y", rectHeight / 2 + 10);
 
 			tooltipGroup.style("opacity", 1);
 		};

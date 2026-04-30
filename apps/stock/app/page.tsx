@@ -1,14 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { generateMarketIndex, type Stock } from "@/lib/stock-data";
-import { MarketIndexChart } from "@/components/MarketIndexChart";
+import type { MarketIndex, Stock } from "@/lib/stock-data";
+import { MarketIndexCard } from "@/components/MarketIndexCard";
 import { StockList } from "@/components/StockList";
 import { HeaderMenu } from "@/components/HeaderMenu";
 import { LoginDialog } from "@/components/LoginDialog";
 
 export default function Home() {
-	const marketIndex = generateMarketIndex();
+	const [marketIndex, setMarketIndex] = useState<MarketIndex | null>(null);
 	const [stocks, setStocks] = useState<Stock[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -30,6 +30,7 @@ export default function Home() {
 			})
 			.then((data) => {
 				setStocks(data.stocks);
+				setMarketIndex(data.marketIndex);
 			})
 			.catch((err: Error) => {
 				console.error("Failed to load stocks:", err);
@@ -89,52 +90,12 @@ export default function Home() {
 				</header>
 
 				<div className="flex flex-col gap-6">
-					<div className="rounded-2xl bg-[#0a0a0a] overflow-hidden">
-						<div className="px-6 py-5">
-							<div className="text-sm text-zinc-400 font-medium">
-								{marketIndex.name}
-							</div>
-							<div className="flex items-baseline justify-between mt-1">
-								<div className="text-3xl sm:text-4xl font-mono font-semibold text-white">
-									{marketIndex.value.toLocaleString("en-US", {
-										minimumFractionDigits: 2,
-										maximumFractionDigits: 2,
-									})}
-								</div>
-								<div className="text-right">
-									<div
-										className={`text-lg font-mono font-semibold ${
-											marketIndex.change >= 0
-												? "text-green-500"
-												: "text-red-500"
-										}`}
-									>
-										{marketIndex.change >= 0 ? "↑" : "↓"}{" "}
-										{marketIndex.change >= 0 ? "+" : ""}
-										{marketIndex.changePercent.toFixed(2)}%
-									</div>
-									<div
-										className={`text-sm font-mono ${
-											marketIndex.change >= 0
-												? "text-green-500"
-												: "text-red-500"
-										} opacity-80`}
-									>
-										{marketIndex.change >= 0 ? "+" : ""}
-										{marketIndex.change.toFixed(2)}
-									</div>
-								</div>
-							</div>
-						</div>
-						<div className="h-80 sm:h-100">
-							<MarketIndexChart data={marketIndex} />
-						</div>
-					</div>
+					<MarketIndexCard marketIndex={marketIndex} loading={loading} />
 
 					{loading && (
 						<div className="rounded-2xl bg-[#0a0a0a] border border-white/5 p-8 text-center">
 							<div className="text-zinc-500 font-mono text-sm">
-								Loading market data...
+								正在加载...
 							</div>
 						</div>
 					)}

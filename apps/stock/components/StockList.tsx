@@ -9,8 +9,9 @@ import {
 	ContextMenuContent,
 	ContextMenuItem,
 } from "@/components/ui/context-menu";
-import { Trash2 } from "lucide-react";
+import { Copy, Trash2 } from "lucide-react";
 import type { Stock } from "@/lib/stock-data";
+import { copyToClipboard } from "@/lib/copy";
 
 interface StockListProps {
 	stocks: Stock[];
@@ -56,7 +57,7 @@ export function StockList({ stocks, isAuthenticated, onDelete }: StockListProps)
 						return (
 							<ContextMenu key={stock.id}>
 								<ContextMenuTrigger asChild>
-									<div className="flex items-center justify-between max-sm:mx-5 px-5 py-4 hover:bg-white/2 transition-colors cursor-default">
+									<div className="flex items-center justify-between max-sm:mx-5 sm:px-5 py-4 hover:bg-white/2 transition-colors cursor-default">
 										<div className="flex-1 min-w-0">
 											<div>
 												<a
@@ -76,35 +77,45 @@ export function StockList({ stocks, isAuthenticated, onDelete }: StockListProps)
 											</div>
 										</div>
 
-										<div className="shrink-0 mx-2 sm:hidden">
-											<StockMiniChart
-												data={stock.sparkline}
-												change={stock.changePercent}
-											/>
-										</div>
-										<div className="shrink-0 mx-6 max-sm:hidden">
-											<StockMiniChart
-												data={stock.sparkline}
-												change={stock.changePercent}
-												width={120}
-											/>
-										</div>
-
-										<div className="shrink-0 text-right min-w-16 flex flex-col items-end md:ml-5 gap-1">
-											<div className="text-white font-[Inter] tabular-nums font-semibold">
-												{Math.round(stock.price).toLocaleString("en-US")}
+										<div className="flex">
+											<div className="shrink-0 mx-2 sm:hidden">
+												<StockMiniChart
+													data={stock.sparkline}
+													change={stock.changePercent}
+												/>
 											</div>
-											<div
-												className={`font-[Inter] tabular-nums text-xs ${changeColor} w-16 px-1 py-0.5 rounded-[3px] font-bold text-white`}
-											>
-												{isPositive ? "+" : ""}
-												{formatPercentage(stock.changePercent)}%
+											<div className="shrink-0 mx-6 max-sm:hidden">
+												<StockMiniChart
+													data={stock.sparkline}
+													change={stock.changePercent}
+													width={120}
+												/>
+											</div>
+
+											<div className="shrink-0 text-right min-w-16 flex flex-col items-end md:ml-5 gap-1">
+												<div className="text-white font-[Inter] tabular-nums font-semibold">
+													{Math.round(stock.price).toLocaleString(
+														"en-US"
+													)}
+												</div>
+												<div
+													className={`font-[Inter] tabular-nums text-xs ${changeColor} w-16 px-1 py-0.5 rounded-[3px] font-bold text-white`}
+												>
+													{isPositive ? "+" : ""}
+													{formatPercentage(stock.changePercent)}%
+												</div>
 											</div>
 										</div>
 									</div>
 								</ContextMenuTrigger>
 								{isAuthenticated && (
 									<ContextMenuContent>
+										<ContextMenuItem
+											onClick={() => copyToClipboard(stock.symbol)}
+										>
+											<Copy className="size-4" />
+											复制BV号
+										</ContextMenuItem>
 										<ContextMenuItem
 											variant="destructive"
 											onClick={() => handleDelete(stock.id)}

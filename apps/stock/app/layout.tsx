@@ -13,8 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-	title: "CVSA Stock",
-	description: "Chinese Vocal Synthesizer Archive - Market",
+	title: "中V大盘",
 };
 
 export default function RootLayout({
