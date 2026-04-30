@@ -52,28 +52,20 @@ export function StockList({ stocks, isAuthenticated, onDelete }: StockListProps)
 					{stocks.map((stock) => {
 						const isPositive = stock.changePercent >= 0;
 						const changeColor = isPositive ? "bg-green-600" : "bg-red-500";
-						const link = `https://www.bilibili.com/video/${stock.symbol}`;
 
 						return (
 							<ContextMenu key={stock.id}>
 								<ContextMenuTrigger asChild>
-									<div className="flex items-center justify-between max-sm:mx-5 sm:px-5 py-4 hover:bg-white/2 transition-colors cursor-default">
+									<a
+										href={`/stock/${stock.id}`}
+										className="flex items-center justify-between max-sm:mx-5 sm:px-5 py-4 hover:bg-white/2 transition-colors cursor-default"
+									>
 										<div className="flex-1 min-w-0">
-											<div>
-												<a
-													className="text-white font-semibold block text-ellipsis truncate"
-													href={link}
-												>
-													{stock.name}
-												</a>
+											<div className="text-white font-semibold block text-ellipsis truncate hover:underline w-fiZ">
+												{stock.name}
 											</div>
-											<div>
-												<a
-													className="text-neutral-500 text-sm font-mono block text-ellipsis truncate"
-													href={link}
-												>
-													{stock.symbol}
-												</a>
+											<div className="text-muted-foreground text-sm font-mono block text-ellipsis truncate w-fit">
+												{stock.symbol}
 											</div>
 										</div>
 
@@ -106,7 +98,7 @@ export function StockList({ stocks, isAuthenticated, onDelete }: StockListProps)
 												</div>
 											</div>
 										</div>
-									</div>
+									</a>
 								</ContextMenuTrigger>
 								{isAuthenticated && (
 									<ContextMenuContent>

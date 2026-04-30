@@ -83,7 +83,7 @@ export default function Home() {
 			<div className="max-w-4xl mx-auto max-sm:px-0 px-4 py-6">
 				<header className="max-sm:px-2 mb-6 flex items-center justify-between">
 					<h1 className="text-3xl font-bold tracking-wide">中V大盘</h1>
-					<div className="flex items-center">
+					<div className="flex items-center gap-2">
 						<DescDialog />
 						<HeaderMenu
 							isAuthenticated={isAuthenticated}

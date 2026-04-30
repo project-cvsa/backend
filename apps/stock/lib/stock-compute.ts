@@ -54,10 +54,99 @@ export function isFullyCached(
 // Core computation
 // ---------------------------------------------------------------------------
 
-/**
- * Propagate the sliding window computation over all eligible videos.
- * Returns computed stocks and new cache entries that need to be persisted.
- */
+export interface SingleStockResult {
+	stock: Stock;
+	newCacheEntries: NewCacheEntry[];
+}
+
+export function computeSingleStock(
+	aid: number,
+	name: string,
+	symbol: string,
+	cacheMap: ReadonlyMap<string, number>,
+	snapshots: SnapshotRow[],
+	now: Date,
+): SingleStockResult | null {
+	const newCacheEntries: NewCacheEntry[] = [];
+	const increments = new Array<number>(WINDOW_COUNT).fill(0);
+
+	for (let i = 0; i < WINDOW_COUNT; i++) {
+		const endTime = new Date(
+			now.getTime() - i * STEP_HOURS * 3600 * 1000,
+		);
+		const startTime = new Date(
+			endTime.getTime() - WINDOW_HOURS * 3600 * 1000,
+		);
+
+		const cacheKey = `${aid}_${endTime.toISOString()}`;
+		const cached = cacheMap.get(cacheKey);
+
+		if (cached !== undefined) {
+			if (cached >= 0) increments[i] = cached;
+			continue;
+		}
+
+		let computed = false;
+		const snapStart = findNearest(snapshots, startTime);
+		const snapEnd = findNearest(snapshots, endTime);
+
+		if (snapStart && snapEnd && snapStart.id !== snapEnd.id) {
+			const viewsDiff = snapEnd.views - snapStart.views;
+			const hoursDiff =
+				(snapEnd.created_at.getTime() -
+					snapStart.created_at.getTime()) /
+				3600000;
+
+			if (hoursDiff > 0) {
+				const increment = Math.round(
+					(viewsDiff / hoursDiff) * WINDOW_HOURS,
+				);
+				increments[i] = increment;
+				newCacheEntries.push({
+					aid,
+					end_time: endTime,
+					views_increment: increment,
+				});
+				computed = true;
+			}
+		}
+
+		if (!computed) {
+			newCacheEntries.push({
+				aid,
+				end_time: endTime,
+				views_increment: -1,
+			});
+		}
+	}
+
+	if (!increments.some((v) => v > 0)) return null;
+
+	const change = increments[0];
+	let oldest = 0;
+	for (let i = WINDOW_COUNT - 1; i >= 0; i--) {
+		if (increments[i] > 0) {
+			oldest = increments[i];
+			break;
+		}
+	}
+	const changePercent =
+		oldest !== 0 ? ((change - oldest) / oldest) * 100 : 0;
+
+	return {
+		stock: {
+			id: aid.toString(),
+			name,
+			symbol,
+			price: change,
+			change,
+			changePercent: Number.isNaN(changePercent) ? 0 : changePercent,
+			sparkline: increments.slice().reverse(),
+		},
+		newCacheEntries,
+	};
+}
+
 export function computeStocks(
 	etaEntries: EtaRow[],
 	titleMap: Map<number, { title: string; bvid: string | null }>,
@@ -73,83 +162,20 @@ export function computeStocks(
 		const meta = titleMap.get(aid);
 		const name = meta?.title ?? `AV${aid}`;
 		const symbol = meta?.bvid ?? `AV${aid}`;
-
 		const snapshots = snapshotsByAid.get(aid) ?? [];
 
-		const increments = new Array<number>(WINDOW_COUNT).fill(0);
-
-		for (let i = 0; i < WINDOW_COUNT; i++) {
-			const endTime = new Date(
-				now.getTime() - i * STEP_HOURS * 3600 * 1000,
-			);
-			const startTime = new Date(
-				endTime.getTime() - WINDOW_HOURS * 3600 * 1000,
-			);
-
-			const cacheKey = `${aid}_${endTime.toISOString()}`;
-			const cached = cacheMap.get(cacheKey);
-
-			if (cached !== undefined) {
-				if (cached >= 0) increments[i] = cached;
-				continue;
-			}
-
-			let computed = false;
-			const snapStart = findNearest(snapshots, startTime);
-			const snapEnd = findNearest(snapshots, endTime);
-
-			if (snapStart && snapEnd && snapStart.id !== snapEnd.id) {
-				const viewsDiff = snapEnd.views - snapStart.views;
-				const hoursDiff =
-					(snapEnd.created_at.getTime() -
-						snapStart.created_at.getTime()) /
-					3600000;
-
-				if (hoursDiff > 0) {
-					const increment = Math.round(
-						(viewsDiff / hoursDiff) * WINDOW_HOURS,
-					);
-					increments[i] = increment;
-					newCacheEntries.push({
-						aid,
-						end_time: endTime,
-						views_increment: increment,
-					});
-					computed = true;
-				}
-			}
-
-			if (!computed) {
-				newCacheEntries.push({
-					aid,
-					end_time: endTime,
-					views_increment: -1,
-				});
-			}
-		}
-
-		if (!increments.some((v) => v > 0)) continue;
-
-		const change = increments[0];
-		let oldest = 0;
-		for (let i = WINDOW_COUNT - 1; i >= 0; i--) {
-			if (increments[i] > 0) {
-				oldest = increments[i];
-				break;
-			}
-		}
-		const changePercent =
-			oldest !== 0 ? ((change - oldest) / oldest) * 100 : 0;
-
-		stocks.push({
-			id: aid.toString(),
+		const result = computeSingleStock(
+			aid,
 			name,
 			symbol,
-			price: change,
-			change,
-			changePercent: Number.isNaN(changePercent) ? 0 : changePercent,
-			sparkline: increments.slice().reverse(),
-		});
+			cacheMap,
+			snapshots,
+			now,
+		);
+		if (!result) continue;
+
+		stocks.push(result.stock);
+		newCacheEntries.push(...result.newCacheEntries);
 	}
 
 	return { stocks, newCacheEntries };

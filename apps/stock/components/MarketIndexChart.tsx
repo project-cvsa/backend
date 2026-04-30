@@ -77,7 +77,12 @@ export function MarketIndexChart({ data }: MarketIndexChartProps) {
 			const day = d.getDate();
 			const hour = d.getHours();
 			const hourText = showHour ? `${hour}时` : "";
-			return `${month}月${day}日${hourText}`;
+			if (showHour) {
+				return `${month}月${day}日${hourText}`;
+			}
+			else {
+				return `${month}/${day}`
+			}
 		}
 
 		const xAxis = d3
@@ -96,7 +101,8 @@ export function MarketIndexChart({ data }: MarketIndexChartProps) {
 					.selectAll(".tick text")
 					.attr("fill", "#71717a")
 					.attr("font-size", isMobile ? "10px" : "11px")
-					.attr("font-family", "sans-serif")
+					.attr("font-family", "Inter")
+					.attr("font-variant-numeric", "tabular-nums")
 			);
 
 		const yAxis = d3
@@ -106,6 +112,9 @@ export function MarketIndexChart({ data }: MarketIndexChartProps) {
 			.tickSizeOuter(0)
 			.tickFormat((d) => {
 				const value = d as number;
+				if (value > 10000) {
+					return `${(value / 1000).toLocaleString("en-US")}k`;
+				}
 				return Math.round(value).toLocaleString("en-US");
 			});
 

@@ -29,6 +29,30 @@ export interface NewCacheEntry {
 // Queries
 // ---------------------------------------------------------------------------
 
+/** Single ETA row for a specific AID. Returns null if not found. */
+export async function fetchEtaEntry(
+	sql: Sql,
+	aid: number,
+): Promise<EtaRow | null> {
+	const raw = (await sql`
+		SELECT e.aid::bigint, e.eta::real, e.speed::real,
+		       e.current_views::integer, e.updated_at
+		FROM public.eta e
+		WHERE e.aid = ${aid}
+		LIMIT 1
+	`) as Record<string, unknown>[];
+
+	if (raw.length === 0) return null;
+	const r = raw[0];
+	return {
+		aid: Number(r.aid),
+		eta: Number(r.eta),
+		speed: Number(r.speed),
+		current_views: Number(r.current_views),
+		updated_at: r.updated_at as Date,
+	};
+}
+
 /** Top-500 videos by speed, not blacklisted, active within last 3 days. */
 export async function fetchEtaEntries(sql: Sql): Promise<EtaRow[]> {
 	const raw = (await sql`
