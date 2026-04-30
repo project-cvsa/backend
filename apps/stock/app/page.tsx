@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { MarketIndex, Stock } from "@/lib/stock-data";
 import { MarketIndexCard } from "@/components/MarketIndexCard";
 import { StockList } from "@/components/StockList";
+import { SearchBox } from "@/components/SearchBox";
 import { HeaderMenu } from "@/components/HeaderMenu";
 import { LoginDialog } from "@/components/LoginDialog";
 import { DescDialog } from "@/components/DescDialog";
@@ -37,9 +38,7 @@ export default function Home() {
 				console.error("Failed to load stocks:", err);
 				setError(err.message);
 			})
-			.finally(() => {
-				setLoading(false);
-			});
+			.finally(() => setLoading(false));
 	}, []);
 
 	useEffect(() => {
@@ -93,9 +92,9 @@ export default function Home() {
 					</div>
 				</header>
 
-				<div className="flex flex-col gap-6">
-					<MarketIndexCard marketIndex={marketIndex} loading={loading} />
+				<MarketIndexCard marketIndex={marketIndex} loading={loading} />
 
+				<SearchBox isAuthenticated={isAuthenticated} onDelete={handleDelete}>
 					{loading && (
 						<div className="rounded-2xl bg-[#0a0a0a] border border-white/5 p-8 text-center">
 							<div className="text-zinc-500 font-mono text-sm">正在加载...</div>
@@ -104,9 +103,7 @@ export default function Home() {
 
 					{error && (
 						<div className="rounded-2xl bg-[#0a0a0a] border border-red-500/20 p-8 text-center">
-							<div className="text-red-400 font-mono text-sm">
-								Failed to load: {error}
-							</div>
+							<div className="text-red-400 font-mono text-sm">无法加载: {error}</div>
 						</div>
 					)}
 
@@ -120,12 +117,10 @@ export default function Home() {
 
 					{!loading && !error && stocks.length === 0 && (
 						<div className="rounded-2xl bg-[#0a0a0a] border border-white/5 p-8 text-center">
-							<div className="text-zinc-500 font-mono text-sm">
-								No stock data available.
-							</div>
+							<div className="text-zinc-500 font-mono text-sm">暂无数据</div>
 						</div>
 					)}
-				</div>
+				</SearchBox>
 			</div>
 
 			<LoginDialog open={showLogin} onOpenChange={setShowLogin} onLogin={handleLogin} />

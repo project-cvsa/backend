@@ -29,6 +29,75 @@ export interface NewCacheEntry {
 // Queries
 // ---------------------------------------------------------------------------
 
+/** Search matching AIDs by BVID, AID, or song name. */
+export async function searchAids(
+	sql: Sql,
+	query: string,
+	limit = 30,
+): Promise<number[]> {
+	const trimmed = query.trim();
+	if (!trimmed) return [];
+
+	const aids = new Set<number>();
+
+	if (/^BV/i.test(trimmed)) {
+		const raw = (await sql`
+			SELECT aid::bigint FROM public.bilibili_metadata
+			WHERE bvid = ${trimmed}
+			LIMIT 1
+		`) as Record<string, unknown>[];
+		for (const r of raw) aids.add(Number(r.aid));
+	} else if (/^\d+$/.test(trimmed)) {
+		const raw = (await sql`
+			SELECT aid::bigint FROM public.eta
+			WHERE aid = ${Number(trimmed)}
+			LIMIT 1
+		`) as Record<string, unknown>[];
+		for (const r of raw) aids.add(Number(r.aid));
+	}
+
+	if (aids.size < limit) {
+		const remaining = limit - aids.size;
+		const excludeList = aids.size > 0 ? [...aids] : [0];
+		const raw = (await sql`
+			SELECT s.aid::bigint
+			FROM public.songs s
+			JOIN public.eta e ON s.aid = e.aid
+			WHERE s.name ILIKE ${`%${trimmed}%`}
+			  AND s.aid != ALL(${excludeList})
+			ORDER BY e.speed DESC
+			LIMIT ${remaining}
+		`) as Record<string, unknown>[];
+		for (const r of raw) aids.add(Number(r.aid));
+	}
+
+	return [...aids];
+}
+
+/** Fetch ETA rows for specific AIDs. */
+export async function fetchEtaEntriesByAids(
+	sql: Sql,
+	aids: number[],
+): Promise<EtaRow[]> {
+	if (aids.length === 0) return [];
+
+	const raw = (await sql`
+		SELECT e.aid::bigint, e.eta::real, e.speed::real,
+		       e.current_views::integer, e.updated_at
+		FROM public.eta e
+		WHERE e.aid = ANY(${aids})
+		ORDER BY e.speed DESC
+	`) as Record<string, unknown>[];
+
+	return raw.map((r) => ({
+		aid: Number(r.aid),
+		eta: Number(r.eta),
+		speed: Number(r.speed),
+		current_views: Number(r.current_views),
+		updated_at: r.updated_at as Date,
+	}));
+}
+
 /** Single ETA row for a specific AID. Returns null if not found. */
 export async function fetchEtaEntry(
 	sql: Sql,
