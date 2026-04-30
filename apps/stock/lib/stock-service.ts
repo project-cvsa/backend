@@ -58,10 +58,12 @@ export async function getTopStocks(): Promise<Stock[]> {
 
 	console.time("getTopStocks: eta query");
 	const etaRaw = await sql`	
-		SELECT aid::bigint, eta::real, speed::real, current_views::integer, updated_at
-		FROM public.eta
-		WHERE updated_at > NOW() - INTERVAL '3 days'
-		ORDER BY speed DESC
+		SELECT e.aid::bigint, e.eta::real, e.speed::real, e.current_views::integer, e.updated_at
+		FROM public.eta e
+		LEFT JOIN public.video_blacklist vb ON e.aid = vb.aid
+		WHERE e.updated_at > NOW() - INTERVAL '3 days'
+		  AND vb.aid IS NULL
+		ORDER BY e.speed DESC
 		LIMIT 100
 	`;
 	console.timeEnd("getTopStocks: eta query");
@@ -305,7 +307,7 @@ export async function getTopStocks(): Promise<Stock[]> {
 		console.timeEnd("getTopStocks: cache insert");
 	}
 
-	stocks.sort((a, b) => b.price - a.price);
+	stocks.sort((a, b) => b.changePercent - a.changePercent);
 
 	console.timeEnd("getTopStocks: total");
 	return stocks;

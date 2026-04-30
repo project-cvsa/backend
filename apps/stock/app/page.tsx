@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { generateMarketIndex, type Stock } from "@/lib/stock-data";
 import { MarketIndexChart } from "@/components/MarketIndexChart";
 import { StockList } from "@/components/StockList";
+import { HeaderMenu } from "@/components/HeaderMenu";
+import { LoginDialog } from "@/components/LoginDialog";
 
 export default function Home() {
 	const marketIndex = generateMarketIndex();
@@ -11,7 +13,16 @@ export default function Home() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
-	useEffect(() => {
+	const [token, setToken] = useState<string | null>(() => {
+		if (typeof window !== "undefined") {
+			return localStorage.getItem("cvsa_token");
+		}
+		return null;
+	});
+	const [showLogin, setShowLogin] = useState(false);
+
+	const fetchStocks = useCallback(() => {
+		setLoading(true);
 		fetch("/api/stocks")
 			.then((res) => {
 				if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -29,13 +40,52 @@ export default function Home() {
 			});
 	}, []);
 
+	useEffect(() => {
+		fetchStocks();
+	}, [fetchStocks]);
+
+	const handleLogin = useCallback((newToken: string) => {
+		setToken(newToken);
+		localStorage.setItem("cvsa_token", newToken);
+	}, []);
+
+	const handleLogout = useCallback(() => {
+		setToken(null);
+		localStorage.removeItem("cvsa_token");
+	}, []);
+
+	const handleDelete = useCallback(
+		async (id: string) => {
+			setStocks((prev) => prev.filter((s) => s.id !== id));
+
+			try {
+				const res = await fetch(`/api/stocks/${id}`, {
+					method: "DELETE",
+					headers: { Authorization: `Bearer ${token}` },
+				});
+				if (!res.ok && res.status === 401) {
+					handleLogout();
+					fetchStocks();
+				}
+			} catch {
+				fetchStocks();
+			}
+		},
+		[token, fetchStocks, handleLogout],
+	);
+
+	const isAuthenticated = token !== null;
+
 	return (
 		<div className="min-h-screen">
 			<div className="max-w-4xl mx-auto max-sm:px-0 px-4 py-6">
-				<header className="mb-6">
-					<h1 className="text-3xl font-bold tracking-wide">
-						中V大盘
-					</h1>
+				<header className="mb-6 flex items-center justify-between">
+					<h1 className="text-3xl font-bold tracking-wide">中V大盘</h1>
+					<HeaderMenu
+						isAuthenticated={isAuthenticated}
+						onLoginClick={() => setShowLogin(true)}
+						onLogout={handleLogout}
+					/>
 				</header>
 
 				<div className="flex flex-col gap-6">
@@ -98,7 +148,11 @@ export default function Home() {
 					)}
 
 					{!loading && !error && stocks.length > 0 && (
-						<StockList stocks={stocks} />
+						<StockList
+							stocks={stocks}
+							isAuthenticated={isAuthenticated}
+							onDelete={handleDelete}
+						/>
 					)}
 
 					{!loading && !error && stocks.length === 0 && (
@@ -110,6 +164,12 @@ export default function Home() {
 					)}
 				</div>
 			</div>
+
+			<LoginDialog
+				open={showLogin}
+				onOpenChange={setShowLogin}
+				onLogin={handleLogin}
+			/>
 		</div>
 	);
 }
