@@ -6,5 +6,8 @@
 		"parser": {
 			"tailwindDirectives": true
 		}
+	},
+	"linter": {
+		"includes": ["**", "!components/ui/*.tsx"]
 	}
 }

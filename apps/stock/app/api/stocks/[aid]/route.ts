@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { verifyToken } from "@/lib/auth";
 import { getSql } from "@/lib/db";
-import { snapToGrid, TOTAL_LOOKBACK_HOURS } from "@/lib/stock-constants";
+import {
+	snapToGrid,
+	lookbackHours,
+	RANGE_CONFIG,
+	DEFAULT_RANGE,
+} from "@/lib/stock-constants";
 import {
 	fetchEtaEntry,
 	fetchCacheMap,
@@ -12,7 +17,7 @@ import {
 import { isFullyCached, computeSingleStock } from "@/lib/stock-compute";
 
 export async function GET(
-	_request: Request,
+	request: Request,
 	{ params }: { params: Promise<{ aid: string }> },
 ) {
 	try {
@@ -22,6 +27,10 @@ export async function GET(
 			return NextResponse.json({ error: "Invalid aid" }, { status: 400 });
 		}
 
+		const { searchParams } = new URL(request.url);
+		const rangeKey = searchParams.get("range") ?? DEFAULT_RANGE;
+		const windowCount = RANGE_CONFIG[rangeKey] ?? RANGE_CONFIG[DEFAULT_RANGE];
+
 		const sql = getSql();
 		const etaEntry = await fetchEtaEntry(sql, aidNum);
 		if (!etaEntry) {
@@ -30,7 +39,7 @@ export async function GET(
 
 		const now = snapToGrid(Date.now());
 		const lookback = new Date(
-			now.getTime() - TOTAL_LOOKBACK_HOURS * 3600 * 1000,
+			now.getTime() - lookbackHours(windowCount) * 3600 * 1000,
 		);
 
 		const [titleMap, cacheMap] = await Promise.all([
@@ -41,7 +50,7 @@ export async function GET(
 		const existingCacheKeys = new Set(cacheMap.keys());
 
 		let snapshotsByAid: Map<number, import("@/lib/stock-repository").SnapshotRow[]> = new Map();
-		if (!isFullyCached(aidNum, cacheMap, now)) {
+		if (!isFullyCached(aidNum, cacheMap, now, windowCount)) {
 			snapshotsByAid = await fetchSnapshotsByAid(sql, [aidNum], lookback);
 		}
 
@@ -57,6 +66,7 @@ export async function GET(
 			cacheMap,
 			snapshots,
 			now,
+			windowCount,
 		);
 
 		const baseTime = now.toISOString();

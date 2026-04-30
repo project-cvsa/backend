@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import type { MarketIndex, Stock } from "@/lib/stock-data";
+import { RANGE_LABELS, DEFAULT_RANGE } from "@/lib/stock-constants";
 import { MarketIndexChart } from "@/components/MarketIndexChart";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,15 +22,18 @@ interface DetailData {
 	baseTime: string;
 }
 
+const RANGES = ["week", "2week", "month", "quarter"] as const;
+
 export default function StockDetailPage() {
 	const { aid } = useParams<{ aid: string }>();
 	const [data, setData] = useState<DetailData | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	const [range, setRange] = useState<string>(DEFAULT_RANGE);
 
 	const fetchDetail = useCallback(() => {
 		setLoading(true);
-		fetch(`/api/stocks/${aid}`)
+		fetch(`/api/stocks/${aid}?range=${range}`)
 			.then((res) => {
 				if (!res.ok) throw new Error(`HTTP ${res.status}`);
 				return res.json();
@@ -40,19 +44,11 @@ export default function StockDetailPage() {
 				setError(err.message);
 			})
 			.finally(() => setLoading(false));
-	}, [aid]);
+	}, [aid, range]);
 
 	useEffect(() => {
 		fetchDetail();
 	}, [fetchDetail]);
-
-	if (loading) {
-		return (
-			<div className="min-h-screen flex items-center justify-center">
-				<div className="text-muted-foreground font-mono text-sm">加载中...</div>
-			</div>
-		);
-	}
 
 	if (error || !data) {
 		return (
@@ -121,6 +117,23 @@ export default function StockDetailPage() {
 							<BiliBili />
 						</Link>
 					</Button>
+				</div>
+
+				<div className="mx-2 mb-3 flex gap-1">
+					{RANGES.map((r) => (
+						<button
+							key={r}
+							type="button"
+							onClick={() => setRange(r)}
+							className={`px-3 py-1 text-xs rounded-md transition-colors ${
+								r === range
+									? "bg-white/10 text-white"
+									: "text-muted-foreground hover:text-white hover:bg-white/5"
+							}`}
+						>
+							{RANGE_LABELS[r]}
+						</button>
+					))}
 				</div>
 
 				<div className="aspect-2/1 w-full overflow-hidden">

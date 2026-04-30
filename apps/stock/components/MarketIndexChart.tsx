@@ -62,10 +62,16 @@ export function MarketIndexChart({ data }: MarketIndexChartProps) {
 		const totalPoints = data.history.length;
 		const baseTime = new Date(data.baseTime);
 
+		const tickInterval = totalPoints <= 50 ? 4
+			: totalPoints <= 100 ? 8
+			: totalPoints <= 300 ? 28
+			: totalPoints <= 600 ? 56
+			: 120;
+
 		const dayTicks: number[] = [];
 		const hoursToShift = baseTime.getHours() / 6;
 		const firstMidnight = totalPoints - 1 - hoursToShift;
-		for (let i = firstMidnight; i >= 0; i -= 4) {
+		for (let i = firstMidnight; i >= 0; i -= tickInterval) {
 			dayTicks.push(i);
 		}
 		dayTicks.reverse();
@@ -80,9 +86,10 @@ export function MarketIndexChart({ data }: MarketIndexChartProps) {
 			if (showHour) {
 				return `${month}月${day}日${hourText}`;
 			}
-			else {
-				return `${month}/${day}`
+			if (tickInterval >= 120) {
+				return `${month}月`;
 			}
+			return `${month}/${day}`;
 		}
 
 		const xAxis = d3

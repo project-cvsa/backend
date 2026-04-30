@@ -41,8 +41,9 @@ export function isFullyCached(
 	aid: number,
 	cacheMap: Map<string, number>,
 	now: Date,
+	windowCount = WINDOW_COUNT,
 ): boolean {
-	for (let i = 0; i < WINDOW_COUNT; i++) {
+	for (let i = 0; i < windowCount; i++) {
 		const endTime = new Date(now.getTime() - i * STEP_HOURS * 3600 * 1000);
 		const key = `${aid}_${endTime.toISOString()}`;
 		if (!cacheMap.has(key)) return false;
@@ -66,11 +67,12 @@ export function computeSingleStock(
 	cacheMap: ReadonlyMap<string, number>,
 	snapshots: SnapshotRow[],
 	now: Date,
+	windowCount = WINDOW_COUNT,
 ): SingleStockResult | null {
 	const newCacheEntries: NewCacheEntry[] = [];
-	const increments = new Array<number>(WINDOW_COUNT).fill(0);
+	const increments = new Array<number>(windowCount).fill(0);
 
-	for (let i = 0; i < WINDOW_COUNT; i++) {
+	for (let i = 0; i < windowCount; i++) {
 		const endTime = new Date(
 			now.getTime() - i * STEP_HOURS * 3600 * 1000,
 		);
@@ -124,7 +126,7 @@ export function computeSingleStock(
 
 	const change = increments[0];
 	let oldest = 0;
-	for (let i = WINDOW_COUNT - 1; i >= 0; i--) {
+	for (let i = windowCount - 1; i >= 0; i--) {
 		if (increments[i] > 0) {
 			oldest = increments[i];
 			break;
