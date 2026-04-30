@@ -46,7 +46,7 @@ export function StockList({ stocks, isAuthenticated, onDelete }: StockListProps)
 	);
 
 	return (
-		<Card className="bg-[#0a0a0a] border border-white/5 rounded-2xl overflow-hidden py-0 max-sm:border-none">
+		<Card className="bg-[#0a0a0a] border border-white/5 rounded-2xl overflow-hidden py-0 max-sm:border-none ring-0">
 			<CardContent className="p-0">
 				<div className="divide-y divide-white/5">
 					{stocks.map((stock) => {

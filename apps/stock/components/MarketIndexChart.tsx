@@ -62,6 +62,14 @@ export function MarketIndexChart({ data }: MarketIndexChartProps) {
 		const totalPoints = data.history.length;
 		const baseTime = new Date(data.baseTime);
 
+		const dayTicks: number[] = [];
+		const hoursToShift = baseTime.getHours() / 6;
+		const firstMidnight = totalPoints - 1 - hoursToShift;
+		for (let i = firstMidnight; i >= 0; i -= 4) {
+			dayTicks.push(i);
+		}
+		dayTicks.reverse();
+
 		function formatDateLabel(index: number, showHour = false): string {
 			const hoursAgo = (totalPoints - 1 - index) * 6;
 			const d = new Date(baseTime.getTime() - hoursAgo * 3600 * 1000);
@@ -74,7 +82,7 @@ export function MarketIndexChart({ data }: MarketIndexChartProps) {
 
 		const xAxis = d3
 			.axisBottom(xScale)
-			.ticks(isMobile ? 3 : 5)
+			.tickValues(dayTicks)
 			.tickSize(4)
 			.tickFormat((d) => formatDateLabel(Math.round(d as number)));
 

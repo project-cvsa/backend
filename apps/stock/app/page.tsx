@@ -6,6 +6,7 @@ import { MarketIndexCard } from "@/components/MarketIndexCard";
 import { StockList } from "@/components/StockList";
 import { HeaderMenu } from "@/components/HeaderMenu";
 import { LoginDialog } from "@/components/LoginDialog";
+import { DescDialog } from "@/components/DescDialog";
 
 export default function Home() {
 	const [marketIndex, setMarketIndex] = useState<MarketIndex | null>(null);
@@ -72,21 +73,24 @@ export default function Home() {
 				fetchStocks();
 			}
 		},
-		[token, fetchStocks, handleLogout],
+		[token, fetchStocks, handleLogout]
 	);
 
 	const isAuthenticated = token !== null;
 
 	return (
-		<div className="min-h-screen">
+		<div>
 			<div className="max-w-4xl mx-auto max-sm:px-0 px-4 py-6">
-				<header className="mb-6 flex items-center justify-between">
+				<header className="max-sm:px-2 mb-6 flex items-center justify-between">
 					<h1 className="text-3xl font-bold tracking-wide">中V大盘</h1>
-					<HeaderMenu
-						isAuthenticated={isAuthenticated}
-						onLoginClick={() => setShowLogin(true)}
-						onLogout={handleLogout}
-					/>
+					<div className="flex items-center">
+						<DescDialog />
+						<HeaderMenu
+							isAuthenticated={isAuthenticated}
+							onLoginClick={() => setShowLogin(true)}
+							onLogout={handleLogout}
+						/>
+					</div>
 				</header>
 
 				<div className="flex flex-col gap-6">
@@ -94,9 +98,7 @@ export default function Home() {
 
 					{loading && (
 						<div className="rounded-2xl bg-[#0a0a0a] border border-white/5 p-8 text-center">
-							<div className="text-zinc-500 font-mono text-sm">
-								正在加载...
-							</div>
+							<div className="text-zinc-500 font-mono text-sm">正在加载...</div>
 						</div>
 					)}
 
@@ -126,11 +128,7 @@ export default function Home() {
 				</div>
 			</div>
 
-			<LoginDialog
-				open={showLogin}
-				onOpenChange={setShowLogin}
-				onLogin={handleLogin}
-			/>
+			<LoginDialog open={showLogin} onOpenChange={setShowLogin} onLogin={handleLogin} />
 		</div>
 	);
 }

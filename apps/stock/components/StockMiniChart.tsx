@@ -52,7 +52,41 @@ export function StockMiniChart({
 			.y((d) => yScale(d))
 			.curve(d3.curveBasis);
 
+		const area = d3
+			.area<number>()
+			.x((_, i) => xScale(i))
+			.y0(innerHeight)
+			.y1((d) => yScale(d))
+			.curve(d3.curveBasis);
+
 		const strokeColor = change >= 0 ? "#22c55e" : "#ef4444";
+
+		const gradientId = `mini-${Math.random().toString(36).slice(2, 8)}`;
+		const defs = svg.append("defs");
+		const gradient = defs
+			.append("linearGradient")
+			.attr("id", gradientId)
+			.attr("x1", "0%")
+			.attr("y1", "0%")
+			.attr("x2", "0%")
+			.attr("y2", "100%");
+
+		gradient
+			.append("stop")
+			.attr("offset", "0%")
+			.attr("stop-color", strokeColor)
+			.attr("stop-opacity", 0.25);
+
+		gradient
+			.append("stop")
+			.attr("offset", "100%")
+			.attr("stop-color", strokeColor)
+			.attr("stop-opacity", 0);
+
+		g.append("path")
+			.datum(data)
+			.attr("fill", `url(#${gradientId})`)
+			.attr("d", area);
 
 		g.append("path")
 			.datum(data)

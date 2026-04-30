@@ -26,7 +26,7 @@ export function MarketIndexCard({ marketIndex, loading }: MarketIndexCardProps) 
 								<div className="text-secondary-foreground font-bold">
 									{marketIndex.name}
 								</div>
-								<div className="text-3xl sm:text-4xl font-[Inter] tabular-nums font-semibold text-white">
+								<div className=" text-3xl sm:text-4xl font-[Inter] tabular-nums font-semibold text-white">
 									{marketIndex.value.toLocaleString("en-US", {
 										minimumFractionDigits: 0,
 										maximumFractionDigits: 2,
@@ -49,7 +49,7 @@ export function MarketIndexCard({ marketIndex, loading }: MarketIndexCardProps) 
 									} opacity-80`}
 								>
 									{marketIndex.change >= 0 ? "+" : ""}
-									{marketIndex.change.toFixed(0)}
+									{marketIndex.change.toFixed(2)}
 								</div>
 							</div>
 						</div>
