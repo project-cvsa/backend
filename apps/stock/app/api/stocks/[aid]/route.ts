@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
 import { verifyToken } from "@/lib/auth";
 import { getSql } from "@/lib/db";
-import { snapToGrid, lookbackHours, RANGE_CONFIG, DEFAULT_RANGE } from "@/lib/stock-constants";
+import { snapToGrid, lookbackHours, RANGE_CONFIG, DEFAULT_RANGE, STEP_PER_WINDOW, STEP_HOURS_MS } from "@/lib/stock-constants";
 import {
 	fetchEtaEntry,
 	fetchCacheMap,
 	fetchTitleMap,
 	fetchSnapshotsByAid,
 	insertCacheEntries,
-    type SnapshotRow,
 } from "@/lib/stock-repository";
-import { isFullyCached, computeSingleStock } from "@/lib/stock-compute";
+import { computeSingleStock } from "@/lib/stock-compute";
+import { withCache } from "@/lib/cache";
 
 export async function GET(request: Request, { params }: { params: Promise<{ aid: string }> }) {
 	try {
@@ -24,75 +24,103 @@ export async function GET(request: Request, { params }: { params: Promise<{ aid:
 		const rangeKey = searchParams.get("range") ?? DEFAULT_RANGE;
 		const windowCount = RANGE_CONFIG[rangeKey] ?? RANGE_CONFIG[DEFAULT_RANGE];
 
-		const sql = getSql();
-		const etaEntry = await fetchEtaEntry(sql, aidNum);
-		if (!etaEntry) {
-			return NextResponse.json({ error: "Not found" }, { status: 404 });
-		}
+		// Per-aid 120s cache to avoid repeated snapshot fetches while keeping price fresh.
+		const result = await withCache(`detail:${aidNum}:${rangeKey}`, 120, async () => {
+			const sql = getSql();
+			const etaEntry = await fetchEtaEntry(sql, aidNum);
+			if (!etaEntry) return null;
 
-		const now = snapToGrid(Date.now());
-		const lookback = new Date(now.getTime() - lookbackHours(windowCount) * 3600 * 1000);
+			const now = snapToGrid(Date.now());
+			const lookback = new Date(now.getTime() - lookbackHours(windowCount) * 3600 * 1000);
 
-		const [titleMap, cacheMap] = await Promise.all([
-			fetchTitleMap(sql, [aidNum]),
-			fetchCacheMap(sql, [aidNum], lookback),
-		]);
+			const [titleMap, cacheMap, snapshotsByAid] = await Promise.all([
+				fetchTitleMap(sql, [aidNum]),
+				fetchCacheMap(sql, [aidNum], lookback),
+				fetchSnapshotsByAid(sql, [aidNum], lookback),
+			]);
 
-		const existingCacheKeys = new Set(cacheMap.keys());
+			const existingCacheKeys = new Set(cacheMap.keys());
 
-		let snapshotsByAid: Map<number, SnapshotRow[]> = new Map();
-		if (!isFullyCached(aidNum, cacheMap, now, windowCount)) {
-			snapshotsByAid = await fetchSnapshotsByAid(sql, [aidNum], lookback);
-		}
+			const meta = titleMap.get(aidNum);
+			const name = meta?.title ?? `AV${aidNum}`;
+			const symbol = meta?.bvid ?? `AV${aidNum}`;
+			const snapshots = snapshotsByAid.get(aidNum) ?? [];
 
-		const meta = titleMap.get(aidNum);
-		const name = meta?.title ?? `AV${aidNum}`;
-		const symbol = meta?.bvid ?? `AV${aidNum}`;
-		const snapshots = snapshotsByAid.get(aidNum) ?? [];
+			const computed = computeSingleStock(
+				aidNum,
+				name,
+				symbol,
+				cacheMap,
+				snapshots,
+				now,
+				true,
+				windowCount
+			);
 
-		const result = computeSingleStock(
-			aidNum,
-			name,
-			symbol,
-			cacheMap,
-			snapshots,
-			now,
-			windowCount
-		);
+			const baseTime = now.toISOString();
 
-		const baseTime = now.toISOString();
+			const stock = computed
+				? computed.stock
+				: {
+						id: aidNum.toString(),
+						name,
+						symbol,
+						price: 0,
+						change: 0,
+						changePercent: 0,
+						sparkline: [] as number[],
+					};
 
-		if (!result) {
-			return NextResponse.json({
-				stock: {
-					id: aidNum.toString(),
-					name,
-					symbol,
-					price: 0,
-					change: 0,
-					changePercent: 0,
-					sparkline: [],
-				},
+			const positives = stock.sparkline.filter((v) => v > 0);
+			const yesterdayIdx = stock.sparkline.length - 1 - STEP_PER_WINDOW;
+
+			// open = the value at the most recent Monday 08:00 CST (= Monday 00:00 UTC)
+			// before now. Find the sparkline window closest to that time.
+			const mondayUtc = new Date(now);
+			const dow = mondayUtc.getUTCDay();
+			mondayUtc.setUTCDate(mondayUtc.getUTCDate() - (dow === 0 ? 6 : dow - 1));
+			mondayUtc.setUTCHours(0, 0, 0, 0);
+			const stepsToMonday = Math.round((now.getTime() - mondayUtc.getTime()) / STEP_HOURS_MS);
+			const openIdx = stock.sparkline.length - 1 - stepsToMonday;
+			const mondayOpen =
+				openIdx >= 0 && openIdx < stock.sparkline.length && stock.sparkline[openIdx] > 0
+					? stock.sparkline[openIdx]
+					: positives.length > 0
+						? positives[0]
+						: 0;
+
+			const fields = {
+				open: mondayOpen,
+				high: positives.length > 0 ? Math.max(...positives) : 0,
+				low: positives.length > 0 ? Math.min(...positives) : 0,
+				yesterdayGrowth:
+					yesterdayIdx >= 0 && yesterdayIdx < stock.sparkline.length
+						? stock.sparkline[yesterdayIdx]
+						: 0,
+				views: etaEntry.current_views,
+			};
+
+			if (computed) {
+				await insertCacheEntries(sql, computed.newCacheEntries, existingCacheKeys);
+			}
+
+			return {
+				stock,
+				fields,
 				eta: {
 					speed: etaEntry.speed,
 					currentViews: etaEntry.current_views,
 					updatedAt: etaEntry.updated_at.toISOString(),
 				},
 				baseTime,
-			});
+			};
+		});
+
+		if (!result) {
+			return NextResponse.json({ error: "Not found" }, { status: 404 });
 		}
 
-		await insertCacheEntries(sql, result.newCacheEntries, existingCacheKeys);
-
-		return NextResponse.json({
-			stock: result.stock,
-			eta: {
-				speed: etaEntry.speed,
-				currentViews: etaEntry.current_views,
-				updatedAt: etaEntry.updated_at.toISOString(),
-			},
-			baseTime,
-		});
+		return NextResponse.json(result);
 	} catch (error) {
 		console.error("Failed to fetch stock detail:", error);
 		return NextResponse.json({ error: "Failed to fetch stock detail" }, { status: 500 });

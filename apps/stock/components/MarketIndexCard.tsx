@@ -27,10 +27,10 @@ export function MarketIndexCard({ marketIndex, loading }: MarketIndexCardProps) 
 					<div className="px-2 py-5">
 						<div className="flex items-end justify-between mt-1">
 							<div className="flex flex-col">
-								<div className="text-secondary-foreground font-bold">
+								<div className="text-lg">
 									{marketIndex.name}
 								</div>
-								<div className=" text-3xl sm:text-4xl font-[Inter] tabular-nums font-semibold text-white">
+								<div className="text-3xl sm:text-4xl font-[Google_Sans] tabular-nums text-white">
 									{marketIndex.value.toLocaleString("en-US", {
 										minimumFractionDigits: 0,
 										maximumFractionDigits: 2,

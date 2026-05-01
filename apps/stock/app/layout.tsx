@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Google_Sans } from "next/font/google";
 import "./globals.css";
 import { ColorModeProvider } from "@/components/ColorModeContext";
 
 const interSans = Inter({
 	variable: "--font-inter-sans",
+	subsets: ["latin"],
+});
+
+const googleSans = Google_Sans({
+	variable: "--font-google-sans",
 	subsets: ["latin"],
 });
 
@@ -18,7 +23,7 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="en" className={`${interSans.variable} h-full antialiased dark`}>
+		<html lang="en" className={`${interSans.variable} ${googleSans.className} h-full antialiased dark`}>
 			<body className="font-sans  bg-[#0a0a0a] text-white">
 				<ColorModeProvider>{children}</ColorModeProvider>
 			</body>

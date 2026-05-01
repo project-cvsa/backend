@@ -151,14 +151,14 @@ export function MarketIndexChart({ data }: MarketIndexChartProps) {
 			.line<number>()
 			.x((_, i) => xScale(i))
 			.y((d) => yScale(d))
-			.curve(d3.curveCatmullRom.alpha(0.5));
+			.curve(d3.curveCatmullRom.alpha(0));
 
 		const area = d3
 			.area<number>()
 			.x((_, i) => xScale(i))
 			.y0(height)
 			.y1((d) => yScale(d))
-			.curve(d3.curveCatmullRom.alpha(0.5));
+			.curve(d3.curveCatmullRom.alpha(0));
 
 		const gradientId = `gradient-${Math.random().toString(36).slice(2)}`;
 		const defs = svg.append("defs");

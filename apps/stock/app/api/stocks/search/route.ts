@@ -9,7 +9,7 @@ import {
 	fetchSnapshotsByAid,
 	insertCacheEntries,
 } from "@/lib/stock-repository";
-import { isFullyCached, computeStocks } from "@/lib/stock-compute";
+import { computeStocks } from "@/lib/stock-compute";
 
 export async function GET(request: NextRequest) {
 	try {
@@ -36,17 +36,15 @@ export async function GET(request: NextRequest) {
 
 		const existingCacheKeys = new Set(cacheMap.keys());
 
-		const uncachedAids = aids.filter(
-			(aid) => !isFullyCached(aid, cacheMap, now)
-		);
-		const snapshotsByAid = await fetchSnapshotsByAid(sql, uncachedAids, lookback);
+		const snapshotsByAid = await fetchSnapshotsByAid(sql, aids, lookback);
 
 		const { stocks, newCacheEntries } = computeStocks(
 			etaEntries,
 			titleMap,
 			cacheMap,
 			snapshotsByAid,
-			now
+			now,
+			true
 		);
 
 		await insertCacheEntries(sql, newCacheEntries, existingCacheKeys);

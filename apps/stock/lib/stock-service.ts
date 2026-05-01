@@ -8,7 +8,7 @@ import {
 	fetchSnapshotsByAid,
 	insertCacheEntries,
 } from "./stock-repository";
-import { isFullyCached, computeStocks, computeMarketIndex } from "./stock-compute";
+import { computeStocks, computeMarketIndex } from "./stock-compute";
 
 const EMPTY_MARKET: MarketIndex = {
 	name: "中V指数",
@@ -54,18 +54,8 @@ export async function getTopStocks(): Promise<{
 
 	const existingCacheKeys = new Set(cacheMap.keys());
 
-	const uncachedAids: number[] = [];
-	for (const aid of aids) {
-		if (!isFullyCached(aid, cacheMap, now)) {
-			uncachedAids.push(aid);
-		}
-	}
-	console.log(
-		`getTopStocks: cache split — ${aids.length - uncachedAids.length} fully cached, ${uncachedAids.length} need snapshots`
-	);
-
 	console.time("getTopStocks: snapshot query");
-	const snapshotsByAid = await fetchSnapshotsByAid(sql, uncachedAids, lookback);
+	const snapshotsByAid = await fetchSnapshotsByAid(sql, aids, lookback);
 	console.timeEnd("getTopStocks: snapshot query");
 
 	console.time("getTopStocks: window computation");
@@ -74,7 +64,8 @@ export async function getTopStocks(): Promise<{
 		titleMap,
 		cacheMap,
 		snapshotsByAid,
-		now
+		now,
+		true
 	);
 	console.timeEnd("getTopStocks: window computation");
 
@@ -89,7 +80,7 @@ export async function getTopStocks(): Promise<{
 	console.timeEnd("getTopStocks: cache insert");
 	console.log(`getTopStocks: inserted ${inserted} truly new entries`);
 
-	stocks.sort((a, b) => b.change - a.change);
+	stocks.sort((a, b) => b.price - a.price);
 
 	const marketIndex = computeMarketIndex(stocks, now);
 

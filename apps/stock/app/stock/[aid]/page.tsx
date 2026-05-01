@@ -18,9 +18,18 @@ interface EtaInfo {
 	updatedAt: string;
 }
 
+interface DetailFields {
+	open: number;
+	high: number;
+	low: number;
+	yesterdayGrowth: number;
+	views: number;
+}
+
 interface DetailData {
 	stock: Stock;
 	eta: EtaInfo;
+	fields: DetailFields;
 	baseTime: string;
 }
 
@@ -75,7 +84,7 @@ export default function StockDetailPage() {
 		);
 	}
 
-	const { stock, eta } = data;
+	const { stock, eta, fields } = data;
 	const isPositive = stock.changePercent >= 0;
 	const badgeColor = getChangeText(mode, stock.changePercent);
 
@@ -87,6 +96,14 @@ export default function StockDetailPage() {
 		history: stock.sparkline,
 		baseTime: data.baseTime,
 	};
+
+	const fmt = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 0 });
+	const updateTime = new Date(eta.updatedAt).toLocaleString("zh-CN", {
+		month: "2-digit",
+		day: "2-digit",
+		hour: "2-digit",
+		minute: "2-digit",
+	});
 
 	return (
 		<div className="min-h-screen">
@@ -119,8 +136,7 @@ export default function StockDetailPage() {
 							</div>
 						</div>
 						<div className="text-muted-foreground text-sm font-mono">
-							增速 {eta.speed.toFixed(2)} · {eta.currentViews.toLocaleString("en-US")}{" "}
-							播放
+							更新时间 {updateTime}
 						</div>
 					</div>
 					<Button size="icon-lg" variant="ghost">
@@ -150,6 +166,24 @@ export default function StockDetailPage() {
 				<div className="aspect-2/1 w-full overflow-hidden">
 					<MarketIndexChart data={chartData} />
 				</div>
+
+				<div className="mx-2 mt-6 grid grid-cols-2 sm:grid-cols-5 gap-3">
+					{([
+						["开盘", fields.open],
+						["最高", fields.high],
+						["最低", fields.low],
+						["昨日播放增长", fields.yesterdayGrowth],
+						["播放", fields.views],
+					] as const).map(([label, value]) => (
+						<div key={label} className="bg-white/5 rounded-lg px-3 py-2">
+							<div className="text-muted-foreground text-xs">{label}</div>
+							<div className="text-white font-[Inter] tabular-nums text-sm font-semibold mt-0.5">
+								{fmt(value)}
+							</div>
+						</div>
+					))}
+				</div>
+
 			</div>
 		</div>
 	);

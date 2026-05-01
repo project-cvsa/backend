@@ -65,6 +65,7 @@ export function computeSingleStock(
 	cacheMap: ReadonlyMap<string, number>,
 	snapshots: SnapshotRow[],
 	now: Date,
+	forceFreshPrice = false,
 	windowCount = WINDOW_COUNT
 ): SingleStockResult | null {
 	const newCacheEntries: NewCacheEntry[] = [];
@@ -82,8 +83,12 @@ export function computeSingleStock(
 		const cached = cacheMap.get(cacheKey);
 
 		if (cached !== undefined && !isNewborn) {
-			if (cached >= 0) increments[i] = cached;
-			continue;
+			// When forceFreshPrice is on, skip cache for the newest window (i=0)
+			// so the returned price always reflects the latest snapshot data.
+			if (!(forceFreshPrice && i === 0)) {
+				if (cached >= 0) increments[i] = cached;
+				continue;
+			}
 		}
 
 		let computed = false;
@@ -136,7 +141,7 @@ export function computeSingleStock(
 			name,
 			symbol,
 			price: change,
-			change,
+			change: change - oldest,
 			changePercent: Number.isNaN(changePercent) ? 0 : changePercent,
 			sparkline: increments.slice().reverse(),
 		},
@@ -149,7 +154,8 @@ export function computeStocks(
 	titleMap: Map<number, { title: string; bvid: string | null }>,
 	cacheMap: ReadonlyMap<string, number>,
 	snapshotsByAid: ReadonlyMap<number, SnapshotRow[]>,
-	now: Date
+	now: Date,
+	forceFreshPrice = false
 ): { stocks: Stock[]; newCacheEntries: NewCacheEntry[] } {
 	const newCacheEntries: NewCacheEntry[] = [];
 	const stocks: Stock[] = [];
@@ -161,7 +167,7 @@ export function computeStocks(
 		const symbol = meta?.bvid ?? `AV${aid}`;
 		const snapshots = snapshotsByAid.get(aid) ?? [];
 
-		const result = computeSingleStock(aid, name, symbol, cacheMap, snapshots, now);
+		const result = computeSingleStock(aid, name, symbol, cacheMap, snapshots, now, forceFreshPrice);
 		if (!result) continue;
 
 		stocks.push(result.stock);
