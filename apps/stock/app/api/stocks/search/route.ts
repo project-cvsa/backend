@@ -36,7 +36,9 @@ export async function GET(request: NextRequest) {
 
 		const existingCacheKeys = new Set(cacheMap.keys());
 
-		const uncachedAids = aids.filter((aid) => !isFullyCached(aid, cacheMap, now));
+		const uncachedAids = aids.filter(
+			(aid) => !isFullyCached(aid, cacheMap, now)
+		);
 		const snapshotsByAid = await fetchSnapshotsByAid(sql, uncachedAids, lookback);
 
 		const { stocks, newCacheEntries } = computeStocks(

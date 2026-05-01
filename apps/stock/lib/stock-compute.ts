@@ -27,19 +27,30 @@ export function findNearest(snapshots: SnapshotRow[], target: Date): SnapshotRow
 	return nearest;
 }
 
-/** True when every one of the WINDOW_COUNT windows for this AID has a cache entry. */
 export function isFullyCached(
 	aid: number,
 	cacheMap: Map<string, number>,
 	now: Date,
 	windowCount = WINDOW_COUNT
 ): boolean {
+	const windowMs = WINDOW_HOURS * 3600 * 1000;
+	let hasOldValid = false;
+
 	for (let i = 0; i < windowCount; i++) {
 		const endTime = new Date(now.getTime() - i * STEP_HOURS * 3600 * 1000);
 		const key = `${aid}_${endTime.toISOString()}`;
-		if (!cacheMap.has(key)) return false;
+		const cached = cacheMap.get(key);
+
+		if (cached === undefined) return false;
+
+		if (cached >= 0 && now.getTime() - endTime.getTime() >= windowMs) {
+			hasOldValid = true;
+		}
 	}
-	return true;
+
+	// If no window ≥ 24h old has a real (non-sentinel) value,
+	// the video is either newborn or has no usable history. Bypass cache.
+	return hasOldValid;
 }
 
 export interface SingleStockResult {
@@ -59,6 +70,10 @@ export function computeSingleStock(
 	const newCacheEntries: NewCacheEntry[] = [];
 	const increments = new Array<number>(windowCount).fill(0);
 
+	const windowMs = WINDOW_HOURS * 3600 * 1000;
+	const birthTime: Date | null = snapshots.length > 0 ? snapshots[0].created_at : null;
+	const isNewborn = birthTime !== null && now.getTime() - birthTime.getTime() < windowMs;
+
 	for (let i = 0; i < windowCount; i++) {
 		const endTime = new Date(now.getTime() - i * STEP_HOURS * 3600 * 1000);
 		const startTime = new Date(endTime.getTime() - WINDOW_HOURS * 3600 * 1000);
@@ -66,7 +81,7 @@ export function computeSingleStock(
 		const cacheKey = `${aid}_${endTime.toISOString()}`;
 		const cached = cacheMap.get(cacheKey);
 
-		if (cached !== undefined) {
+		if (cached !== undefined && !isNewborn) {
 			if (cached >= 0) increments[i] = cached;
 			continue;
 		}
@@ -81,7 +96,9 @@ export function computeSingleStock(
 				(snapEnd.created_at.getTime() - snapStart.created_at.getTime()) / 3600000;
 
 			if (hoursDiff > 0) {
-				const increment = Math.round((viewsDiff / hoursDiff) * WINDOW_HOURS);
+				const increment = isNewborn
+					? Math.round(viewsDiff)
+					: Math.round((viewsDiff / hoursDiff) * WINDOW_HOURS);
 				increments[i] = increment;
 				newCacheEntries.push({
 					aid,

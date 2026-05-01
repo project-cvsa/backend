@@ -8,6 +8,7 @@ import {
 	fetchTitleMap,
 	fetchSnapshotsByAid,
 	insertCacheEntries,
+    type SnapshotRow,
 } from "@/lib/stock-repository";
 import { isFullyCached, computeSingleStock } from "@/lib/stock-compute";
 
@@ -39,7 +40,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ aid:
 
 		const existingCacheKeys = new Set(cacheMap.keys());
 
-		let snapshotsByAid: Map<number, import("@/lib/stock-repository").SnapshotRow[]> = new Map();
+		let snapshotsByAid: Map<number, SnapshotRow[]> = new Map();
 		if (!isFullyCached(aidNum, cacheMap, now, windowCount)) {
 			snapshotsByAid = await fetchSnapshotsByAid(sql, [aidNum], lookback);
 		}

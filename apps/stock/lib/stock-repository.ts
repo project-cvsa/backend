@@ -1,5 +1,5 @@
 import type { Sql } from "postgres";
-import { withCache } from "./cache";
+import { withCache, perAidMget, perAidMset } from "./cache";
 
 export interface EtaRow {
 	aid: number;
@@ -137,59 +137,103 @@ export async function fetchEtaEntries(sql: Sql): Promise<EtaRow[]> {
 	});
 }
 
-/** Pre-computed window increments keyed by `aid_endTime`. */
+/** Pre-computed window increments keyed by `aid_endTime`. Per-aid Redis cache. */
 export async function fetchCacheMap(
 	sql: Sql,
 	aids: number[],
 	lookback: Date
 ): Promise<Map<string, number>> {
-	const sorted = [...aids].sort((a, b) => a - b).join(",");
-	return withCache(`cache:${sorted}:${lookback.toISOString()}`, 60, async () => {
+	const { hits, misses } = await perAidMget<{ end_time: string; views_increment: number }[]>(
+		"incr",
+		aids,
+		(raw) => JSON.parse(raw) as { end_time: string; views_increment: number }[]
+	);
+
+	const out = new Map<string, number>();
+	for (const [aid, entries] of hits) {
+		for (const e of entries) {
+			if (new Date(e.end_time) >= lookback) {
+				out.set(`${aid}_${e.end_time}`, e.views_increment);
+			}
+		}
+	}
+
+	if (misses.length > 0) {
 		const raw = (await sql`
 			SELECT aid::bigint, end_time, views_increment::integer
 			FROM internal.increment_cache_day
-			WHERE aid = ANY(${aids})
+			WHERE aid = ANY(${misses})
 			  AND end_time >= ${lookback}
 		`) as Record<string, unknown>[];
 
-		const map = new Map<string, number>();
+		const byAid = new Map<number, { end_time: string; views_increment: number }[]>();
 		for (const r of raw) {
 			const aid = Number(r.aid);
-			const endTime = r.end_time as Date;
-			const inc = Number(r.views_increment);
-			map.set(`${aid}_${endTime.toISOString()}`, inc);
+			const e = {
+				end_time: (r.end_time as Date).toISOString(),
+				views_increment: Number(r.views_increment),
+			};
+			const arr = byAid.get(aid);
+			if (arr) arr.push(e);
+			else byAid.set(aid, [e]);
+			out.set(`${aid}_${e.end_time}`, e.views_increment);
 		}
-		return map;
-	});
+
+		const toSet = new Map<number, unknown>();
+		for (const miss of misses) {
+			toSet.set(miss, byAid.get(miss) ?? []);
+		}
+		await perAidMset("incr", 60, toSet);
+	}
+
+	return out;
 }
 
-/** Title and BVid lookup for the given AIDs. */
+/** Title and BVid lookup for the given AIDs. Per-aid Redis cache. */
 export async function fetchTitleMap(
 	sql: Sql,
 	aids: number[]
 ): Promise<Map<number, { title: string; bvid: string | null }>> {
-	const sorted = [...aids].sort((a, b) => a - b).join(",");
-	return withCache(`titles:${sorted}`, 60, async () => {
+	const { hits, misses } = await perAidMget<{ title: string; bvid: string | null }>(
+		"title",
+		aids,
+		(raw) => JSON.parse(raw) as { title: string; bvid: string | null }
+	);
+
+	const out = new Map<number, { title: string; bvid: string | null }>();
+	for (const [aid, val] of hits) {
+		out.set(aid, val);
+	}
+
+	if (misses.length > 0) {
 		const raw = (await sql`
 			SELECT bm.aid::bigint, COALESCE(s.name, bm.title) AS title, bm.bvid
 			FROM public.bilibili_metadata bm
 			LEFT JOIN public.songs s ON bm.aid = s.aid
-			WHERE bm.aid = ANY(${aids})
+			WHERE bm.aid = ANY(${misses})
 		`) as Record<string, unknown>[];
 
-		const map = new Map<number, { title: string; bvid: string | null }>();
+		const byAid = new Map<number, unknown>();
+		for (const miss of misses) {
+			byAid.set(miss, { title: `AV${miss}`, bvid: null });
+		}
 		for (const r of raw) {
 			const aid = Number(r.aid);
-			map.set(aid, {
+			const val = {
 				title: (r.title as string) ?? `AV${aid}`,
-				bvid: r.bvid as string | null,
-			});
+				bvid: (r.bvid as string) ?? null,
+			};
+			out.set(aid, val);
+			byAid.set(aid, val);
 		}
-		return map;
-	});
+
+		await perAidMset("title", 1200, byAid);
+	}
+
+	return out;
 }
 
-/** Raw snapshots for uncached AIDs, grouped by AID. */
+/** Raw snapshots for uncached AIDs, grouped by AID. Per-aid Redis cache. */
 export async function fetchSnapshotsByAid(
 	sql: Sql,
 	aids: number[],
@@ -197,33 +241,81 @@ export async function fetchSnapshotsByAid(
 ): Promise<Map<number, SnapshotRow[]>> {
 	if (aids.length === 0) return new Map();
 
-	const sorted = [...aids].sort((a, b) => a - b).join(",");
-	return withCache(`snapshots:${sorted}:${lookback.toISOString()}`, 60, async () => {
+	const { hits, misses } = await perAidMget<
+		{ id: number; created_at: string; views: number; aid: number }[]
+	>(
+		"snap",
+		aids,
+		(raw) => JSON.parse(raw) as { id: number; created_at: string; views: number; aid: number }[]
+	);
+
+	const out = new Map<number, SnapshotRow[]>();
+	for (const [aid, rows] of hits) {
+		const filtered = rows
+			.filter((r) => new Date(r.created_at) >= lookback)
+			.map(
+				(r): SnapshotRow => ({
+					id: r.id,
+					created_at: new Date(r.created_at),
+					views: r.views,
+					aid: r.aid,
+				})
+			);
+		if (filtered.length > 0) out.set(aid, filtered);
+	}
+
+	if (misses.length > 0) {
 		const raw = (await sql`
 			SELECT id::integer, created_at, views::integer, aid::bigint
 			FROM public.video_snapshot
-			WHERE aid = ANY(${aids})
+			WHERE aid = ANY(${misses})
 			  AND created_at >= ${lookback}
 			ORDER BY aid, created_at
 		`) as Record<string, unknown>[];
 
-		const map = new Map<number, SnapshotRow[]>();
+		const byAid = new Map<
+			number,
+			{ id: number; created_at: string; views: number; aid: number }[]
+		>();
 		for (const r of raw) {
-			const s: SnapshotRow = {
+			const entry = {
 				id: Number(r.id),
-				created_at: r.created_at as Date,
+				created_at: (r.created_at as Date).toISOString(),
 				views: Number(r.views),
 				aid: Number(r.aid),
 			};
-			const arr = map.get(s.aid);
-			if (arr) {
-				arr.push(s);
+			const arr = byAid.get(entry.aid);
+			if (arr) arr.push(entry);
+			else byAid.set(entry.aid, [entry]);
+
+			const existing = out.get(entry.aid);
+			if (existing) {
+				existing.push({
+					id: entry.id,
+					created_at: new Date(entry.created_at),
+					views: entry.views,
+					aid: entry.aid,
+				});
 			} else {
-				map.set(s.aid, [s]);
+				out.set(entry.aid, [
+					{
+						id: entry.id,
+						created_at: new Date(entry.created_at),
+						views: entry.views,
+						aid: entry.aid,
+					},
+				]);
 			}
 		}
-		return map;
-	});
+
+		const toSet = new Map<number, unknown>();
+		for (const miss of misses) {
+			toSet.set(miss, byAid.get(miss) ?? []);
+		}
+		await perAidMset("snap", 30, toSet);
+	}
+
+	return out;
 }
 
 /** Batch-insert newly computed cache entries that aren't already persisted. */
