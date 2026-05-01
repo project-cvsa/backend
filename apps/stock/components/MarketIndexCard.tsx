@@ -32,7 +32,7 @@ export function MarketIndexCard({ marketIndex, loading }: MarketIndexCardProps) 
 								</div>
 								<div className="text-3xl sm:text-4xl font-[Google_Sans] tabular-nums text-white">
 									{marketIndex.value.toLocaleString("en-US", {
-										minimumFractionDigits: 0,
+										minimumFractionDigits: 1,
 										maximumFractionDigits: 2,
 									})}
 								</div>
@@ -54,12 +54,12 @@ export function MarketIndexCard({ marketIndex, loading }: MarketIndexCardProps) 
 							</div>
 						</div>
 					</div>
-					<div className="absolute mx-2 text-muted-foreground text-sm flex gap-4">
+					<div className="absolute mx-2 text-muted-foreground text-sm flex gap-4 -translate-y-3">
 						<span>开盘: {marketIndex.openValue?.toFixed(2) ?? "N/A"}</span>
 						<span>最高: {marketIndex.highValue?.toFixed(2) ?? "N/A"}</span>
 						<span>最低: {marketIndex.lowValue?.toFixed(2) ?? "N/A"}</span>
 					</div>
-					<div className="h-80 sm:h-100 -translate-y-2">
+					<div className="h-80 sm:h-100">
 						<MarketIndexChart data={marketIndex} isIndex={true} />
 					</div>
 				</>
