@@ -34,7 +34,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ aid:
 
 		const sql = getSql();
 		const etaEntry = await fetchEtaEntry(sql, aidNum);
-		if (!etaEntry) return null;
+		if (!etaEntry) return;
 
 		const now = snapToGrid(Date.now());
 		const lookback = new Date(now.getTime() - lookbackHours(windowCount) * 3600 * 1000);
