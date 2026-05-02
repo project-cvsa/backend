@@ -153,7 +153,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ a
 		`;
 
 		const redis = getRedis();
-		await redis.del("cvsa:stock:eta:top500");
+		await redis.del("cvsa:stock:eta:top1000");
 
 		return NextResponse.json({ success: true });
 	} catch {
