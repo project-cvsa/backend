@@ -72,15 +72,19 @@ export async function getStocks(): Promise<Stock[]> {
 	return stocks;
 }
 
-export async function getVideos(bvids: string[]) {
+export async function getVideos(bvids: string[], limit?: number, offset?: number) {
 	const sql = getSql();
+
 	const data = await sql`
-		SELECT e.*
-		FROM public.bilibili_metadata e
-		JOIN unnest(${bvids}::text[]) WITH ORDINALITY AS list(bvid, ord)
-		  ON e.bvid = list.bvid
-		ORDER BY list.ord;
-	`;
+        SELECT e.*
+        FROM public.bilibili_metadata e
+        INNER JOIN unnest(${bvids}::text[]) WITH ORDINALITY AS list(bvid, ord)
+          ON e.bvid = list.bvid
+        ORDER BY list.ord
+        ${limit !== undefined ? sql`LIMIT ${limit}` : sql``}
+        ${offset !== undefined ? sql`OFFSET ${offset}` : sql``};
+    `;
+
 	return data;
 }
 
