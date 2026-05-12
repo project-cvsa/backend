@@ -51,14 +51,14 @@ export async function getStocks(): Promise<Stock[]> {
 		cacheMap,
 		snapshotsByAid,
 		now,
-		true,
+		true
 	);
 	console.timeEnd("getStocks: window computation");
 
 	const realEntries = newCacheEntries.filter((e) => e.views_increment >= 0).length;
 	const sentinelEntries = newCacheEntries.filter((e) => e.views_increment === -1).length;
 	console.log(
-		`getStocks: computed ${stocks.length} stocks, ${realEntries} new + ${sentinelEntries} sentinel cache entries`,
+		`getStocks: computed ${stocks.length} stocks, ${realEntries} new + ${sentinelEntries} sentinel cache entries`
 	);
 
 	console.time("getStocks: cache insert");
@@ -69,7 +69,19 @@ export async function getStocks(): Promise<Stock[]> {
 	stocks.sort((a, b) => b.price - a.price);
 
 	console.timeEnd("getStocks: total");
-	return stocks.slice(0, 100);
+	return stocks;
+}
+
+export async function getVideos(bvids: string[]) {
+	const sql = getSql();
+	const data = await sql`
+		SELECT e.*
+		FROM public.bilibili_metadata e
+		JOIN unnest(${bvids}::text[]) WITH ORDINALITY AS list(bvid, ord)
+		  ON e.bvid = list.bvid
+		ORDER BY list.ord;
+	`;
+	return data;
 }
 
 const INDEX_RANGES: Record<string, { days: number; stepMs: number }> = {
