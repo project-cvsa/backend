@@ -7,7 +7,7 @@ const app = new Hono();
 
 const mcpServer = new McpServer({
 	name: "CVSA MCP",
-	version: "1.0.0",
+	version: "0.0.2",
 });
 
 stockDeleteSetup(mcpServer);
@@ -24,9 +24,13 @@ app.use(async (c, next) => {
 	await next();
 });
 
+const transport = new StreamableHTTPTransport();
+
 app.all("/mcp", async (c) => {
-	const transport = new StreamableHTTPTransport();
-	await mcpServer.connect(transport);
+	if (!mcpServer.isConnected()) {
+        // Connecting the MCP server to the transport
+        await mcpServer.connect(transport);
+    }
 	return transport.handleRequest(c);
 });
 
