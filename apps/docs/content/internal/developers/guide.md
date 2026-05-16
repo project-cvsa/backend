@@ -62,7 +62,7 @@ REDIS_URL=redis://localhost:6379
 ## 启动外部服务
 
 你需要准备一个 PostgreSQL 18 、Redis 7 以及 MeiliSearch 1.40 实例来辅助开发和调试。推荐使用 Docker，因为它易于管理和隔离。  
-确保你安装了 [Docker Compose](https://docs.docker.com/compose/install/)，之后便可以在根路径下通过 compose 拉起这两个容器。
+确保你安装了 [Docker Compose](https://docs.docker.com/compose/install/)，之后便可以在根路径下通过 compose 拉起这三个容器。
 
 ```bash
 docker compose up -d
