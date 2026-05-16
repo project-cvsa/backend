@@ -12,7 +12,8 @@ services:
     volumes:
       - data:/var/lib/postgresql
     command: postgres
-
+    network_mode: host
+    
   meili:
     image: getmeili/meilisearch:v1.40
     container_name: cvsa-meili
@@ -23,6 +24,7 @@ services:
       - .env.docker
     volumes:
       - meili:/meili_data
+    network_mode: host
 
   redis:
     image: redis:7-alpine
@@ -32,6 +34,7 @@ services:
       - "127.0.0.1:6379:6379"
     volumes:
       - redis:/data
+    network_mode: bridge
 
 volumes:
   data:
