@@ -56,8 +56,8 @@ MEILI_API_URL=http://localhost:7700
 REDIS_URL=redis://localhost:6379
 ```
 
-如果`.env`和`.env.test`中缺少配置项或参数，可以手动添加，但不要修改`.ts`文件中的默认值。
-`MEILI_MASTER_KEY` 通常不需要更改，保持默认值即可。`cvsa`和`password`需要和`.env.docker`文件中的值一致。
+如果`.env`和`.env.test`中缺少`REDIS_URL`可以手动添加（通常只需要在`/packages/core/`中的`.env`和`.env.test`添加）。不要修改`.ts`文件中的默认值。
+`MEILI_MASTER_KEY`、`cvsa`和`password`如需修改需要和`.env.docker`文件中的值一致。
 
 ## 启动外部服务
 
